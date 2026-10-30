@@ -62,6 +62,12 @@ jobs:
           if grep -q 'LIVE PLAYBACK: BLOCKED' shared/build/test-results/jvmTest/*.xml; then
             grep -ho 'LIVE PLAYBACK: BLOCKED[^<]*' shared/build/test-results/jvmTest/*.xml | sed 's/^/::warning::/'
           fi
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: jvm-test-results
+          path: shared/build/test-results/jvmTest/
+          if-no-files-found: ignore
 
   ios:
     name: iOS (simulator tests, app build, launch screenshot)
@@ -128,14 +134,18 @@ jobs:
             grep -ho 'LIVE PLAYBACK: BLOCKED[^<]*' shared/build/test-results/iosSimulatorArm64Test/*.xml | sed 's/^/::warning::/'
           fi
       - name: Generate Xcode project
+        # This and the app steps run even when a test step failed, so one macOS run always yields the gate's evidence.
+        if: ${{ !cancelled() }}
         run: |
           brew install xcodegen
           xcodegen generate --spec iosApp/project.yml
       - name: Build app
+        if: ${{ !cancelled() }}
         run: >
           xcodebuild -project iosApp/iosApp.xcodeproj -scheme iosApp -configuration Debug
           -destination "id=$SIM_ID" -derivedDataPath build/xcode CODE_SIGNING_ALLOWED=NO build
       - name: Launch and screenshot
+        if: ${{ !cancelled() }}
         run: |
           xcrun simctl boot "$SIM_ID" || true
           xcrun simctl bootstatus "$SIM_ID" -b
@@ -150,8 +160,10 @@ jobs:
           mkdir -p screenshots
           xcrun simctl io "$SIM_ID" screenshot screenshots/launch.png
       - name: App icon is in the bundle
+        if: ${{ !cancelled() }}
         run: /usr/libexec/PlistBuddy -c 'Print :CFBundleIcons:CFBundlePrimaryIcon' build/xcode/Build/Products/Debug-iphonesimulator/Flow.app/Info.plist
       - name: Launch in Indonesian and screenshot
+        if: ${{ !cancelled() }}
         # Upstream's values-in ships as values-id, the code iOS reports; this shows it is picked.
         run: |
           xcrun simctl terminate "$SIM_ID" io.github.templimp.flow || true
@@ -159,6 +171,7 @@ jobs:
           sleep 10
           xcrun simctl io "$SIM_ID" screenshot screenshots/launch-id.png
       - name: Playback gate (S04)
+        if: ${{ !cancelled() }}
         # A real video and a real YouTube Music song through the ported chain into AVPlayer, run by the
         # Debug build's -flowPlaybackGate argument. Anything short of PASS fails, BLOCKED included.
         run: |
