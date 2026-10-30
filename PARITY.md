@@ -138,7 +138,7 @@ A session may only change lines for its own session id. S22 requires zero `todo`
 | `ui/screens/update` | 6 | 713 | skip | skipped | |
 | `ui/screens/widgets` | 4 | 170 | S17 | todo | |
 | `ui/startup` | 5 | 431 | S13 | todo | |
-| `ui/theme` | 16 | 1926 | S02 | todo | |
+| `ui/theme` | 16 | 1926 | S02 | done | 16/16 in `shared/.../ui/theme`, 12 verbatim. Ported tests: FlowTypographyTest, PaletteColorsTest, ThemeMigrationTest, InversePrimaryContrastTest, AppFontTest (AppFont cases; CustomFontStore cases move with `data/local`, S06), MaterialYouSchemeTest (rewritten for the iOS limit below); new ColorToneTest. Green on jvm and iOS simulator, CI run 41029990779. |
 | `ui/tv` | 37 | 4110 | skip | skipped | |
 | `ui/utils` | 3 | 159 | S13 | todo | |
 | `util` | 1 | 50 | S03 | todo | |
@@ -202,7 +202,7 @@ A session may only change lines for its own session id. S22 requires zero `todo`
 | F37 | Privacy | All data stored locally on your device | S06 | todo | |
 | F38 | Privacy | Import subscriptions and history from NewPipe | S19 | todo | |
 | F39 | Privacy | Export or delete everything at any time | S19 | todo | |
-| F40 | Appearance | 11 themes: Light, Dark, OLED Black, Ocean Blue, Forest Green, Sunset Orange, Purple Nebula, Midnight Black, Rose Gold, Arctic Ice, Crimson Red | S02 | todo | |
+| F40 | Appearance | 11 themes: Light, Dark, OLED Black, Ocean Blue, Forest Green, Sunset Orange, Purple Nebula, Midnight Black, Rose Gold, Arctic Ice, Crimson Red | S02 | done | Upstream at the pin has 26 palettes plus Material You, each in light, dark and AMOLED; the README's names are the old ones, which `ThemeMode.fromStored` maps (ThemeMigrationTest.everyReadmeThemeStillResolvesToAPalette). Theme picker demo in `launch.png`, CI run 41029990779. Material You: see section 7. The settings UI is S17. |
 | F41 | Appearance | Built entirely with Jetpack Compose and Material 3 | S13 | todo | |
 
 ## 3. Navigation routes
@@ -338,8 +338,8 @@ A session may only change lines for its own session id. S22 requires zero `todo`
 
 | Item | Count | Session | Status | Evidence |
 |---|---|---|---|---|
-| Default strings (`values/strings.xml`) | 4028 | S02 | todo | |
-| Locales (ar, az, b+yue+Hant, bs, cs, de, es, et, fa, fr, hi, hu, in, it, ja, kab, ko, lo, pa, pl, pt, pt-rBR, ru, si, sl, sr, ta, tr, uk, ur, vi, zh-rCN, zh-rTW) | 33 | S02 | todo | |
+| Default strings (`values/strings.xml`) | 4028 | S02 | done | 4028 strings, 105 plurals, 2 arrays in `composeResources/values` (StringResourcesTest.everyUpstreamKeyIsPresent, jvm and iOS). Converted by `tools/import_resources.py` with aapt2's quote, whitespace and escape rules. UpstreamStringsTest reads all 90,352 values (strings, arrays, plural picks) through CMP and matches upstream in every locale. CI re-imports and fails on any drift. |
+| Locales (ar, az, b+yue+Hant, bs, cs, de, es, et, fa, fr, hi, hu, in, it, ja, kab, ko, lo, pa, pl, pt, pt-rBR, ru, si, sl, sr, ta, tr, uk, ur, vi, zh-rCN, zh-rTW) | 33 | S02 | done | Same 33 dirs. `values-in` ships as `values-id`, the code iOS and JDK 17+ report. Upstream's fa, lo, sl, ta and b+yue+Hant files are empty and read English, as on Android. 1,286 stale translations of keys the default no longer has are dropped (no code can reference them). iOS: `launch-id.png` (`-AppleLanguages (id)`), CI run 41029990779. |
 
 ## 7. Platform behaviour and iOS limits
 
@@ -359,6 +359,12 @@ A session may only change lines for its own session id. S22 requires zero `todo`
 | CarPlay (entitlement required) | S21 | todo | |
 | DLNA discovery (multicast entitlement required) | S21 | todo | |
 | Paid vs free Apple ID capability check (App Group, CarPlay, multicast) | S21 | todo | |
+| Material You (Android 12+ dynamic color) | S02 | iOS limit | iOS has no system dynamic color (no Monet). `ThemeMode.MATERIAL_YOU` resolves to Flow Default, as upstream does below Android 12 (MaterialYouSchemeTest). S17 should hide the entry like upstream's ThemeViewModel does below Android 12. |
+| "Condensed" app font | S02 | iOS limit | Upstream draws Android's `sans-serif-condensed` (Roboto Condensed), which iOS lacks. The port uses Avenir Next Condensed, which iOS ships in the same five weights (AppFontTest). Not verified on a device. |
+| Numbers inside formatted strings | S13 | todo | `formatResourceString` prints digits and decimal points as Locale.ROOT ("1.5"). Android formats with the app locale ("1,5" in German, Arabic-Indic digits in Arabic). Marked `shortcut:` in `utils/ResourceFormat.kt`. |
+| Locale fallback across scripts (zh-Hant-HK, zh-Hans-SG) | S22 | todo | CMP matches language and region but does not infer scripts, so zh-HK and zh-SG read English where Android picks zh-rTW and zh-rCN. Possible fix: add `values-b+zh+Hant` and `values-b+zh+Hans` copies. |
+| Per-app language and localized system UI (`CFBundleLocalizations`) | S17 | todo | Info.plist declares no localizations yet. iOS then offers no per-app language setting and shows system UI in the development language. Add it with the language settings screen. |
+| Non-vector drawables (splash insets, widget selectors, layer-list, animated-vector) | S02 | iOS limit | Android splash and Glance chrome with no CMP equivalent; `tools/import_resources.py` lists all 14 and skips them. The splash belongs to S13 and widget visuals to S21 (WidgetKit). |
 
 ## 8. Skipped by decision
 
