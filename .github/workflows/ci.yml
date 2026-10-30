@@ -22,6 +22,18 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
+        with:
+          # Upstream's res is the reference the jvm string tests compare against.
+          submodules: true
+      - name: Tool self-tests
+        run: |
+          python3 tools/codemod.py --self-test
+          python3 tools/import_resources.py --self-test
+      - name: Resources match upstream
+        run: |
+          python3 tools/import_resources.py
+          git diff --exit-code -- shared/src/commonMain/composeResources
+          test -z "$(git status --porcelain -- shared/src/commonMain/composeResources)"
       - uses: actions/setup-java@v6
         with:
           distribution: temurin
@@ -95,6 +107,15 @@ jobs:
           fi
           mkdir -p screenshots
           xcrun simctl io "$SIM_ID" screenshot screenshots/launch.png
+      - name: App icon is in the bundle
+        run: /usr/libexec/PlistBuddy -c 'Print :CFBundleIcons:CFBundlePrimaryIcon' build/xcode/Build/Products/Debug-iphonesimulator/Flow.app/Info.plist
+      - name: Launch in Indonesian and screenshot
+        # Upstream's values-in ships as values-id, the code iOS reports; this shows it is picked.
+        run: |
+          xcrun simctl terminate "$SIM_ID" io.github.templimp.flow || true
+          xcrun simctl launch "$SIM_ID" io.github.templimp.flow -AppleLanguages "(id)" -AppleLocale id_ID
+          sleep 10
+          xcrun simctl io "$SIM_ID" screenshot screenshots/launch-id.png
       - uses: actions/upload-artifact@v7
         if: always()
         with:
