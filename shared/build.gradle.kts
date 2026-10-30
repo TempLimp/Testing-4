@@ -20,6 +20,32 @@ val generateFixturePath = tasks.register("generateFixturePath") {
     }
 }
 
+// Upstream's BotGuard page (assets/po_token.html), compiled in as a string so it follows the pin.
+val poTokenHtml = rootProject.file("upstream/app/src/main/assets/po_token.html")
+val generatePoTokenHtml = tasks.register("generatePoTokenHtml") {
+    val out = layout.buildDirectory.dir("generated/poTokenHtml/kotlin")
+    inputs.file(poTokenHtml)
+    outputs.dir(out)
+    doLast {
+        val escaped = buildString {
+            poTokenHtml.readText().forEach { c ->
+                when (c) {
+                    '\\' -> append("\\\\")
+                    '"' -> append("\\\"")
+                    '$' -> append("\\$")
+                    '\n' -> append("\\n")
+                    '\r' -> append("\\r")
+                    '\t' -> append("\\t")
+                    else -> append(c)
+                }
+            }
+        }
+        val file = out.get().file("io/github/aedev/flow/utils/potoken/PoTokenHtml.kt").asFile
+        file.parentFile.mkdirs()
+        file.writeText("package io.github.aedev.flow.utils.potoken\n\ninternal const val PO_TOKEN_HTML = \"$escaped\"\n")
+    }
+}
+
 kotlin {
     compilerOptions {
         // Kotlin's common atomics (AtomicReference, AtomicInt) stand in for java.util.concurrent's.
@@ -38,7 +64,13 @@ kotlin {
     }
 
     sourceSets {
+        commonMain {
+            kotlin.srcDir(generatePoTokenHtml)
+        }
         commonMain.dependencies {
+            implementation(libs.ktor.server.core)
+            implementation(libs.ktor.server.cio)
+            implementation(libs.atomicfu)
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
             implementation(libs.compose.ui)
@@ -58,6 +90,8 @@ kotlin {
             implementation(libs.ktor.client.cio)
             implementation(libs.ktor.client.encoding)
             implementation(libs.icu4j)
+            implementation(libs.graal.polyglot)
+            implementation(libs.graal.js)
         }
         commonTest {
             kotlin.srcDir(generateFixturePath)
