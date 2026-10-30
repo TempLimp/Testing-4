@@ -12,6 +12,9 @@ Rewritten:
   painterResource / vectorResource / stringArrayResource -> org.jetbrains.compose.resources
   ImageVector.vectorResource(...) -> vectorResource(...); a leading `id = ` argument name is dropped
   hiltViewModel -> koinViewModel; @HiltViewModel and @Inject on constructors are removed
+  android.util.Log, java.util.Locale -> io.github.aedev.flow.utils.Log / Locale (same call shapes)
+  .lowercase(Locale.ROOT/US/ENGLISH), .uppercase(...) -> .lowercase() / .uppercase() (common case mapping is invariant)
+  System.currentTimeMillis() -> Clock.System.now().toEpochMilliseconds() (kotlin.time)
 Reported, not rewritten: anything that needs judgement (Context, getString outside Compose,
 android.*/java.* imports, R types CMP has no equivalent for, Koin registration).
 """
@@ -35,6 +38,8 @@ IMPORT_REWRITES = {
     "androidx.compose.ui.res.stringArrayResource": "org.jetbrains.compose.resources.stringArrayResource",
     "androidx.hilt.navigation.compose.hiltViewModel": "org.koin.compose.viewmodel.koinViewModel",
     "androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel": "org.koin.compose.viewmodel.koinViewModel",
+    "android.util.Log": "io.github.aedev.flow.utils.Log",
+    "java.util.Locale": "io.github.aedev.flow.utils.Locale",
 }
 IMPORT_REMOVALS = {"io.github.aedev.flow.R", "dagger.hilt.android.lifecycle.HiltViewModel"} | {
     "androidx.annotation." + a for a in ANNOTATION_TYPES}
@@ -81,6 +86,10 @@ def rewrite(source):
         if text != before:
             imports_added.add("org.jetbrains.compose.resources." + cmp_type)
 
+    text = re.sub(r"\.(lowercase|uppercase)\(\s*(?:java\.util\.)?Locale\.(?:ROOT|US|ENGLISH)\s*\)", r".\1()", text)
+    if re.search(r"\bSystem\.currentTimeMillis\(\)", text):
+        text = re.sub(r"\bSystem\.currentTimeMillis\(\)", "Clock.System.now().toEpochMilliseconds()", text)
+        imports_added.add("kotlin.time.Clock")
     text = re.sub(r"(?<![\w.])hiltViewModel\b", "koinViewModel", text)  # imports are mapped in fix_imports
     text = re.sub(r"^[ \t]*@HiltViewModel[ \t]*\n", "", text, flags=re.M)
     text = re.sub(r"^[ \t]*@Inject[ \t]*\n([ \t]*constructor\b)", r"\1", text, flags=re.M)
@@ -174,7 +183,11 @@ fun Row(vm: ThemeViewModel = hiltViewModel()) {
     val other = android.R.drawable.stat_sys_download
     Text(context.getString(R.string.shorts))
 }
+
+fun stamp(tag: String) = Log.d("Stamp", "${tag.uppercase(Locale.US)} ${System.currentTimeMillis()}")
 '''
+    before = before.replace("import androidx.annotation.DrawableRes\n", "import android.util.Log\nimport androidx.annotation.DrawableRes\n")
+    before = before.replace("import javax.inject.Inject\n", "import java.util.Locale\nimport javax.inject.Inject\n")
     expected = '''package io.github.aedev.flow.ui.theme
 
 import androidx.compose.runtime.Immutable
@@ -185,10 +198,13 @@ import io.github.aedev.flow.resources.shorts
 import io.github.aedev.flow.resources.theme_name_a
 import io.github.aedev.flow.resources.theme_name_b
 import io.github.aedev.flow.ui.utils.stringResource
+import io.github.aedev.flow.utils.Locale
+import io.github.aedev.flow.utils.Log
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.vectorResource
 import org.koin.compose.viewmodel.koinViewModel
+import kotlin.time.Clock
 
 data class Entry(
     val nameRes: StringResource,
@@ -212,6 +228,8 @@ fun Row(vm: ThemeViewModel = koinViewModel()) {
     val other = android.R.drawable.stat_sys_download
     Text(context.getString(Res.string.shorts))
 }
+
+fun stamp(tag: String) = Log.d("Stamp", "${tag.uppercase()} ${Clock.System.now().toEpochMilliseconds()}")
 '''
     actual, notes = rewrite(before)
     assert actual == expected, "rewrite mismatch:\n" + actual
