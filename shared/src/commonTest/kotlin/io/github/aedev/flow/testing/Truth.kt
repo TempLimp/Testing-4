@@ -54,6 +54,8 @@ open class Subject<T>(
             assertEquals(expected, actual, message)
         }
 
+    fun isSameInstanceAs(expected: Any?) = kotlin.test.assertSame(expected, actual, message)
+
     private fun Any?.isIntegral() = this is Int || this is Long || this is Short || this is Byte
 
     fun isNotEqualTo(unexpected: Any?) = assertNotEquals(unexpected, actual, message)
