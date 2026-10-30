@@ -45,6 +45,10 @@ jobs:
           total=$(grep -ho 'tests="[0-9]*"' shared/build/test-results/jvmTest/*.xml | tr -dc '0-9\n' | awk '{s+=$1} END {print s+0}')
           echo "jvm tests run: $total"
           test "$total" -gt 0
+      - name: Live API smoke test result
+        # LiveInnerTubeSmokeTest passes when YouTube turns the runner away, and says so here.
+        if: always()
+        run: grep -ho 'LIVE SMOKE: BLOCKED[^<]*' shared/build/test-results/jvmTest/*.xml | sed 's/^/::warning::/' || echo "Live API reached: no block reported"
 
   ios:
     name: iOS (simulator tests, app build, launch screenshot)
@@ -55,6 +59,9 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v7
+        with:
+          # The ported InnerTube tests read upstream's JSON fixtures in place.
+          submodules: true
       - uses: actions/setup-java@v6
         with:
           distribution: temurin
@@ -85,6 +92,9 @@ jobs:
           total=$(grep -ho 'tests="[0-9]*"' shared/build/test-results/iosSimulatorArm64Test/*.xml | tr -dc '0-9\n' | awk '{s+=$1} END {print s+0}')
           echo "iOS simulator tests run: $total"
           test "$total" -gt 0
+      - name: Live API smoke test result
+        if: always()
+        run: grep -ho 'LIVE SMOKE: BLOCKED[^<]*' shared/build/test-results/iosSimulatorArm64Test/*.xml | sed 's/^/::warning::/' || echo "Live API reached: no block reported"
       - name: Generate Xcode project
         run: |
           brew install xcodegen
