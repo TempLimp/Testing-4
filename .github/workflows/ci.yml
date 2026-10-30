@@ -68,7 +68,8 @@ jobs:
           distribution: temurin
           java-version: "21"
       - uses: gradle/actions/setup-gradle@v6
-      - uses: actions/cache@v6
+      # Restore and save apart, so a failed run still keeps the Kotlin/Native toolchain it downloaded.
+      - uses: actions/cache/restore@v6
         with:
           path: ~/.konan
           key: konan-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
@@ -86,6 +87,11 @@ jobs:
           ')
           echo "SIM_ID=$SIM_ID" >> "$GITHUB_ENV"
           xcrun simctl list devices | grep "$SIM_ID"
+      - name: Boot the simulator
+        # The tests run on the booted device: a standalone spawn has no trust daemon for TLS.
+        run: |
+          xcrun simctl boot "$SIM_ID" || true
+          xcrun simctl bootstatus "$SIM_ID" -b
       - name: Shared tests on the iOS simulator
         run: ./gradlew :shared:iosSimulatorArm64Test -PiosSimulatorDevice="$SIM_ID" --stacktrace
       - name: Require iOS tests to have run
@@ -128,6 +134,11 @@ jobs:
           xcrun simctl launch "$SIM_ID" io.github.templimp.flow -AppleLanguages "(id)" -AppleLocale id_ID
           sleep 10
           xcrun simctl io "$SIM_ID" screenshot screenshots/launch-id.png
+      - uses: actions/cache/save@v6
+        if: always()
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
       - uses: actions/upload-artifact@v7
         if: always()
         with:

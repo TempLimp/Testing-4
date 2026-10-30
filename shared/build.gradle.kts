@@ -73,7 +73,12 @@ compose.resources {
     packageOfResClass = "io.github.aedev.flow.resources"
 }
 
-// CI passes the UDID of a simulator that exists on the runner's Xcode; locally the plugin default is used.
+// CI passes the UDID of a simulator that exists on the runner's Xcode, booted beforehand; locally the
+// plugin default is used. A standalone spawn runs without the simulator's trust daemon, so every TLS
+// handshake in the live API test fails (NSURLError -1200); the booted device has it.
 tasks.withType<org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeSimulatorTest>().configureEach {
-    providers.gradleProperty("iosSimulatorDevice").orNull?.let { device.set(it) }
+    providers.gradleProperty("iosSimulatorDevice").orNull?.let {
+        device.set(it)
+        standalone.set(false)
+    }
 }
