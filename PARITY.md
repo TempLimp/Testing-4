@@ -17,12 +17,15 @@ A session may only change lines for its own session id. S22 requires zero `todo`
 | `data/download` | 4 | 546 | S18 | todo | |
 | `data/engagement` | 5 | 420 | S08 | todo | |
 | `data/feed` | 1 | 67 | S07 | todo | |
-| `data/innertube` | 2 | 638 | S03 | todo | |
-| `data/local` | 86 | 15280 | S06 | todo | |
-| `data/localmedia` | 23 | 2024 | S19 | todo | |
+| `data/innertube/SubscriptionSweepFeed.kt` | 1 | 78 | S03 | done | Verbatim apart from the clock. Its logic is exercised through RssSubscriptionServiceTest upstream, which moves to S07 with that file. |
+| `data/innertube/RssSubscriptionService.kt` | 1 | 560 | S07 | todo | Moved from S03: it is built on `data/subscriptions` (ChannelRssClient, ChannelUploadsClient) and `data/shorts` (ChannelReelIndex), both S07, and its only consumer is SubscriptionFeedRepository (S07). RssSubscriptionServiceTest (mockk) moves with it. |
+| `data/local` (all but ThumbnailQuality.kt) | 85 | 15258 | S06 | todo | |
+| `data/local/ThumbnailQuality.kt` | 1 | 22 | S03 | done | Pulled forward: ThumbnailUrlResolver (S03) needs it. Verbatim; ThumbnailQualityTiersTest. |
+| `data/localmedia` | 23 | 2024 | S19 | todo | `LocalMediaIds.kt`'s id helpers (PREFIX, isLocal, of, mediaStoreId) were ported in S03 for ThumbnailUrlResolver; its `videoUri`/`audioUri` (MediaStore content URIs) are left to S19. |
 | `data/lyrics` | 30 | 3864 | S08 | todo | |
 | `data/migration` | 1 | 76 | S19 | todo | |
-| `data/model` | 13 | 615 | S08 | todo | |
+| `data/model` (all but Models.kt, RichText.kt) | 11 | 400 | S08 | todo | |
+| `data/model/Models.kt`, `RichText.kt` | 2 | 215 | S03 | done | Pulled forward: the InnerTube pages build Video, Channel, Playlist, Comment and RichText. `Comment.repliesPage` (NewPipe's `Page`) is dropped: the InnerTube path pages replies by `continuationToken`. Covered by the innertube page tests. |
 | `data/music` | 12 | 1420 | S08 | todo | |
 | `data/newmusic` | 1 | 551 | S08 | todo | |
 | `data/notes` | 2 | 227 | S08 | todo | |
@@ -42,12 +45,12 @@ A session may only change lines for its own session id. S22 requires zero `todo`
 | `data/video` | 59 | 7398 | S07 | todo | |
 | `di` | 8 | 563 | S13 | todo | |
 | `discord` | 3 | 92 | skip | skipped | |
-| `extensions` | 1 | 133 | S03 | todo | |
-| `innertube` | 4 | 4117 | S03 | todo | |
-| `innertube/models` | 78 | 4897 | S03 | todo | |
-| `innertube/pages` | 58 | 7734 | S03 | todo | |
-| `innertube/utils` | 1 | 96 | S03 | todo | |
-| `network` | 4 | 337 | S03 | todo | |
+| `extensions` | 1 | 133 | S12 | todo | Moved from S03: PlayerExtensions.kt extends Media3's `Player` (play/pause, repeat, queue windows); its only consumer is Media3MusicService. iOS replaces Media3 with AVPlayer behind EnhancedMusicPlayerManager (S12). |
+| `innertube` | 4 | 4117 | S03 | done | 4/4. OkHttp engine → `network/HttpEngine` (NSURLSession on iOS, CIO on jvm); `YouTube.proxy` carries an AppProxyConfig instead of a java.net.Proxy plus a header; `getMediaInfo` takes `rytdEnabled` instead of reading PlayerPreferences (S08's InnertubeMusicService passes it). NewPipe's `YoutubeParsingHelper.getClientVersion` is ported as `innertube/WebClientVersion.kt`. Tests: YouTubeSearchParamsTest, LiveInnerTubeSmokeTest (music search, music browse, video search with the site's client version), CI run 41056924212 (jvm 514 run, iOS simulator 505 run, 0 failed; live API reached from both, no block). |
+| `innertube/models` | 78 | 4897 | S03 | done | 78/78, verbatim apart from Base64 (kotlin.io.encoding). Tests: YouTubeClientTest, YouTubeLocaleTest, NextBodyTest, AudioXTagsTest, AudioFormatMetadataTest, ChannelVideosResponseTest, LockupViewModelMappingTest, PlayerAttestationTest, PlayerResponseFieldsTest, VideoChaptersParserTest, VideoHeatmapParserTest. |
+| `innertube/pages` | 58 | 7734 | S03 | done | 58/58. CompactNumberSuffixes reads `utils/CompactNumbers` (android.icu's CompactDecimalFormat has no Foundation counterpart); YouTubeCountParser drops BigDecimal and Character.UnicodeScript. Every upstream page test is ported; the 39 that read `explore/` and `shorts/` fixtures are `@Ignore`d, as upstream skips them (those fixtures are gitignored there). RichTextTargetsTest's rendering case moves to S13 with RichTextRendering. |
+| `innertube/utils` | 1 | 96 | S03 | done | SHA-1 through Ktor's `sha1`. |
+| `network` | 4 | 337 | S03 | done | OkHttp → Ktor. A Ktor client's proxy is fixed when it is built, so upstream's per-connection ProxySelector and pool eviction become ProxyAwareClient rebuilding per proxy signature, with a direct client for local hosts (AppProxySelector). VpnStateMonitor and NetworkState read NWPathMonitor on iOS (`network/NetworkPath`). Tests: AppProxyConfigTest, AppProxySelectorTest (common), AppProxyConfigJvmTest (the jvm-only unresolved-address cases), ProxyAwareClientTest, NetworkStateTest. Proxy use on iOS: see section 7. |
 | `notification` | 14 | 2126 | S11, S18 | todo | |
 | `platform` | 5 | 219 | S13 | todo | |
 | `player` | 47 | 7905 | S10 | todo | |
@@ -66,7 +69,8 @@ A session may only change lines for its own session id. S22 requires zero `todo`
 | `player/recovery` | 3 | 251 | S10 | todo | |
 | `player/renderer` | 4 | 522 | S10 | todo | |
 | `player/resolver` | 4 | 673 | S04 | todo | |
-| `player/sabr` | 21 | 3726 | S05 | todo | |
+| `player/sabr` (all but proto/ProtobufReader.kt) | 20 | 3626 | S05 | todo | |
+| `player/sabr/proto/ProtobufReader.kt` | 1 | 100 | S03 | done | Pulled forward: ArtistDiscographyParams (S03) reads protobuf with it. Verbatim apart from UTF-8 decoding. |
 | `player/service` | 1 | 67 | S11 | todo | |
 | `player/shorts` | 7 | 1013 | S15 | todo | |
 | `player/sponsorblock` | 1 | 290 | S10 | todo | |
@@ -141,12 +145,26 @@ A session may only change lines for its own session id. S22 requires zero `todo`
 | `ui/theme` | 16 | 1926 | S02 | done | 16/16 in `shared/.../ui/theme`, 12 verbatim. Ported tests: FlowTypographyTest, PaletteColorsTest, ThemeMigrationTest, InversePrimaryContrastTest, AppFontTest (AppFont cases; CustomFontStore cases move with `data/local`, S06), MaterialYouSchemeTest (rewritten for the iOS limit below); new ColorToneTest. Green on jvm and iOS simulator, CI run 41029990779. |
 | `ui/tv` | 37 | 4110 | skip | skipped | |
 | `ui/utils` | 3 | 159 | S13 | todo | |
-| `util` | 1 | 50 | S03 | todo | |
-| `utils` | 28 | 3785 | S03 | todo | |
+| `util` | 1 | 50 | S17 | todo | Moved from S03: AppIcons.kt lists Android launcher aliases (`R.mipmap`, manifest suffixes); the iOS counterpart is alternate app icons, built with the icon picker in AppearanceScreen (S17). |
+| `utils` (DateDisplay, FormatUtils, HexColors, LocaleCatalogs, NetworkConnectivityObserver, NetworkState, NewPipeImageUtils, OriginalTextPolicy, PerformanceDispatcher, SearchFolding, SponsorBlockCategoryLabels, ThumbnailUrlResolver, Timestamps, YouTubeLink) | 14 | 2070 | S03 | done | java.util.Locale, android.icu and java.text go through `utils/Locale`, `utils/PlatformFormat` (ICU4J on jvm, Foundation on iOS) and `utils/CompactNumbers` (CLDR data from ICU4J 77.1; CompactNumberDataTest matches ICU4J's CompactDecimalFormat on 671,216 cases across every ICU locale). NetworkState and NetworkConnectivityObserver lose their Context parameter. NewPipeImageUtils keeps `avatarImageIdentityKey`; its two NewPipe `Image` helpers go to S07 with the NewPipe path. PerformanceDispatcher.networkIO is a 4–16 wide view of Dispatchers.IO at default priority (upstream: own pool at nice 5). Tests: DateDisplayTest (+DateDisplayJvmTest), DateOnlyUploadTest, FilterBySearchTest, FormatDurationTest, FormatMultiplierLabelTest, OriginalTextPolicyTest, ScheduledStartTest, StreamedDateParsingTest, ThumbnailQualityTiersTest, ThumbnailUrlResolverTest, TimestampsTest, YouTubeLinkTest, PlatformFormatTest. |
+| `utils/AppLanguageManager.kt` | 1 | 230 | S06 | todo | Moved from S03: its first consumer is PlayerPreferences (S06). It keeps the language in SharedPreferences and hands it to Android's LocaleManager and Context configuration, which iOS replaces with DataStore and the system's per-app language. AppLanguageListTest, AppLanguageManagerTest, AppLanguageResolutionTest move with it. |
+| `utils/AsyncTrace.kt` | 1 | 24 | S09 | todo | Moved from S03: androidx.tracing async sections for the benchmarks; first consumer FlowNeuroEngine (S09). |
+| `utils/Clipboard.kt` | 1 | 34 | S13 | todo | Moved from S03: Android ClipData behind Compose's Clipboard; consumers are UI and player error sheets. |
+| `utils/ContentLocalization.kt` | 1 | 62 | S07 | todo | Moved from S03: it configures NewPipe's Localization/ContentCountry for YouTubeRepository's NewPipe path (S07) and reads PlayerPreferences' CONTENT_LANGUAGE_FOLLOW_APP (S06). ContentLocalizationTest moves with it. |
+| `utils/DeviceDetails.kt` | 1 | 195 | S17 | todo | Moved from S03: Android device, codec and storage details for the diagnostics screen. |
+| `utils/ExitReasonText.kt` | 1 | 49 | S17 | todo | Moved from S03: describes ApplicationExitInfo for FlowDiagnostics; ExitReasonTextTest moves with it. |
+| `utils/FlowCrashHandler.kt` | 1 | 210 | S13 | todo | Moved from S03: the uncaught-exception handler installed by FlowApplication/MainActivity. |
+| `utils/FlowCrashReportFormatter.kt` | 1 | 76 | S13 | todo | Moved from S03 with FlowCrashHandler, its only consumer; FlowCrashReportFormatterTest moves with it. |
+| `utils/FlowDiagnostics.kt` | 1 | 156 | S17 | todo | Moved from S03: ActivityManager diagnostics for the diagnostics screen. |
+| `utils/MusicPlayerUtils.kt` | 1 | 275 | S04 | todo | Moved from S03: music stream resolution on top of `player/stream` (InnerTubeVideoStreamExtractor, AudioStreamSelector), which S04 ports. |
+| `utils/RichTextRendering.kt` | 1 | 127 | S13 | todo | Moved from S03: Compose AnnotatedString rendering for comment and description composables; it needs ShareVideo's watch URL. RichTextTargetsTest's rendering case moves with it. |
+| `utils/SharedFiles.kt` | 1 | 12 | S19 | todo | Moved from S03: FileProvider share URIs for exports. |
+| `utils/ShareVideo.kt` | 1 | 162 | S13 | todo | Moved from S03: share and open-in-YouTube Intents; iOS needs UIActivityViewController and a presenting view controller. ShareVideoTest moves with it. |
+| `utils/TextUtilities.kt` | 1 | 103 | S13 | todo | Moved from S03: HtmlCompat/URLSpan comment formatting for ui/components/shared. |
 | `utils/cipher` | 5 | 1637 | S04 | todo | |
 | `utils/potoken` | 10 | 1480 | S04 | todo | |
-| `utils/protobuf` | 1 | 91 | S03 | todo | |
-| `utils/relativedate` | 2 | 580 | S07 | todo | |
+| `utils/protobuf` | 1 | 91 | S03 | done | kotlinx-io Buffer for ByteArrayOutputStream. Covered by YouTubeSearchParamsTest and ReelParamsTest. |
+| `utils/relativedate` | 2 | 580 | S03 | done | Pulled forward from S07: the InnerTube parsers date items with RelativeUploadDateParser. Character.getType/digit → Kotlin's CharCategory and digitToInt. RelativeUploadDateParserTest. |
 | `widget/config` | 1 | 69 | S21 | todo | |
 | `widget/core` | 26 | 2035 | S21 | todo | |
 | `widget/downloads` | 2 | 300 | S21 | todo | |
@@ -181,7 +199,7 @@ A session may only change lines for its own session id. S22 requires zero `todo`
 | F16 | Music | Shuffle and repeat (single/all) | S12 | todo | |
 | F17 | Music | Persistent mini player across the app | S16 | todo | |
 | F18 | Music | Synchronized lyrics display | S08, S16 | todo | |
-| F19 | Music | Fetches tracks from YouTube Music | S03 | todo | |
+| F19 | Music | Fetches tracks from YouTube Music | S03 | done | LiveInnerTubeSmokeTest.aMusicSearchFindsTheSong and theMusicHomeBrowseHasShelves against the live API, CI run 41056924212 (jvm 514 run, iOS simulator 505 run, 0 failed; live API reached from both, no block); parsing covered by the ported page tests. Playback is S04. |
 | F20 | Music | Playback speed control for music playback | S12 | todo | |
 | F21 | Recommendations (FlowNeuro Engine) | Runs 100% on-device — no server, no telemetry, no account needed | S09 | todo | |
 | F22 | Recommendations (FlowNeuro Engine) | Learns from what you watch, skip, like, dislike, search for, and how long you watch | S09 | todo | |
@@ -197,7 +215,7 @@ A session may only change lines for its own session id. S22 requires zero `todo`
 | F32 | Library | Shorts feed with bookmarking | S15 | todo | |
 | F33 | Library | Continue watching shelf | S14 | todo | |
 | F34 | Library | Subscription management with cached feeds | S15 | todo | |
-| F35 | Privacy | No Google account required | S03 | todo | |
+| F35 | Privacy | No Google account required | S03 | done | Every request in LiveInnerTubeSmokeTest goes out with no cookie, account or API key (searches use the anonymous WEB context), CI run 41056924212. |
 | F36 | Privacy | No ads, analytics, or tracking | S22 | todo | |
 | F37 | Privacy | All data stored locally on your device | S06 | todo | |
 | F38 | Privacy | Import subscriptions and history from NewPipe | S19 | todo | |
@@ -364,6 +382,9 @@ A session may only change lines for its own session id. S22 requires zero `todo`
 | Numbers inside formatted strings | S13 | todo | `formatResourceString` prints digits and decimal points as Locale.ROOT ("1.5"). Android formats with the app locale ("1,5" in German, Arabic-Indic digits in Arabic). Marked `shortcut:` in `utils/ResourceFormat.kt`. |
 | Locale fallback across scripts (zh-Hant-HK, zh-Hans-SG) | S22 | todo | CMP matches language and region but does not infer scripts, so zh-HK and zh-SG read English where Android picks zh-rTW and zh-rCN. Possible fix: add `values-b+zh+Hant` and `values-b+zh+Hans` copies. |
 | Per-app language and localized system UI (`CFBundleLocalizations`) | S17 | todo | Info.plist declares no localizations yet. iOS then offers no per-app language setting and shows system UI in the development language. Add it with the language settings screen. |
+| Captive-portal detection (Android's NET_CAPABILITY_VALIDATED) | S03 | iOS limit | NWPathMonitor reports a path as satisfied before a captive portal is signed in to, so NetworkState.isOnline is true there where Android says offline. |
+| VPN detection for "bypass proxy on VPN" | S03 | iOS limit | iOS has no public API for whether the app's traffic is tunnelled. VpnStateMonitor reads the app's NWPath and counts a tunnel interface (utun, ipsec, ppp, tun, tap) of type "other"; a VPN that does not show one is missed. |
+| App proxy on iOS (HTTP and SOCKS5, with credentials) | S17 | todo | Built in S03 (`network/HttpEngine.ios.kt`): HTTP and HTTPS keys in connectionProxyDictionary, HTTP proxy credentials through the auth challenge, SOCKS5 credentials as kCFStreamPropertySOCKSUser/Password keys. CI has no proxy, so none of it is verified; check against real proxies with the network settings screen. |
 | Non-vector drawables (splash insets, widget selectors, layer-list, animated-vector) | S02 | iOS limit | Android splash and Glance chrome with no CMP equivalent; `tools/import_resources.py` lists all 14 and skips them. The splash belongs to S13 and widget visuals to S21 (WidgetKit). |
 
 ## 8. Skipped by decision
