@@ -49,7 +49,11 @@ jobs:
         # LiveInnerTubeSmokeTest passes when YouTube turns the runner away, and says so here.
         if: always()
         run: |
-          grep -ho 'LIVE SMOKE: BLOCKED[^<]*' shared/build/test-results/jvmTest/*.xml | sed 's/^/::warning::/' || echo "Live API reached: no block reported"
+          if grep -q 'LIVE SMOKE: BLOCKED' shared/build/test-results/jvmTest/*.xml; then
+            grep -ho 'LIVE SMOKE: BLOCKED[^<]*' shared/build/test-results/jvmTest/*.xml | sed 's/^/::warning::/'
+          else
+            echo "Live API reached: no block reported"
+          fi
 
   ios:
     name: iOS (simulator tests, app build, launch screenshot)
@@ -102,7 +106,11 @@ jobs:
       - name: Live API smoke test result
         if: always()
         run: |
-          grep -ho 'LIVE SMOKE: BLOCKED[^<]*' shared/build/test-results/iosSimulatorArm64Test/*.xml | sed 's/^/::warning::/' || echo "Live API reached: no block reported"
+          if grep -q 'LIVE SMOKE: BLOCKED' shared/build/test-results/iosSimulatorArm64Test/*.xml; then
+            grep -ho 'LIVE SMOKE: BLOCKED[^<]*' shared/build/test-results/iosSimulatorArm64Test/*.xml | sed 's/^/::warning::/'
+          else
+            echo "Live API reached: no block reported"
+          fi
       - name: Generate Xcode project
         run: |
           brew install xcodegen
