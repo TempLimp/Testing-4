@@ -28,6 +28,11 @@ jobs:
           java-version: "21"
       - uses: gradle/actions/setup-gradle@v6
       - run: ./gradlew :shared:jvmTest --stacktrace
+      - name: Require jvm tests to have run
+        run: |
+          total=$(grep -ho 'tests="[0-9]*"' shared/build/test-results/jvmTest/*.xml | tr -dc '0-9\n' | awk '{s+=$1} END {print s+0}')
+          echo "jvm tests run: $total"
+          test "$total" -gt 0
 
   ios:
     name: iOS (simulator tests, app build, launch screenshot)
@@ -63,6 +68,11 @@ jobs:
           xcrun simctl list devices | grep "$SIM_ID"
       - name: Shared tests on the iOS simulator
         run: ./gradlew :shared:iosSimulatorArm64Test -PiosSimulatorDevice="$SIM_ID" --stacktrace
+      - name: Require iOS tests to have run
+        run: |
+          total=$(grep -ho 'tests="[0-9]*"' shared/build/test-results/iosSimulatorArm64Test/*.xml | tr -dc '0-9\n' | awk '{s+=$1} END {print s+0}')
+          echo "iOS simulator tests run: $total"
+          test "$total" -gt 0
       - name: Generate Xcode project
         run: |
           brew install xcodegen
@@ -88,6 +98,8 @@ jobs:
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: ios-screenshots
-          path: screenshots/
+          name: ios-evidence
+          path: |
+            screenshots/
+            shared/build/test-results/iosSimulatorArm64Test/
           if-no-files-found: ignore

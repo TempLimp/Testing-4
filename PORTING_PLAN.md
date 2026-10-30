@@ -123,3 +123,4 @@ Paste into a new session in this folder:
 | Session | Status | Branch / commit | Unverified / notes |
 |---|---|---|---|
 | S00 Analysis & plan | done | — | Upstream analysed at 77ae9d9. No code yet. |
+| S01 Scaffold & CI | done | `main` 166d986 + CI gate commit | Local `jvmTest` 1/1. CI run 41018580969 green (jvm 2 min, iOS 12 min cold cache; macOS 26.6.2, Xcode 26.6, iPhone 17 Pro simulator). The app launches and stays up 15 s, and the screenshot shows edge-to-edge "Flow" from compose resources. CI fails if zero tests run. Not verified: device (arm64) build, signing, any Mac other than the CI runner. |
