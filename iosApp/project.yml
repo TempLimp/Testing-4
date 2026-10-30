@@ -27,6 +27,10 @@ targets:
         CODE_SIGN_STYLE: Automatic
         FRAMEWORK_SEARCH_PATHS: "$(inherited) $(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)"
         OTHER_LDFLAGS: "$(inherited) -framework Shared"
+      configs:
+        # Compiles the Debug-only playback gate hook in iOSApp.swift.
+        Debug:
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
     preBuildScripts:
       - name: Compile Kotlin Framework
         basedOnDependencyAnalysis: false

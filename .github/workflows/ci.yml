@@ -54,6 +54,14 @@ jobs:
           else
             echo "Live API reached: no block reported"
           fi
+      - name: Live playback chain result
+        if: always()
+        run: |
+          grep -Eho 'LIVE (PLAYBACK|CIPHER): [^<]*' shared/build/test-results/jvmTest/*.xml || echo "no live playback lines"
+          grep -ho 'ffmpeg on [^<]*' shared/build/test-results/jvmTest/*.xml || echo "ffmpeg check did not run"
+          if grep -q 'LIVE PLAYBACK: BLOCKED' shared/build/test-results/jvmTest/*.xml; then
+            grep -ho 'LIVE PLAYBACK: BLOCKED[^<]*' shared/build/test-results/jvmTest/*.xml | sed 's/^/::warning::/'
+          fi
 
   ios:
     name: iOS (simulator tests, app build, launch screenshot)
@@ -111,6 +119,14 @@ jobs:
           else
             echo "Live API reached: no block reported"
           fi
+      - name: Live playback chain result
+        # LivePlaybackChainTest on iOS: the ladder, the loopback HLS proxy and the cipher in JavaScriptCore.
+        if: always()
+        run: |
+          grep -Eho 'LIVE (PLAYBACK|CIPHER): [^<]*' shared/build/test-results/iosSimulatorArm64Test/*.xml || echo "no live playback lines"
+          if grep -q 'LIVE PLAYBACK: BLOCKED' shared/build/test-results/iosSimulatorArm64Test/*.xml; then
+            grep -ho 'LIVE PLAYBACK: BLOCKED[^<]*' shared/build/test-results/iosSimulatorArm64Test/*.xml | sed 's/^/::warning::/'
+          fi
       - name: Generate Xcode project
         run: |
           brew install xcodegen
@@ -142,6 +158,28 @@ jobs:
           xcrun simctl launch "$SIM_ID" io.github.templimp.flow -AppleLanguages "(id)" -AppleLocale id_ID
           sleep 10
           xcrun simctl io "$SIM_ID" screenshot screenshots/launch-id.png
+      - name: Playback gate (S04)
+        # A real video and a real YouTube Music song through the ported chain into AVPlayer, run by the
+        # Debug build's -flowPlaybackGate argument. Anything short of PASS fails, BLOCKED included.
+        run: |
+          xcrun simctl terminate "$SIM_ID" io.github.templimp.flow || true
+          DATA=$(xcrun simctl get_app_container "$SIM_ID" io.github.templimp.flow data)
+          RESULT="$DATA/Documents/playback-gate.json"
+          rm -f "$RESULT"
+          xcrun simctl launch "$SIM_ID" io.github.templimp.flow -flowPlaybackGate
+          for i in $(seq 1 96); do
+            [ -f "$RESULT" ] && break
+            sleep 5
+          done
+          mkdir -p screenshots
+          xcrun simctl io "$SIM_ID" screenshot screenshots/playback-gate.png
+          if [ ! -f "$RESULT" ]; then
+            echo "::error::The playback gate wrote no result within 8 minutes"
+            xcrun simctl spawn "$SIM_ID" log show --last 10m --predicate 'process == "Flow"' | tail -n 300
+            exit 1
+          fi
+          cp "$RESULT" screenshots/
+          python3 tools/check_playback_gate.py "$RESULT"
       - uses: actions/cache/save@v6
         if: always()
         with:

@@ -3,6 +3,13 @@ import SwiftUI
 
 @main
 struct iOSApp: App {
+    init() {
+        #if DEBUG
+        // The S04 playback gate: runs only with the -flowPlaybackGate launch argument (CI).
+        PlaybackGateKt.startPlaybackGateIfRequested()
+        #endif
+    }
+
     var body: some Scene {
         WindowGroup {
             // Edge to edge like upstream: Compose reads the insets itself.
