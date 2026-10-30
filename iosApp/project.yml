@@ -20,6 +20,8 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: io.github.templimp.flow
         INFOPLIST_FILE: iosApp/Info.plist
         GENERATE_INFOPLIST_FILE: NO
+        # Upstream's adaptive launcher icon (tools/import_resources.py), as one 1024 px image.
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         TARGETED_DEVICE_FAMILY: "1,2"
         SWIFT_VERSION: "5.0"
         CODE_SIGN_STYLE: Automatic
