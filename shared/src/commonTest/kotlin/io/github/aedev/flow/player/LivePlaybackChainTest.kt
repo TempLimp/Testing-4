@@ -13,6 +13,7 @@ import io.github.aedev.flow.player.resolver.canPlay
 import io.github.aedev.flow.player.stream.AudioStreamSelector
 import io.github.aedev.flow.player.stream.InnerTubeStreamBridge
 import io.github.aedev.flow.player.stream.InnerTubeVideoStreamExtractor
+import io.github.aedev.flow.player.stream.PlaybackBlockedException
 import io.github.aedev.flow.player.stream.VideoCodecUtils
 import io.github.aedev.flow.utils.MusicPlayerUtils
 import io.github.aedev.flow.utils.cipher.CipherDeobfuscator
@@ -48,7 +49,7 @@ class LivePlaybackChainTest {
                     val block =
                         InnerTubeVideoStreamExtractor.blockOf(VIDEO_ID)
                             ?: fail("no client resolved $VIDEO_ID and none reported a block:\n${diagnostics()}")
-                    return@live blocked("video", "every client refused $VIDEO_ID ($block):\n${diagnostics()}")
+                    return@live blocked("video", "every client refused $VIDEO_ID ($block): ${clientRefusals()}")
                 }
             val videos = InnerTubeStreamBridge.convertVideoFormats(result.videoFormats).filter { PlatformCodecSupport.canPlay(it) }
             val audio =
@@ -167,7 +168,25 @@ private fun live(
     try {
         withTimeout(120.seconds) { block() }
     } catch (error: Throwable) {
-        val reason = blockReason(error) ?: throw error
+        val reason = blockReason(error) ?: playbackBlock(error) ?: throw error
         println("LIVE PLAYBACK: BLOCKED $what: $reason")
     }
 }
+
+// The ladder's own verdict that YouTube refused this viewer (a bot wall, sign-in, region), as MusicPlayerUtils reports it.
+private fun playbackBlock(error: Throwable): String? {
+    var cause: Throwable? = error
+    while (cause != null) {
+        if (cause is PlaybackBlockedException) return "every client refused (${cause.block}): ${clientRefusals()}"
+        cause = cause.cause
+    }
+    return null
+}
+
+// One line per CI log: what each client of the ladder answered.
+private fun clientRefusals(): String =
+    PlayerDiagnostics
+        .entries()
+        .filter { "skip " in it.message || "unavailable" in it.message || "FAILED" in it.message }
+        .takeLast(15)
+        .joinToString(" | ") { it.message }
