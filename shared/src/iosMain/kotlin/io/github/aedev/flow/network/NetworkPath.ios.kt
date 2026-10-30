@@ -3,6 +3,9 @@
 package io.github.aedev.flow.network
 
 import kotlinx.cinterop.toKString
+import platform.Network.nw_endpoint_copy_address_string
+import platform.Network.nw_path_enumerate_gateways
+import platform.posix.free
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -34,16 +37,26 @@ private val VPN_INTERFACES = Regex("^(utun|ipsec|ppp|tun|tap).*")
 
 private fun nw_path_t.snapshot(): NetworkSnapshot {
     var vpn = false
+    val signature = StringBuilder()
     nw_path_enumerate_interfaces(this) { networkInterface ->
         val name = nw_interface_get_name(networkInterface)?.toKString().orEmpty()
+        signature.append(nw_interface_get_type(networkInterface)).append(':').append(name).append(';')
         if (nw_interface_get_type(networkInterface) == nw_interface_type_other && VPN_INTERFACES.matches(name)) vpn = true
-        !vpn
+        true
+    }
+    nw_path_enumerate_gateways(this) { gateway ->
+        nw_endpoint_copy_address_string(gateway)?.let { address ->
+            signature.append(address.toKString()).append(';')
+            free(address)
+        }
+        true
     }
     return NetworkSnapshot(
         online = nw_path_get_status(this) == nw_path_status_satisfied,
         wifi = nw_path_uses_interface_type(this, nw_interface_type_wifi),
         metered = nw_path_is_expensive(this),
         vpn = vpn,
+        identity = signature.toString().takeIf { it.isNotEmpty() }?.hashCode()?.toLong(),
     )
 }
 

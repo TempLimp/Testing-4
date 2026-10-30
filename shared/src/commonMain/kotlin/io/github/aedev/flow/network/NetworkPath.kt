@@ -14,6 +14,11 @@ internal data class NetworkSnapshot(
     val metered: Boolean,
     /** The app's own traffic runs through a VPN. */
     val vpn: Boolean,
+    /**
+     * Tells one network from another, as Android's Network.networkHandle does for VisitorIdentityStore:
+     * the interfaces and gateways on iOS, which has no handle. Null when the platform cannot say.
+     */
+    val identity: Long? = null,
 )
 
 internal expect fun currentNetwork(): NetworkSnapshot

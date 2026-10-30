@@ -40,6 +40,7 @@ IMPORT_REWRITES = {
     "androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel": "org.koin.compose.viewmodel.koinViewModel",
     "android.util.Log": "io.github.aedev.flow.utils.Log",
     "java.util.Locale": "io.github.aedev.flow.utils.Locale",
+    "android.net.Uri": "io.github.aedev.flow.utils.Uri",
 }
 IMPORT_REMOVALS = {"io.github.aedev.flow.R", "dagger.hilt.android.lifecycle.HiltViewModel"} | {
     "androidx.annotation." + a for a in ANNOTATION_TYPES}
@@ -188,6 +189,7 @@ fun stamp(tag: String) = Log.d("Stamp", "${tag.uppercase(Locale.US)} ${System.cu
 '''
     before = before.replace("import androidx.annotation.DrawableRes\n", "import android.util.Log\nimport androidx.annotation.DrawableRes\n")
     before = before.replace("import javax.inject.Inject\n", "import java.util.Locale\nimport javax.inject.Inject\n")
+    before = before.replace("import android.util.Log\n", "import android.net.Uri\nimport android.util.Log\n")
     expected = '''package io.github.aedev.flow.ui.theme
 
 import androidx.compose.runtime.Immutable
@@ -200,6 +202,7 @@ import io.github.aedev.flow.resources.theme_name_b
 import io.github.aedev.flow.ui.utils.stringResource
 import io.github.aedev.flow.utils.Locale
 import io.github.aedev.flow.utils.Log
+import io.github.aedev.flow.utils.Uri
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.vectorResource

@@ -34,6 +34,10 @@ expect class Locale {
     }
 }
 
+/** `Locale.getDisplayLanguage()`: the language's name in the app's language. */
+val Locale.displayLanguage: String
+    get() = getDisplayLanguage(Locale.getDefault())
+
 /** A region-only locale, like `Locale("", code)`. */
 fun regionLocale(country: String): Locale = Locale.forLanguageTag("und-$country")
 

@@ -134,7 +134,7 @@ fun parseYouTubeLink(text: String): YouTubeLink? {
 }
 
 /** The parts of `java.net.URI` this file reads: the host, the decoded path and the raw query. */
-private class Uri(
+private class ParsedUri(
     val host: String?,
     val path: String,
     val rawQuery: String?,
@@ -145,7 +145,7 @@ private val URI_PARTS = Regex("""^[A-Za-z][A-Za-z0-9+.-]*:(?://([^/?#]*))?([^?#]
 private val ILLEGAL_URI_CHARS = Regex("""[\s"<>\\^`{|}]|%(?![0-9A-Fa-f]{2})""")
 private val SERVER_HOST = Regex("""[A-Za-z0-9.-]+|\[[0-9A-Fa-f:.]+]""")
 
-private fun firstUri(text: String): Uri? {
+private fun firstUri(text: String): ParsedUri? {
     val candidate =
         URL_IN_TEXT.find(text)?.value?.trimEnd { it in TRAILING_PUNCTUATION }
             ?: text.takeIf { it.isNotEmpty() && it.none(Char::isWhitespace) }?.let { "https://$it" }
@@ -158,12 +158,12 @@ private fun firstUri(text: String): Uri? {
         (if (authority.startsWith("[")) authority.substringBefore(']') + "]" else authority.substringBefore(':'))
             .takeIf(SERVER_HOST::matches)
     val path = runCatching { parts.groupValues[2].decodeURLPart() }.getOrNull() ?: return null
-    return Uri(host, path, parts.groups[3]?.value)
+    return ParsedUri(host, path, parts.groups[3]?.value)
 }
 
 private fun String.isOrIsUnder(domain: String): Boolean = this == domain || endsWith(".$domain")
 
-private fun queryOf(uri: Uri): Map<String, String> =
+private fun queryOf(uri: ParsedUri): Map<String, String> =
     uri.rawQuery
         .orEmpty()
         .split('&')
