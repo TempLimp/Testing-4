@@ -21,6 +21,7 @@ import io.github.aedev.flow.utils.Log
 import io.github.aedev.flow.utils.MusicPlayerUtils
 import io.github.aedev.flow.utils.cipher.CipherDeobfuscator
 import io.github.aedev.flow.utils.potoken.PoTokenAttestationPolicy
+import io.github.aedev.flow.utils.potoken.VisitorIdentityStore
 import io.github.aedev.flow.utils.potoken.WebPoTokenSession
 import io.github.aedev.flow.utils.writeText
 import kotlinx.cinterop.useContents
@@ -104,6 +105,12 @@ private object PlaybackGate {
 
     suspend fun run(videoId: String) {
         Log.w(TAG, "Playback gate started for $videoId")
+        // FlowApplication's start-up wiring (S13): the visitor identity persists, and a visitor walled on every
+        // client at /player is re-rolled once.
+        val identityStore = VisitorIdentityStore()
+        YouTube.onVisitorDataChanged = identityStore::save
+        WebPoTokenSession.bindIdentityStore(identityStore)
+        identityStore.restore()?.let { YouTube.visitorData = it }
         val report =
             buildJsonObject {
                 put("device", "${UIDevice.currentDevice.model} iOS ${UIDevice.currentDevice.systemVersion}")
