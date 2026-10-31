@@ -17,3 +17,6 @@ Work in progress. The port reuses Flow's Kotlin code and Compose UI through Kotl
 ## License
 
 GPL-3.0, same as upstream. Flow is Copyright © 2025-2026 A-EDev. See [LICENSE](LICENSE).
+
+The iOS app bundles FFmpeg (LGPL-2.1-or-later) and dav1d (BSD-2-Clause) to play VP9, AV1 and Opus; see
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
