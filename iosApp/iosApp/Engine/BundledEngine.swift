@@ -414,7 +414,7 @@ final class BundledEngine: NSObject, PlaybackEngine {
     private func observeAutomaticFlushes() {
         guard flushObserver == nil else { return }
         flushObserver = NotificationCenter.default.addObserver(
-            forName: AVSampleBufferAudioRenderer.wasFlushedAutomaticallyNotification, object: audioRenderer, queue: nil
+            forName: .AVSampleBufferAudioRendererWasFlushedAutomatically, object: audioRenderer, queue: nil
         ) { [weak self] _ in
             guard let self else { return }
             let position = currentPositionMs()
