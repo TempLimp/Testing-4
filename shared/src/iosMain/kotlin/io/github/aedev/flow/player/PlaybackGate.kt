@@ -127,22 +127,33 @@ fun startPlaybackGateIfRequested(always: Boolean) {
 }
 
 /**
- * The ladder records no block when a web client gets past the wall, but WEB's answer is SABR-only (its formats
- * carry neither a URL nor a cipher; measured 2026-10-31: 0 of 22 and 0 of 40), and SABR plays from S05. Every
- * other client walled then still means this network is refused. [report] is the ladder's own "ALL clients
- * failed" line; a ciphered client (MWEB) that answered and yielded nothing stays a failure, so a broken cipher
- * is not hidden.
+ * Why the ladder found nothing to play, when that is this network's answer and not a fault in a layer the port
+ * owns: every client refused the viewer (a bot wall, or a status such as LOGIN_REQUIRED or UNPLAYABLE), never
+ * answered, was not asked, or is WEB, whose answer is SABR-only (its formats carry neither a URL nor a cipher;
+ * measured 2026-10-31: 0 of 22 and 0 of 40) and plays from S05. Null when any client answered with formats the
+ * port failed to make playable (a ciphered client such as MWEB, TV_TIZEN's solve, an n-transform, an
+ * exception): those are faults. [report] is the ladder's own "ALL clients failed" line.
  */
-internal fun sabrOnlyWall(
+internal fun networkRefusal(
     id: String,
     report: String?,
 ): String? {
     val reasons = report?.substringAfter("ALL clients failed $id: ", missingDelimiterValue = "")?.takeIf { it.isNotEmpty() }?.split(" | ") ?: return null
-    val sabrOnly = reasons.filter { it.startsWith("WEB: SABR resolved but no format survived") }
-    val walled = reasons.filter { "BOT_WALL" in it }
-    return "BOT_WALL (WEB answered SABR-only)".takeIf { sabrOnly.isNotEmpty() && walled.isNotEmpty() && walled.size + sabrOnly.size == reasons.size }
+    val outcomes =
+        reasons.map { reason ->
+            when {
+                "BOT_WALL" in reason -> "bot wall"
+                "status=" in reason -> "status " + reason.substringAfter("status=").substringBefore(',')
+                reason.startsWith("WEB: SABR resolved but no format survived") -> "web client SABR-only (S05)"
+                NO_STREAM_OFFERED.containsMatchIn(reason) -> "no stream offered"
+                else -> return null
+            }
+        }
+    return outcomes.groupingBy { it }.eachCount().entries.joinToString { "${it.key} x${it.value}" }
 }
 
+// Reasons in which the client never answered, was not asked, or answered without a stream to make playable.
+private val NO_STREAM_OFFERED = Regex("timeout or null response|not asked|no visitorData|PoToken unavailable|demoted|no adaptive formats|live but no hls")
 private object PlaybackGate {
     // The gate writes its result before this, whatever a step is doing; CI waits a little longer.
     private val DEADLINE = 8.minutes
@@ -238,10 +249,12 @@ private object PlaybackGate {
                             }
                     }
                 }
-                val verdicts = listOf("music", "video").map { (results[it] as? JsonObject)?.get("verdict")?.toString()?.trim('"') }
+                // A fault in a layer the port owns fails the gate; a network that offered nothing playable blocks it.
+                fun verdictOf(name: String) = (results[name] as? JsonObject)?.get("verdict")?.toString()?.trim('"')
+                val items = listOf("cipher", "poToken", "music", "video").map(::verdictOf)
                 when {
-                    verdicts.all { it == "PASS" } -> "PASS"
-                    "FAIL" in verdicts || null in verdicts -> "FAIL"
+                    "FAIL" in items || null in items -> "FAIL"
+                    listOf("music", "video").all { verdictOf(it) == "PASS" } -> "PASS"
                     else -> "BLOCKED"
                 }
             }
@@ -451,13 +464,13 @@ private object PlaybackGate {
         put("error", "$what: $why")
     }
 
-    // BLOCKED only when YouTube refused the viewer (bot wall, sign-in, region), as the ladder reports it.
+    // BLOCKED when YouTube refused the viewer, as the ladder reports it, or when nothing this network was offered is playable before S05.
     private fun blockedOrFailed(
         what: String,
         id: String,
         why: String?,
     ): JsonObject {
-        val block = InnerTubeVideoStreamExtractor.blockOf(id)?.name ?: sabrOnlyWall(id) ?: return failed(what, id, why)
+        val block = InnerTubeVideoStreamExtractor.blockOf(id)?.name ?: networkRefusal(id) ?: return failed(what, id, why)
         return buildJsonObject {
             put("verdict", "BLOCKED")
             put("layer", currentStage())
@@ -467,8 +480,8 @@ private object PlaybackGate {
         }
     }
 
-    private fun sabrOnlyWall(id: String): String? =
-        sabrOnlyWall(id, PlayerDiagnostics.entries().lastOrNull { "ALL clients failed $id: " in it.message }?.message)
+    private fun networkRefusal(id: String): String? =
+        networkRefusal(id, PlayerDiagnostics.entries().lastOrNull { "ALL clients failed $id: " in it.message }?.message)
 
     /** Plays [source] until it has advanced [REQUIRED_ADVANCE_SECONDS], and reports what AVPlayer saw. */
     private suspend fun observe(
