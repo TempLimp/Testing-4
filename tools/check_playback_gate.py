@@ -18,6 +18,9 @@ def main(path):
         details = {k: v for k, v in result.items() if k not in ("verdict", "uri")}
         print(f"{layer}: {result.get('verdict')} {json.dumps(details)}")
     verdict = gate.get("verdict")
+    if verdict == "RUNNING":
+        # The app died or hung before the gate finished; it names the layer it was in.
+        verdict = f"FAIL (the app stopped in '{gate.get('running')}')"
     print(f"PLAYBACK GATE: {verdict}")
     if verdict != "PASS":
         for line in gate.get("diagnostics", [])[-40:]:

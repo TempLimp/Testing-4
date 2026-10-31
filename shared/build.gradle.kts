@@ -115,4 +115,6 @@ tasks.withType<org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeSimu
         device.set(it)
         standalone.set(false)
     }
+    // CI runs the live playback tests in a step of their own, so a crash there cannot stop the rest.
+    providers.gradleProperty("excludeTests").orNull?.let { filter.excludeTestsMatching(it) }
 }

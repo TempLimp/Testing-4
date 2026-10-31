@@ -111,27 +111,44 @@ jobs:
           xcrun simctl boot "$SIM_ID" || true
           xcrun simctl bootstatus "$SIM_ID" -b
       - name: Shared tests on the iOS simulator
-        run: ./gradlew :shared:iosSimulatorArm64Test -PiosSimulatorDevice="$SIM_ID" --stacktrace
-      - name: Require iOS tests to have run
+        # Everything but the live playback chain, which runs next in a process of its own.
         run: |
-          total=$(grep -ho 'tests="[0-9]*"' shared/build/test-results/iosSimulatorArm64Test/*.xml | tr -dc '0-9\n' | awk '{s+=$1} END {print s+0}')
-          echo "iOS simulator tests run: $total"
+          status=0
+          ./gradlew :shared:iosSimulatorArm64Test -PiosSimulatorDevice="$SIM_ID" -PexcludeTests=io.github.aedev.flow.player.LivePlaybackChainTest --stacktrace || status=$?
+          mkdir -p ios-test-results/unit
+          cp shared/build/test-results/iosSimulatorArm64Test/*.xml ios-test-results/unit/ || true
+          exit $status
+      - name: Live playback tests on the iOS simulator
+        # LivePlaybackChainTest: the ladder, the loopback HLS proxy and the cipher in JavaScriptCore.
+        if: ${{ !cancelled() }}
+        run: |
+          status=0
+          rm -rf shared/build/test-results/iosSimulatorArm64Test
+          ./gradlew :shared:iosSimulatorArm64Test -PiosSimulatorDevice="$SIM_ID" --tests io.github.aedev.flow.player.LivePlaybackChainTest --stacktrace || status=$?
+          mkdir -p ios-test-results/live
+          cp shared/build/test-results/iosSimulatorArm64Test/*.xml ios-test-results/live/ || true
+          exit $status
+      - name: Require iOS tests to have run
+        if: ${{ !cancelled() }}
+        run: |
+          total=$(grep -ho 'tests="[0-9]*"' ios-test-results/*/*.xml | tr -dc '0-9\n' | awk '{s+=$1} END {print s+0}')
+          failed=$(grep -ho 'failures="[0-9]*"' ios-test-results/*/*.xml | tr -dc '0-9\n' | awk '{s+=$1} END {print s+0}')
+          echo "iOS simulator tests run: $total, failed: $failed"
           test "$total" -gt 0
       - name: Live API smoke test result
         if: always()
         run: |
-          if grep -q 'LIVE SMOKE: BLOCKED' shared/build/test-results/iosSimulatorArm64Test/*.xml; then
-            grep -ho 'LIVE SMOKE: BLOCKED[^<]*' shared/build/test-results/iosSimulatorArm64Test/*.xml | sed 's/^/::warning::/'
+          if grep -q 'LIVE SMOKE: BLOCKED' ios-test-results/*/*.xml; then
+            grep -ho 'LIVE SMOKE: BLOCKED[^<]*' ios-test-results/*/*.xml | sed 's/^/::warning::/'
           else
             echo "Live API reached: no block reported"
           fi
       - name: Live playback chain result
-        # LivePlaybackChainTest on iOS: the ladder, the loopback HLS proxy and the cipher in JavaScriptCore.
         if: always()
         run: |
-          grep -Eho 'LIVE (PLAYBACK|CIPHER): [^<]*' shared/build/test-results/iosSimulatorArm64Test/*.xml || echo "no live playback lines"
-          if grep -q 'LIVE PLAYBACK: BLOCKED' shared/build/test-results/iosSimulatorArm64Test/*.xml; then
-            grep -ho 'LIVE PLAYBACK: BLOCKED[^<]*' shared/build/test-results/iosSimulatorArm64Test/*.xml | sed 's/^/::warning::/'
+          grep -Eho 'LIVE (PLAYBACK|CIPHER): [^<]*' ios-test-results/*/*.xml || echo "no live playback lines"
+          if grep -q 'LIVE PLAYBACK: BLOCKED' ios-test-results/*/*.xml; then
+            grep -ho 'LIVE PLAYBACK: BLOCKED[^<]*' ios-test-results/*/*.xml | sed 's/^/::warning::/'
           fi
       - name: Generate Xcode project
         # This and the app steps run even when a test step failed, so one macOS run always yields the gate's evidence.
@@ -180,19 +197,32 @@ jobs:
           RESULT="$DATA/Documents/playback-gate.json"
           rm -f "$RESULT"
           xcrun simctl launch "$SIM_ID" io.github.templimp.flow -flowPlaybackGate
-          for i in $(seq 1 96); do
-            [ -f "$RESULT" ] && break
+          # The gate writes its final verdict within 8 minutes; it rewrites "RUNNING" with its layer as it goes.
+          for i in $(seq 1 120); do
+            if [ -f "$RESULT" ] && ! grep -q '"verdict":"RUNNING"' "$RESULT"; then break; fi
+            if ! pgrep -f 'Flow.app/Flow' > /dev/null; then
+              echo "::error::The app is no longer running"
+              break
+            fi
             sleep 5
           done
           mkdir -p screenshots
           xcrun simctl io "$SIM_ID" screenshot screenshots/playback-gate.png
           if [ ! -f "$RESULT" ]; then
-            echo "::error::The playback gate wrote no result within 8 minutes"
-            xcrun simctl spawn "$SIM_ID" log show --last 10m --predicate 'process == "Flow"' | tail -n 300
+            echo "::error::The playback gate wrote nothing"
+            xcrun simctl spawn "$SIM_ID" log show --last 15m --predicate 'process == "Flow"' | tail -n 300
             exit 1
           fi
           cp "$RESULT" screenshots/
           python3 tools/check_playback_gate.py "$RESULT"
+      - name: Crash reports
+        # The test process's and the app's crash reports, with the crashing thread printed.
+        if: always()
+        run: |
+          mkdir -p crash-reports
+          find ~/Library/Logs/DiagnosticReports -name '*.ips' \( -name 'Flow*' -o -name 'test.kexe*' \) -exec cp {} crash-reports/ \; 2>/dev/null || true
+          ls crash-reports
+          python3 tools/print_crash_reports.py crash-reports/*.ips || true
       - uses: actions/cache/save@v6
         if: always()
         with:
@@ -204,5 +234,6 @@ jobs:
           name: ios-evidence
           path: |
             screenshots/
-            shared/build/test-results/iosSimulatorArm64Test/
+            ios-test-results/
+            crash-reports/
           if-no-files-found: ignore
