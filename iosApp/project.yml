@@ -7,13 +7,24 @@ settings:
   base:
     # The Kotlin build phase runs Gradle, which writes outside the sandboxed script paths.
     ENABLE_USER_SCRIPT_SANDBOXING: NO
+    # The bundled engine's FFmpeg + dav1d (tools/build_ffmpeg_xcframework.sh, built before Xcode runs): the
+    # xcframework's slice for each SDK, and the Swift module over its headers (iosApp/FFmpeg).
+    FFMPEG_XCFRAMEWORK: "$(SRCROOT)/../build/ffmpeg/FFmpeg.xcframework"
+    "FFMPEG_SLICE[sdk=iphoneos*]": "$(FFMPEG_XCFRAMEWORK)/ios-arm64"
+    "FFMPEG_SLICE[sdk=iphonesimulator*]": "$(FFMPEG_XCFRAMEWORK)/ios-arm64-simulator"
+    HEADER_SEARCH_PATHS: "$(inherited) $(FFMPEG_SLICE)/Headers"
+    SWIFT_INCLUDE_PATHS: "$(inherited) $(SRCROOT)/FFmpeg"
+    FRAMEWORK_SEARCH_PATHS: "$(inherited) $(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)"
+    SWIFT_VERSION: "5.0"
 targets:
   iosApp:
     type: application
     platform: iOS
     sources:
       - path: iosApp
-    scheme: {}
+    scheme:
+      testTargets:
+        - iosAppTests
     settings:
       base:
         PRODUCT_NAME: Flow
@@ -23,10 +34,11 @@ targets:
         # Upstream's adaptive launcher icon (tools/import_resources.py), as one 1024 px image.
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         TARGETED_DEVICE_FAMILY: "1,2"
-        SWIFT_VERSION: "5.0"
         CODE_SIGN_STYLE: Automatic
-        FRAMEWORK_SEARCH_PATHS: "$(inherited) $(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)"
-        OTHER_LDFLAGS: "$(inherited) -framework Shared"
+        LIBRARY_SEARCH_PATHS: "$(inherited) $(FFMPEG_SLICE)"
+        OTHER_LDFLAGS: "$(inherited) -framework Shared -lFFmpeg"
+        # One executable, so the engine tests' bundle loader is the app itself.
+        ENABLE_DEBUG_DYLIB: NO
       configs:
         # Compiles the Debug-only playback gate hook in iOSApp.swift.
         Debug:
@@ -37,3 +49,25 @@ targets:
         script: |
           cd "$SRCROOT/.."
           ./gradlew :shared:embedAndSignAppleFrameworkForXcode
+    postBuildScripts:
+      # FFmpeg's LGPL and dav1d's BSD licence texts ship inside the app (THIRD_PARTY_NOTICES.md).
+      - name: Copy decoder licences
+        basedOnDependencyAnalysis: false
+        script: |
+          rm -rf "$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/ThirdPartyLicenses"
+          cp -R "$SRCROOT/../build/ffmpeg/licenses" "$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/ThirdPartyLicenses"
+  # The bundled engine's tests (S04b), hosted in the app so its renderers have a window, on clips from
+  # tools/make_engine_clips.py: YouTube walls CI's runners off.
+  iosAppTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: iosAppTests
+    dependencies:
+      - target: iosApp
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.templimp.flow.tests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Flow.app/Flow"
+        BUNDLE_LOADER: "$(TEST_HOST)"

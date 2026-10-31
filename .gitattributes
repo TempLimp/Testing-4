@@ -2,3 +2,6 @@
 *.bat text eol=crlf
 *.jar binary
 *.png binary
+*.webm binary
+*.mp4 binary
+*.m4a binary

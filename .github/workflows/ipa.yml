@@ -1,6 +1,6 @@
 name: Device IPA
 
-# An unsigned iPhone build of the S04 playback gate (Swift's PLAYBACK_GATE: the gate runs on every launch),
+# An unsigned iPhone build of the S04/S04b playback gate (Swift's PLAYBACK_GATE: the gate runs on every launch),
 # for sideloading with a tool that re-signs it, such as Sideloadly. Manual only: it is a build to install,
 # not a check.
 on:
@@ -17,7 +17,8 @@ jobs:
   ipa:
     name: iPhone IPA (playback gate build)
     runs-on: macos-latest
-    timeout-minutes: 45
+    # A cold run also builds FFmpeg and dav1d (tools/build_ffmpeg_xcframework.sh).
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v7
         with:
@@ -32,6 +33,24 @@ jobs:
         with:
           path: ~/.konan
           key: konan-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
+      # The same cache as CI's iOS job: the build script pins the versions, checksums and flags.
+      - name: Restore FFmpeg + dav1d xcframework
+        id: ffmpeg-cache
+        uses: actions/cache/restore@v6
+        with:
+          path: build/ffmpeg
+          key: ffmpeg-xcframework-${{ runner.os }}-${{ hashFiles('tools/build_ffmpeg_xcframework.sh') }}
+      - name: Build FFmpeg + dav1d xcframework
+        if: steps.ffmpeg-cache.outputs.cache-hit != 'true'
+        run: |
+          brew install meson ninja
+          command -v pkg-config || brew install pkgconf
+          tools/build_ffmpeg_xcframework.sh
+      - uses: actions/cache/save@v6
+        if: steps.ffmpeg-cache.outputs.cache-hit != 'true'
+        with:
+          path: build/ffmpeg
+          key: ffmpeg-xcframework-${{ runner.os }}-${{ hashFiles('tools/build_ffmpeg_xcframework.sh') }}
       - name: Generate Xcode project
         run: |
           brew install xcodegen
@@ -51,6 +70,8 @@ jobs:
           lipo -info "$APP/Flow"
           test "$(lipo -archs "$APP/Flow")" = "arm64"
           /usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" -c "Print :MinimumOSVersion" "$APP/Info.plist"
+          # FFmpeg's and dav1d's licences travel with the binary.
+          ls "$APP/ThirdPartyLicenses"
           ls -la "$APP"
           mkdir -p ipa/Payload
           cp -R "$APP" ipa/Payload/

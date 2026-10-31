@@ -1,0 +1,6 @@
+// FFmpeg and dav1d from build/ffmpeg/FFmpeg.xcframework (tools/build_ffmpeg_xcframework.sh), for the bundled engine.
+// The library is linked by the app target (-lFFmpeg), not here, so a test bundle importing the app links no second copy.
+module FFmpeg [system] {
+    header "FFmpegShim.h"
+    export *
+}
