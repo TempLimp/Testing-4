@@ -126,6 +126,23 @@ fun startPlaybackGateIfRequested(always: Boolean) {
     MainScope().launch(Dispatchers.Default) { PlaybackGate.run(videoId, device) }
 }
 
+/**
+ * The ladder records no block when a web client gets past the wall, but WEB's answer is SABR-only (its formats
+ * carry neither a URL nor a cipher; measured 2026-10-31: 0 of 22 and 0 of 40), and SABR plays from S05. Every
+ * other client walled then still means this network is refused. [report] is the ladder's own "ALL clients
+ * failed" line; a ciphered client (MWEB) that answered and yielded nothing stays a failure, so a broken cipher
+ * is not hidden.
+ */
+internal fun sabrOnlyWall(
+    id: String,
+    report: String?,
+): String? {
+    val reasons = report?.substringAfter("ALL clients failed $id: ", missingDelimiterValue = "")?.takeIf { it.isNotEmpty() }?.split(" | ") ?: return null
+    val sabrOnly = reasons.filter { it.startsWith("WEB: SABR resolved but no format survived") }
+    val walled = reasons.filter { "BOT_WALL" in it }
+    return "BOT_WALL (WEB answered SABR-only)".takeIf { sabrOnly.isNotEmpty() && walled.isNotEmpty() && walled.size + sabrOnly.size == reasons.size }
+}
+
 private object PlaybackGate {
     // The gate writes its result before this, whatever a step is doing; CI waits a little longer.
     private val DEADLINE = 8.minutes
@@ -440,15 +457,18 @@ private object PlaybackGate {
         id: String,
         why: String?,
     ): JsonObject {
-        val block = InnerTubeVideoStreamExtractor.blockOf(id) ?: return failed(what, id, why)
+        val block = InnerTubeVideoStreamExtractor.blockOf(id)?.name ?: sabrOnlyWall(id) ?: return failed(what, id, why)
         return buildJsonObject {
             put("verdict", "BLOCKED")
             put("layer", currentStage())
             put("id", id)
-            put("block", block.name)
+            put("block", block)
             put("error", "$what: $why")
         }
     }
+
+    private fun sabrOnlyWall(id: String): String? =
+        sabrOnlyWall(id, PlayerDiagnostics.entries().lastOrNull { "ALL clients failed $id: " in it.message }?.message)
 
     /** Plays [source] until it has advanced [REQUIRED_ADVANCE_SECONDS], and reports what AVPlayer saw. */
     private suspend fun observe(
