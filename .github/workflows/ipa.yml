@@ -1,8 +1,8 @@
 name: Device IPA
 
 # An unsigned iPhone build of the S04 playback gate (Swift's PLAYBACK_GATE: the gate runs on every launch),
-# for sideloading with a tool that re-signs it, such as Sideloadly. Manual only: macOS minutes cost 10x
-# on this private repo.
+# for sideloading with a tool that re-signs it, such as Sideloadly. Manual only: it is a build to install,
+# not a check.
 on:
   workflow_dispatch:
 

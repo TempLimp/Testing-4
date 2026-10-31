@@ -72,7 +72,7 @@ jobs:
   ios:
     name: iOS (simulator tests, app build, launch screenshot)
     needs: jvm
-    # macOS minutes cost 10x on a private repo, so pull requests stop at the jvm job.
+    # Pull requests stop at the jvm job; the iOS job runs on pushes to main and manual runs.
     if: github.event_name != 'pull_request'
     runs-on: macos-latest
     timeout-minutes: 60
