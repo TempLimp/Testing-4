@@ -9,7 +9,9 @@ import Shared
 ///
 /// A/V sync: every frame is shown at its own timestamp on the synchronizer's clock. A frame decoded more than
 /// `lateTolerance` past the clock is dropped rather than shown late, so a shown frame is at most that far from the
-/// sound; one more than `catchUpAfter` behind skips decoding to the next keyframe, as ExoPlayer does.
+/// sound; one more than `catchUpAfter` behind skips decoding to the next keyframe, as ExoPlayer does. After opening and
+/// after a seek the clock stays parked until the first frame at or after its target is on the display (the sound alone
+/// would start it sooner, and that frame would then be late).
 final class BundledEngine: NSObject, PlaybackEngine {
     static let lateTolerance = CMTime(value: 40, timescale: 1000)
     static let catchUpAfter = CMTime(value: 1, timescale: 1)
@@ -35,6 +37,7 @@ final class BundledEngine: NSObject, PlaybackEngine {
     private var wantsToPlay = false
     private var seekTarget = CMTime.zero
     private var startAt = CMTime.zero
+    private var clockParked = false
     private var videoEnded = false
     private var audioEnded = false
     private var audioQueuedUntil = CMTime.invalid
@@ -80,7 +83,7 @@ final class BundledEngine: NSObject, PlaybackEngine {
     func play() {
         lock.lock()
         wantsToPlay = true
-        let ready = opened && !closed
+        let ready = opened && !closed && !clockParked
         lock.unlock()
         if ready { control.async { self.synchronizer.rate = 1 } }
         invalidatePictureInPicture()
@@ -204,9 +207,9 @@ final class BundledEngine: NSObject, PlaybackEngine {
                 let known = max(videoTrack?.durationSeconds ?? 0, audioTrack?.durationSeconds ?? 0)
                 duration = durationMs > 0 ? durationMs : Int64(known * 1000)
                 opened = true
-                let rate: Float = wantsToPlay ? 1 : 0
                 let start = startAt
                 seekTarget = start
+                clockParked = true
                 lock.unlock()
                 if CMTimeCompare(start, .zero) > 0 {
                     videoTrack?.seek(to: start)
@@ -215,10 +218,9 @@ final class BundledEngine: NSObject, PlaybackEngine {
                 if videoTrack != nil { synchronizer.addRenderer(displayLayer.sampleBufferRenderer) }
                 if audioTrack != nil { synchronizer.addRenderer(audioRenderer) }
                 observeAutomaticFlushes()
+                synchronizer.setRate(0, time: start)
                 startFeeding(generation)
                 startWatchdog()
-                // The clock waits for both renderers to hold enough media (delaysRateChangeUntilHasSufficientMediaData).
-                synchronizer.setRate(rate, time: start)
             } catch {
                 fail("\(error)")
             }
@@ -272,6 +274,7 @@ final class BundledEngine: NSObject, PlaybackEngine {
             let clock = synchronizer.currentTime()
             let late = synchronizer.rate > 0 ? CMTimeSubtract(clock, time) : .zero
             var show = false
+            var startsClock = false
             update(generation) {
                 framesDecoded += 1
                 framesDropped += skipped
@@ -286,11 +289,13 @@ final class BundledEngine: NSObject, PlaybackEngine {
                 framesRendered += 1
                 maxLateMs = max(maxLateMs, CMTimeGetSeconds(late) * 1000)
                 if seekLandedMs < 0 { seekLandedMs = Int64(CMTimeGetSeconds(time) * 1000) }
+                startsClock = clockParked
             }
             if CMTimeCompare(late, Self.catchUpAfter) > 0 { decoder.skipToNextKeyframe() }
             guard show else { continue }
             if let videoTap, let pixels = CMSampleBufferGetImageBuffer(sample) { videoTap(pixels, time) }
             renderer.enqueue(sample)
+            if startsClock { control.async { self.startClock(generation) } }
         }
     }
 
@@ -313,17 +318,38 @@ final class BundledEngine: NSObject, PlaybackEngine {
             let time = CMSampleBufferGetPresentationTimeStamp(sample)
             let end = CMTimeAdd(time, CMSampleBufferGetDuration(sample))
             var queue = false
+            var startsClock = false
             update(generation) {
                 if CMTimeCompare(end, seekTarget) <= 0 { return }
                 queue = true
                 audioQueuedMs += CMTimeGetSeconds(CMSampleBufferGetDuration(sample)) * 1000
                 audioQueuedUntil = end
-                if seekLandedMs < 0 && video == nil { seekLandedMs = Int64(CMTimeGetSeconds(time) * 1000) }
+                if video == nil {
+                    if seekLandedMs < 0 { seekLandedMs = Int64(CMTimeGetSeconds(time) * 1000) }
+                    startsClock = clockParked
+                }
             }
             guard queue else { continue }
             if let audioTap { tap(sample, time, audioTap) }
             audioRenderer.enqueue(sample)
+            if startsClock { control.async { self.startClock(generation) } }
         }
+    }
+
+    // The first frame (or, with no video, the first sound) after opening or a seek is queued: the clock may run. It
+    // still waits for the sound to be ready (delaysRateChangeUntilHasSufficientMediaData).
+    private func startClock(_ generation: Int) {
+        lock.lock()
+        guard generation == self.generation, !closed, clockParked else {
+            lock.unlock()
+            return
+        }
+        clockParked = false
+        let rate: Float = wantsToPlay ? 1 : 0
+        let at = seekTarget
+        lock.unlock()
+        synchronizer.setRate(rate, time: at)
+        invalidatePictureInPicture()
     }
 
     private func tap(_ sample: CMSampleBuffer, _ time: CMTime, _ audioTap: (UnsafeBufferPointer<Float>, Int, Double, CMTime) -> Void) {
@@ -350,7 +376,6 @@ final class BundledEngine: NSObject, PlaybackEngine {
         generation += 1
         let next = generation
         let tracks = (video, audio)
-        let rate: Float = wantsToPlay ? 1 : 0
         lock.unlock()
         synchronizer.setRate(0, time: synchronizer.currentTime())
         displayLayer.sampleBufferRenderer.stopRequestingMediaData()
@@ -364,13 +389,14 @@ final class BundledEngine: NSObject, PlaybackEngine {
         tracks.1?.seek(to: target)
         lock.lock()
         seekTarget = target
+        clockParked = true
         videoEnded = false
         audioEnded = false
         audioQueuedUntil = .invalid
         audioStarving = false
         lock.unlock()
+        synchronizer.setRate(0, time: target)
         startFeeding(next)
-        synchronizer.setRate(rate, time: target)
     }
 
     // MARK: Watching
@@ -404,8 +430,8 @@ final class BundledEngine: NSObject, PlaybackEngine {
             if starving && !audioStarving { underruns += 1 }
             audioStarving = starving
         }
+        // At the end the clock stops; the wish to play stays, so a seek back plays on, as in ExoPlayer.
         let finished = ended && playing && (!hasAudio || !audioQueuedUntil.isValid || CMTimeCompare(clock, audioQueuedUntil) >= 0)
-        if finished { wantsToPlay = false }
         lock.unlock()
         if finished { synchronizer.rate = 0 }
     }
