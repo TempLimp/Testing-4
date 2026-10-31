@@ -24,14 +24,22 @@ import io.github.aedev.flow.utils.potoken.PoTokenAttestationPolicy
 import io.github.aedev.flow.utils.potoken.VisitorIdentityStore
 import io.github.aedev.flow.utils.potoken.WebPoTokenSession
 import io.github.aedev.flow.utils.writeText
+import kotlinx.atomicfu.locks.SynchronizedObject
+import kotlinx.atomicfu.locks.synchronized
 import kotlinx.cinterop.useContents
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.io.files.Path
+import kotlinx.io.files.SystemFileSystem
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -73,6 +81,8 @@ import platform.QuartzCore.CACurrentMediaTime
 import platform.UIKit.UIApplication
 import platform.UIKit.UIDevice
 import platform.VideoToolbox.VTIsHardwareDecodeSupported
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
 
@@ -97,13 +107,25 @@ fun startPlaybackGateIfRequested() {
     val arguments = NSProcessInfo.processInfo.arguments.map { it.toString() }
     if (GATE_ARGUMENT !in arguments) return
     val videoId = arguments.getOrNull(arguments.indexOf("-gateVideo") + 1).takeIf { "-gateVideo" in arguments } ?: DEFAULT_VIDEO_ID
-    MainScope().launch { PlaybackGate.run(videoId) }
+    val device = "${UIDevice.currentDevice.model} iOS ${UIDevice.currentDevice.systemVersion}"
+    // Off the main thread, as the player's own extraction runs: only the video layer goes back to it.
+    MainScope().launch(Dispatchers.Default) { PlaybackGate.run(videoId, device) }
 }
 
 private object PlaybackGate {
-    private val layers = mutableListOf<AVPlayerLayer>()
+    // The gate writes its result before this, whatever a step is doing; CI waits a little longer.
+    private val DEADLINE = 8.minutes
 
-    suspend fun run(videoId: String) {
+    private val layers = mutableListOf<AVPlayerLayer>()
+    private val lock = SynchronizedObject()
+    private val results = linkedMapOf<String, JsonElement>()
+    private var running = "start"
+    private var finished = false
+
+    suspend fun run(
+        videoId: String,
+        device: String,
+    ) {
         Log.w(TAG, "Playback gate started for $videoId")
         // FlowApplication's start-up wiring (S13): the visitor identity persists, and a visitor walled on every
         // client at /player is re-rolled once.
@@ -111,45 +133,104 @@ private object PlaybackGate {
         YouTube.onVisitorDataChanged = identityStore::save
         WebPoTokenSession.bindIdentityStore(identityStore)
         identityStore.restore()?.let { YouTube.visitorData = it }
-        val report =
-            buildJsonObject {
-                put("device", "${UIDevice.currentDevice.model} iOS ${UIDevice.currentDevice.systemVersion}")
-                put("codecs", codecEvidence())
-                put("cipher", step { cipher() })
-                put("poToken", step { poToken(videoId) })
-                val music = step { music() }
-                put("music", music)
-                val video = step { video(videoId) }
-                put("video", video)
-                val verdicts = listOf(music, video).map { it["verdict"].toString().trim('"') }
-                put(
-                    "verdict",
-                    when {
-                        verdicts.all { it == "PASS" } -> "PASS"
-                        "FAIL" in verdicts -> "FAIL"
-                        else -> "BLOCKED"
-                    },
-                )
-                put("diagnostics", buildJsonArray { PlayerDiagnostics.entries().takeLast(80).forEach { add(kotlinx.serialization.json.JsonPrimitive(it.toString())) } })
+        record("device", JsonPrimitive(device))
+        record("codecs", codecEvidence())
+        val watchdog =
+            CoroutineScope(Dispatchers.Default).launch {
+                delay(DEADLINE)
+                finish(deadlineReached = true)
             }
-        val json = report.toString()
-        val documents = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true).first() as String
-        Path(documents, "playback-gate.json").writeText(json)
-        Log.w(TAG, "FLOW PLAYBACK GATE: $json")
+        step("cipher", 60.seconds) { cipher() }
+        step("poToken", 100.seconds) { poToken(videoId) }
+        step("music", 150.seconds) { music() }
+        step("video", 150.seconds) { video(videoId) }
+        watchdog.cancel()
+        finish(deadlineReached = false)
     }
 
-    private suspend fun step(block: suspend () -> JsonObject): JsonObject =
-        try {
-            block()
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Throwable) {
-            buildJsonObject {
-                put("verdict", "FAIL")
-                put("error", "${e::class.simpleName}: ${e.message}")
-            }
-        }
+    /** Names the layer the gate is in, in the result file, so a crash or a hang there is attributed to it. */
+    private fun stage(name: String) {
+        synchronized(lock) { running = name }
+        write("RUNNING")
+    }
 
+    private fun currentStage() = synchronized(lock) { running }
+
+    private fun record(
+        key: String,
+        value: JsonElement,
+    ) = synchronized(lock) { results[key] = value }
+
+    private suspend fun step(
+        name: String,
+        timeout: Duration,
+        block: suspend () -> JsonObject,
+    ) {
+        stage(name)
+        val result =
+            withTimeoutOrNull(timeout) {
+                try {
+                    block()
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Throwable) {
+                    buildJsonObject {
+                        put("verdict", "FAIL")
+                        put("layer", currentStage())
+                        put("error", "${e::class.simpleName}: ${e.message}")
+                    }
+                }
+            } ?: buildJsonObject {
+                put("verdict", "FAIL")
+                put("layer", currentStage())
+                put("error", "timed out after $timeout")
+            }
+        record(name, result)
+        write("RUNNING")
+    }
+
+    private fun finish(deadlineReached: Boolean) {
+        val verdict =
+            synchronized(lock) {
+                if (finished) return
+                finished = true
+                if (deadlineReached) {
+                    listOf("cipher", "poToken", "music", "video").filter { it !in results }.forEach { missing ->
+                        results[missing] =
+                            buildJsonObject {
+                                put("verdict", "FAIL")
+                                put("layer", running)
+                                put("error", "the gate's $DEADLINE deadline passed in $running")
+                            }
+                    }
+                }
+                val verdicts = listOf("music", "video").map { (results[it] as? JsonObject)?.get("verdict")?.toString()?.trim('"') }
+                when {
+                    verdicts.all { it == "PASS" } -> "PASS"
+                    "FAIL" in verdicts || null in verdicts -> "FAIL"
+                    else -> "BLOCKED"
+                }
+            }
+        write(verdict)
+        Log.w(TAG, "FLOW PLAYBACK GATE: $verdict")
+    }
+
+    // Written to a temporary file and moved, so CI never reads half a file.
+    private fun write(verdict: String) {
+        val json =
+            synchronized(lock) {
+                buildJsonObject {
+                    results.forEach { (key, value) -> put(key, value) }
+                    put("verdict", verdict)
+                    put("running", running)
+                    put("diagnostics", buildJsonArray { PlayerDiagnostics.entries().takeLast(80).forEach { add(JsonPrimitive(it.toString())) } })
+                }.toString()
+            }
+        val documents = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true).first() as String
+        val partial = Path(documents, "playback-gate.json.partial")
+        partial.writeText(json)
+        SystemFileSystem.atomicMove(partial, Path(documents, "playback-gate.json"))
+    }
     // What AVFoundation and VideoToolbox say they can open here: the evidence behind the VP9 decision.
     private fun codecEvidence() =
         buildJsonObject {
@@ -169,7 +250,9 @@ private object PlaybackGate {
         }
 
     private suspend fun cipher(): JsonObject {
+        stage("cipher: player script download")
         val sts = CipherDeobfuscator.ensureSignatureTimestamp()
+        stage("cipher: JavaScriptCore")
         val sampleN = "KdrqFlzJXl9EcCwlmEy"
         val transformed = CipherDeobfuscator.transformNParamInUrl("https://rr1---sn.googlevideo.com/videoplayback?itag=18&n=$sampleN")
         val n = Regex("[?&]n=([^&]+)").find(transformed)?.groupValues?.get(1)
@@ -190,7 +273,9 @@ private object PlaybackGate {
     }
 
     private suspend fun poToken(videoId: String): JsonObject {
+        stage("poToken: visitor data")
         val visitorData = WebPoTokenSession.sessionVisitorData()
+        stage("poToken: WKWebView")
         val result = withTimeoutOrNull(90.seconds) { WebPoTokenSession.mint(videoId) }
         return buildJsonObject {
             put("verdict", if (result != null) "PASS" else "FAIL")
@@ -203,6 +288,7 @@ private object PlaybackGate {
     }
 
     private suspend fun music(): JsonObject {
+        stage("music: YouTube Music search")
         val songId =
             YouTube
                 .search("Queen Bohemian Rhapsody", YouTube.SearchFilter.FILTER_SONG)
@@ -211,10 +297,12 @@ private object PlaybackGate {
                 ?.filterIsInstance<SongItem>()
                 ?.firstOrNull()
                 ?.id ?: FALLBACK_SONG_ID
+        stage("music: player response")
         val playback =
             MusicPlayerUtils.playerResponseForPlayback(songId).getOrElse { error ->
                 return blockedOrFailed("music", songId, error.message)
             }
+        stage("music: HLS proxy")
         val stream = InnerTubeStreamBridge.convertAudioFormats(listOf(playback.format)).single()
         val source =
             VideoPlaybackResolver(songId).resolve(
@@ -224,6 +312,7 @@ private object PlaybackGate {
                 hlsUrl = null,
                 durationSeconds = playback.videoDetails?.lengthSeconds?.toLongOrNull() ?: 0,
             ) ?: return failed("music", songId, "nothing resolved")
+        stage("music: AVPlayer")
         val observed = observe(source, expectVideo = false)
         return buildJsonObject {
             put("id", songId)
@@ -236,6 +325,7 @@ private object PlaybackGate {
     }
 
     private suspend fun video(videoId: String): JsonObject {
+        stage("video: player response")
         val result =
             InnerTubeVideoStreamExtractor.extract(videoId)
                 ?: return blockedOrFailed("video", videoId, "every client failed")
@@ -252,6 +342,7 @@ private object PlaybackGate {
             AutoQualityPolicy.initialPick(videos, PlayerConfig.INITIAL_BANDWIDTH_ESTIMATE, null)
                 ?: return failed("video", videoId, "no stream AVPlayer can decode among ${all.map { it.codec }}")
         val ladder = AdaptiveLadder.rungs(anchor, videos)
+        stage("video: HLS proxy")
         val source =
             VideoPlaybackResolver(videoId).resolve(
                 videoStreams = ladder.ifEmpty { listOf(anchor) },
@@ -261,6 +352,7 @@ private object PlaybackGate {
                 durationSeconds = result.playerResponse.videoDetails?.lengthSeconds?.toLongOrNull() ?: 0,
                 asAdaptiveLadder = ladder.isNotEmpty(),
             ) ?: return failed("video", videoId, "nothing resolved")
+        stage("video: AVPlayer")
         val observed = observe(source, expectVideo = true)
         return buildJsonObject {
             put("id", videoId)
@@ -278,6 +370,7 @@ private object PlaybackGate {
         why: String?,
     ) = buildJsonObject {
         put("verdict", "FAIL")
+        put("layer", currentStage())
         put("id", id)
         put("error", "$what: $why")
     }
@@ -291,6 +384,7 @@ private object PlaybackGate {
         val block = InnerTubeVideoStreamExtractor.blockOf(id) ?: return failed(what, id, why)
         return buildJsonObject {
             put("verdict", "BLOCKED")
+            put("layer", currentStage())
             put("id", id)
             put("block", block.name)
             put("error", "$what: $why")
@@ -307,7 +401,7 @@ private object PlaybackGate {
         val output = AVPlayerItemVideoOutput(pixelBufferAttributes = null)
         item.addOutput(output)
         val player = AVPlayer(playerItem = item)
-        if (expectVideo) showOnScreen(player)
+        if (expectVideo) withContext(Dispatchers.Main) { showOnScreen(player) }
         player.play()
 
         val started = TimeSource.Monotonic.markNow()
@@ -365,7 +459,7 @@ private object PlaybackGate {
             put("presentationSize", item.presentationSize.useContents { "${width.toInt()}x${height.toInt()}" })
             put("indicatedBitrate", access?.indicatedBitrate)
             put("observedBitrate", access?.observedBitrate)
-            put("errorLog", buildJsonArray { errors.takeLast(5).forEach { add(kotlinx.serialization.json.JsonPrimitive("${it.errorStatusCode} ${it.errorComment} ${it.URI}")) } })
+            put("errorLog", buildJsonArray { errors.takeLast(5).forEach { add(JsonPrimitive("${it.errorStatusCode} ${it.errorComment} ${it.URI}")) } })
         }
     }
 
