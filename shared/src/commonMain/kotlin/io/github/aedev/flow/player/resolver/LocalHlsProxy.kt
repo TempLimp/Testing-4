@@ -28,6 +28,9 @@ import io.ktor.server.routing.routing
 import io.ktor.util.collections.ConcurrentMap
 import io.ktor.utils.io.copyTo
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlin.concurrent.atomics.AtomicInt
@@ -96,10 +99,19 @@ object LocalHlsProxy {
     }
 
     private suspend fun serveMaster(call: ApplicationCall) {
-        val presentation = call.parameters["id"]?.let { presentations[it] } ?: return call.respondText("", status = HttpStatusCode.NotFound)
-        val renditions = presentation.renditions
+        val id = call.parameters["id"] ?: return call.respondText("", status = HttpStatusCode.NotFound)
+        val presentation = presentations[id] ?: return call.respondText("", status = HttpStatusCode.NotFound)
+        // The indexes the media playlists need next, read now so the master states each rendition's real rates.
+        val measured =
+            coroutineScope {
+                presentation.renditions
+                    .mapIndexed { index, rendition -> async { indexOrNull("$id/$index", rendition)?.let(rendition::measuredBy) ?: rendition } }
+                    .awaitAll()
+            }
+        val video = measured.take(presentation.video.size)
+        val shown = HlsPresentation(video, measured.drop(video.size).firstOrNull(), presentation.durationMs)
         call.respondText(
-            HlsPlaylists.master(presentation) { "${renditions.indexOf(it)}.m3u8" },
+            HlsPlaylists.master(shown) { "${measured.indexOf(it)}.m3u8" },
             ContentType.parse(HLS_MIME),
         )
     }
@@ -110,17 +122,22 @@ object LocalHlsProxy {
         val rendition =
             index?.let { presentations[id]?.renditions?.getOrNull(it) }
                 ?: return call.respondText("", status = HttpStatusCode.NotFound)
-        val segments =
-            try {
-                segmentsOf("$id/$index", rendition)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Log.w(TAG, "Index of itag ${StreamDenialClassifier.itagOf(rendition.url)} unreadable: ${e.message}")
-                null
-            } ?: return call.respondText("", status = HttpStatusCode.BadGateway)
+        val segments = indexOrNull("$id/$index", rendition) ?: return call.respondText("", status = HttpStatusCode.BadGateway)
         call.respondText(HlsPlaylists.media(rendition, segments, "$index.mp4"), ContentType.parse(HLS_MIME))
     }
+
+    private suspend fun indexOrNull(
+        key: String,
+        rendition: HlsRendition,
+    ): List<SidxSegment>? =
+        try {
+            segmentsOf(key, rendition)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.w(TAG, "Index of itag ${StreamDenialClassifier.itagOf(rendition.url)} unreadable: ${e.message}")
+            null
+        }
 
     private suspend fun segmentsOf(
         key: String,

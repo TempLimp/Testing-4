@@ -13,7 +13,7 @@ data class HlsRendition(
     val url: String,
     /** RFC 6381 codec string, e.g. `avc1.4d401f` or `mp4a.40.2`. */
     val codecs: String,
-    /** Peak bits per second. */
+    /** Peak bits per second: the stream's own bitrate until [measuredBy] reads its segments. */
     val bandwidth: Int,
     val isAudio: Boolean,
     val initStart: Long,
@@ -26,7 +26,22 @@ data class HlsRendition(
     val audioLanguage: String? = null,
     val audioName: String? = null,
     val audioChannels: Int = 0,
-)
+    /** Mean bits per second over the whole stream, once measured; 0 when unknown. */
+    val averageBandwidth: Int = 0,
+) {
+    /**
+     * The rates HLS asks for, read off the sidx: BANDWIDTH is the peak segment bit rate (AVPlayer logs -12318,
+     * "Segment exceeds specified bandwidth", when a segment beats it; YouTube's bitrates are averages), and
+     * AVERAGE-BANDWIDTH the mean.
+     */
+    fun measuredBy(segments: List<SidxSegment>): HlsRendition {
+        val timed = segments.filter { it.durationSeconds > 0 }
+        if (timed.isEmpty()) return this
+        val peak = timed.maxOf { it.size * 8 / it.durationSeconds }
+        val average = timed.sumOf { it.size } * 8 / timed.sumOf { it.durationSeconds }
+        return copy(bandwidth = maxOf(bandwidth, ceil(peak).toInt()), averageBandwidth = ceil(average).toInt())
+    }
+}
 
 /**
  * What upstream hands ExoPlayer as `MergingMediaSource(video, audio)`: the video renditions (one, or an
@@ -117,7 +132,9 @@ object HlsPlaylists {
             val audio = presentation.audio
             if (presentation.video.isEmpty()) {
                 if (audio != null) {
-                    appendLine("#EXT-X-STREAM-INF:BANDWIDTH=${audio.bandwidth},CODECS=\"${audio.codecs}\"")
+                    append("#EXT-X-STREAM-INF:BANDWIDTH=${audio.bandwidth}")
+                    if (audio.averageBandwidth > 0) append(",AVERAGE-BANDWIDTH=${audio.averageBandwidth}")
+                    appendLine(",CODECS=\"${audio.codecs}\"")
                     appendLine(uriOf(audio))
                 }
                 return@buildString
@@ -130,6 +147,9 @@ object HlsPlaylists {
             }
             presentation.video.sortedBy { it.bandwidth }.forEach { video ->
                 append("#EXT-X-STREAM-INF:BANDWIDTH=${video.bandwidth + (audio?.bandwidth ?: 0)}")
+                if (video.averageBandwidth > 0 && (audio == null || audio.averageBandwidth > 0)) {
+                    append(",AVERAGE-BANDWIDTH=${video.averageBandwidth + (audio?.averageBandwidth ?: 0)}")
+                }
                 append(",CODECS=\"${listOfNotNull(video.codecs, audio?.codecs).joinToString(",")}\"")
                 if (video.width > 0 && video.height > 0) append(",RESOLUTION=${video.width}x${video.height}")
                 if (video.frameRate > 0) append(",FRAME-RATE=${video.frameRate}.000")

@@ -105,6 +105,26 @@ class HlsPlaylistsTest {
     }
 
     @Test
+    fun theMasterStatesThePeakAndAverageSegmentRatesTheIndexesMeasure() {
+        // Video: 1000 B in 2 s (4000 b/s), then 3000 B in 2 s (12000 b/s). Audio: 500 B in 1 s, twice.
+        val measuredVideo = video.copy(bandwidth = 5_000).measuredBy(listOf(SidxSegment(0, 1000, 2.0), SidxSegment(1000, 3000, 2.0)))
+        val measuredAudio = audio.copy(bandwidth = 1_000).measuredBy(listOf(SidxSegment(0, 500, 1.0), SidxSegment(500, 500, 1.0)))
+
+        assertThat(measuredVideo.bandwidth).isEqualTo(12_000)
+        assertThat(measuredVideo.averageBandwidth).isEqualTo(8_000)
+        val master = HlsPlaylists.master(HlsPresentation(listOf(measuredVideo), measuredAudio, 4_000)) { if (it.isAudio) "1.m3u8" else "0.m3u8" }
+        assertThat(master).contains("#EXT-X-STREAM-INF:BANDWIDTH=16000,AVERAGE-BANDWIDTH=12000,CODECS=\"avc1.4d401f,mp4a.40.2\"")
+    }
+
+    @Test
+    fun aDeclaredRateAboveTheMeasuredPeakIsKept() {
+        val measured = video.measuredBy(listOf(SidxSegment(0, 1000, 2.0)))
+
+        assertThat(measured.bandwidth).isEqualTo(2_500_000)
+        assertThat(video.measuredBy(emptyList())).isEqualTo(video)
+    }
+
+    @Test
     fun anAudioOnlyMasterHasOneVariant() {
         val master = HlsPlaylists.master(HlsPresentation(emptyList(), audio, 212_000)) { "0.m3u8" }
 

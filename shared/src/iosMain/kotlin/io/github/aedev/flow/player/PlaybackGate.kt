@@ -528,6 +528,8 @@ private object PlaybackGate {
             if (advanced >= REQUIRED_ADVANCE_SECONDS && (!expectVideo || frames > 0)) break
         }
 
+        // Only a master with an EXT-X-MEDIA audio group has an audible selection group; an audio-only master has
+        // none, so it reports false here and shows its audio through audioTrack and the advancing clock instead.
         val audibleGroup = asset.mediaSelectionGroupForMediaCharacteristic(AVMediaCharacteristicAudible)
         val audibleSelected = audibleGroup?.let { item.currentMediaSelection.selectedMediaOptionInMediaSelectionGroup(it) } != null
         val advanced = lastTime - (firstTime ?: lastTime)
