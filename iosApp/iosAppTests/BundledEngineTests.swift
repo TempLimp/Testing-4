@@ -85,9 +85,13 @@ final class BundledEngineTests: XCTestCase {
     }
 
     func testPictureInPictureCanTakeTheSampleBufferLayer() throws {
+        // CI's iPhone simulator reports no Picture in Picture (run 41241274318); the phone's playback gate checks it there.
+        guard AVPictureInPictureController.isPictureInPictureSupported() else {
+            record("pictureInPicture", ["supported": false])
+            throw XCTSkip("Picture in Picture is not supported on this simulator")
+        }
         let engine = try start(video: "vp9.webm", audio: "opus.webm")
         waitUntil(engine, reaches: 500)
-        XCTAssertTrue(AVPictureInPictureController.isPictureInPictureSupported())
         let controller = try XCTUnwrap(engine.pictureInPictureController())
         XCTAssertTrue(controller.contentSource?.sampleBufferDisplayLayer === engine.layer)
         let deadline = Date().addingTimeInterval(10)
