@@ -1,8 +1,10 @@
 package io.github.aedev.flow.innertube
 
 import io.github.aedev.flow.innertube.models.SongItem
+import io.github.aedev.flow.innertube.models.YouTubeClient
 import io.github.aedev.flow.innertube.pages.search.SearchSection
 import io.ktor.client.plugins.ResponseException
+import io.ktor.client.statement.bodyAsText
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import kotlin.test.Test
@@ -33,6 +35,13 @@ class LiveInnerTubeSmokeTest {
     fun theMusicHomeBrowseHasShelves() =
         live("music browse") {
             val home = YouTube.home().getOrThrow()
+            if (home.sections.isEmpty()) {
+                // A parser that missed the shelves fails; a home sent with none (seen from a CI runner) is a block.
+                val raw = InnerTube().browse(YouTubeClient.WEB_REMIX, browseId = "FEmusic_home").bodyAsText()
+                val shelves = SHELF_RENDERERS.filter { it in raw }
+                assertTrue(shelves.isEmpty(), "YouTube sent $shelves but none parsed")
+                throw HomeWithoutShelves(raw.length, Regex(""""text"\s*:\s*"([^"]{1,160})"""").findAll(raw).take(3).joinToString(" | ") { it.groupValues[1] })
+            }
 
             assertTrue(home.sections.any { it.title.isNotBlank() && it.items.isNotEmpty() }, "no filled shelf in ${home.sections.map { it.title }}")
         }
@@ -68,6 +77,7 @@ internal fun blockReason(error: Throwable): String? {
         if (cause is ResponseException && cause.response.status.value in BLOCK_STATUSES) {
             return "HTTP ${cause.response.status.value} from ${cause.response.call.request.url.host}"
         }
+        if (cause is HomeWithoutShelves) return "YouTube Music sent ${cause.message}"
         // A consent or "unusual traffic" page arrives as HTML where the body should be JSON.
         val message = cause.message.orEmpty()
         BLOCK_MARKERS.firstOrNull { it in message }?.let { return "a web page instead of JSON ($it)" }
@@ -77,4 +87,10 @@ internal fun blockReason(error: Throwable): String? {
 }
 
 private val BLOCK_STATUSES = setOf(403, 429)
+private val SHELF_RENDERERS = listOf("musicCarouselShelfRenderer", "musicImmersiveCarouselShelfRenderer", "musicShelfRenderer", "gridRenderer")
+
+private class HomeWithoutShelves(
+    length: Int,
+    texts: String,
+) : Exception("a home with no shelves ($length bytes; text: $texts)")
 private val BLOCK_MARKERS = listOf("text/html", "consent.youtube.com", "google.com/sorry", "unusual traffic")
