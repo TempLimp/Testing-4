@@ -190,7 +190,8 @@ jobs:
       - name: Playback gate (S04)
         if: ${{ !cancelled() }}
         # A real video and a real YouTube Music song through the ported chain into AVPlayer, run by the
-        # Debug build's -flowPlaybackGate argument. Anything short of PASS fails, BLOCKED included.
+        # Debug build's -flowPlaybackGate argument. A failure or a missing verdict fails the job; BLOCKED (YouTube
+        # refused the runner) is a warning, as for the live smoke test.
         run: |
           xcrun simctl terminate "$SIM_ID" io.github.templimp.flow || true
           DATA=$(xcrun simctl get_app_container "$SIM_ID" io.github.templimp.flow data)

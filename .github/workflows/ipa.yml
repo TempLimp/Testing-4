@@ -1,0 +1,68 @@
+name: Device IPA
+
+# An unsigned iPhone build of the S04 playback gate (Swift's PLAYBACK_GATE: the gate runs on every launch),
+# for sideloading with a tool that re-signs it, such as Sideloadly. Manual only: macOS minutes cost 10x
+# on this private repo.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ipa-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ipa:
+    name: iPhone IPA (playback gate build)
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The build compiles in upstream's BotGuard page (assets/po_token.html).
+          submodules: true
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v6
+      - uses: actions/cache/restore@v6
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
+      - name: Generate Xcode project
+        run: |
+          brew install xcodegen
+          xcodegen generate --spec iosApp/project.yml
+      - name: Build for iPhone
+        # Unsigned (the sideloading tool signs it). One executable: Xcode's debug dylib split is turned off.
+        run: >
+          xcodebuild -project iosApp/iosApp.xcodeproj -scheme iosApp -configuration Debug
+          -destination 'generic/platform=iOS' -derivedDataPath build/xcode
+          CODE_SIGNING_ALLOWED=NO ENABLE_DEBUG_DYLIB=NO
+          "SWIFT_ACTIVE_COMPILATION_CONDITIONS=DEBUG PLAYBACK_GATE" build
+      - name: Package the IPA
+        run: |
+          APP=build/xcode/Build/Products/Debug-iphoneos/Flow.app
+          # This build's result is fetched from the Files app; the shipped app keeps its Documents private.
+          /usr/libexec/PlistBuddy -c "Add :UIFileSharingEnabled bool true" -c "Add :LSSupportsOpeningDocumentsInPlace bool true" "$APP/Info.plist"
+          lipo -info "$APP/Flow"
+          test "$(lipo -archs "$APP/Flow")" = "arm64"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" -c "Print :MinimumOSVersion" "$APP/Info.plist"
+          ls -la "$APP"
+          mkdir -p ipa/Payload
+          cp -R "$APP" ipa/Payload/
+          (cd ipa && zip -qry ../Flow-playback-gate.ipa Payload)
+          ls -l Flow-playback-gate.ipa
+      - uses: actions/cache/save@v6
+        if: always()
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
+      - uses: actions/upload-artifact@v7
+        with:
+          name: flow-playback-gate-ipa
+          path: Flow-playback-gate.ipa
+          if-no-files-found: error
