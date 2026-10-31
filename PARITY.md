@@ -19,12 +19,13 @@ A session may only change lines for its own session id. S22 requires zero `todo`
 | `data/feed` | 1 | 67 | S07 | todo | |
 | `data/innertube/SubscriptionSweepFeed.kt` | 1 | 78 | S03 | done | Verbatim apart from the clock. Its logic is exercised through RssSubscriptionServiceTest upstream, which moves to S07 with that file. |
 | `data/innertube/RssSubscriptionService.kt` | 1 | 560 | S07 | todo | Moved from S03: it is built on `data/subscriptions` (ChannelRssClient, ChannelUploadsClient) and `data/shorts` (ChannelReelIndex), both S07, and its only consumer is SubscriptionFeedRepository (S07). RssSubscriptionServiceTest (mockk) moves with it. |
-| `data/local` (all but ThumbnailQuality.kt) | 85 | 15258 | S06 | todo | |
+| `data/local` (all but ThumbnailQuality.kt) | 85 | 15258 | S06 | todo | S04 pulled forward PlayerPreferences.kt's `VideoQuality`, `VideoCodec` and `MusicAudioQuality` enums, which stream selection reads, into `data/local/PlayerPreferences.kt`; S06 ports the rest of that file around them, unchanged. |
 | `data/local/ThumbnailQuality.kt` | 1 | 22 | S03 | done | Pulled forward: ThumbnailUrlResolver (S03) needs it. Verbatim; ThumbnailQualityTiersTest. |
 | `data/localmedia` | 23 | 2024 | S19 | todo | `LocalMediaIds.kt`'s id helpers (PREFIX, isLocal, of, mediaStoreId) were ported in S03 for ThumbnailUrlResolver; its `videoUri`/`audioUri` (MediaStore content URIs) are left to S19. |
 | `data/lyrics` | 30 | 3864 | S08 | todo | |
 | `data/migration` | 1 | 76 | S19 | todo | |
-| `data/model` (all but Models.kt, RichText.kt) | 11 | 400 | S08 | todo | |
+| `data/model` (all but Models.kt, RichText.kt, SponsorBlockSegment.kt) | 10 | 387 | S08 | todo | |
+| `data/model/SponsorBlockSegment.kt` | 1 | 13 | S04 | done | Pulled forward: `player/stream/ResolvedPlayback` carries it. Gson's `@SerializedName` becomes kotlinx.serialization's `@SerialName`, same names. |
 | `data/model/Models.kt`, `RichText.kt` | 2 | 215 | S03 | done | Pulled forward: the InnerTube pages build Video, Channel, Playlist, Comment and RichText. `Comment.repliesPage` (NewPipe's `Page`) is dropped: the InnerTube path pages replies by `continuationToken`. Covered by the innertube page tests. |
 | `data/music` | 12 | 1420 | S08 | todo | |
 | `data/newmusic` | 1 | 551 | S08 | todo | |
@@ -55,27 +56,33 @@ A session may only change lines for its own session id. S22 requires zero `todo`
 | `platform` | 5 | 219 | S13 | todo | |
 | `player` | 47 | 7905 | S10 | todo | |
 | `player/analytics` | 2 | 117 | S10 | todo | |
-| `player/audio` | 6 | 800 | S12 | todo | |
+| `player/audio` (all but LoudnessGain.kt) | 5 | 775 | S12 | todo | |
+| `player/audio/LoudnessGain.kt` | 1 | 25 | S04 | done | Pulled forward: MusicPlayerUtils reports a track's loudness gain with it. Verbatim. |
 | `player/cache` | 3 | 392 | S10 | todo | |
-| `player/config` | 2 | 231 | S10 | todo | |
-| `player/datasource` | 6 | 613 | S10 | todo | |
+| `player/config` | 2 | 231 | S04 | done | Pulled forward: QualityManager and AutoQualityPolicy read PlayerConfig (verbatim). VideoSizeCap keeps `forHeap`; its Media3 `DefaultTrackSelector` extensions (`resetVideoSizeTo`, `adaptiveTrackSelectorDefaults`) work on `VideoTrackParameters`, the parameters the iOS track selector applies (AdaptiveTrackSelectorDefaultsTest ported on it). `forDevice(Context)` (ActivityManager's memory class) is the player's to decide on iOS (S10). |
+| `player/datasource` (all but GoogleVideoRequestPolicy.kt) | 5 | 547 | S10 | todo | The loopback HLS proxy (`player/resolver/LocalHlsProxy`, S04) already fetches googlevideo the way YouTubeHttpDataSource does: the minting client's user agent and headers, and the same 403 log line. |
+| `player/datasource/GoogleVideoRequestPolicy.kt` | 1 | 66 | S04 | done | Pulled forward for LocalHlsProxy's googlevideo requests. Verbatim. |
 | `player/dlna` | 4 | 1549 | S21 | todo | |
-| `player/error` | 7 | 1752 | S10 | todo | |
+| `player/error` (all but PlayerDiagnostics.kt, StreamDenialClassifier.kt) | 5 | 1413 | S10 | todo | |
+| `player/error/PlayerDiagnostics.kt` | 1 | 239 | S04, S10 | todo | S04 ported the log ring buffer every extractor writes to (`log`, `logInfo`, `logWarning`, `logError`, `logRefocusGlitch`, `clear`; SimpleDateFormat becomes kotlinx-datetime). `logPlaybackError` (Media3's PlaybackException), `buildReport` and `copyToClipboard` read the player manager, device and clipboard, so S10 adds them. |
+| `player/error/StreamDenialClassifier.kt` | 1 | 100 | S04 | done | Pulled forward: ClientGateTracker and MusicPlayerUtils classify refused URLs with it. URLDecoder becomes Ktor's decoder. |
 | `player/factory` | 2 | 355 | S10 | todo | |
 | `player/media` | 2 | 680 | S11 | todo | |
 | `player/musicvideo` | 6 | 453 | S10 | todo | |
 | `player/preload` | 1 | 302 | S10 | todo | |
-| `player/quality` | 4 | 787 | S04 | todo | |
+| `player/quality` | 4 | 787 | S04 | done | AdaptiveLadder, AutoQualityPolicy, LiveQualitySelection verbatim. QualityManager reads a `BandwidthMeter` and a `VideoTrackSelector` (`player/quality/VideoTrackSelector.kt`) where upstream takes Media3's DefaultBandwidthMeter and DefaultTrackSelector; the AVPlayer implementations (access log bandwidth, preferred resolution and peak bit rate) come with the player manager in S10. Tests: AdaptiveLadderTest, AutoQualityPolicyTest, LiveQualitySelectionTest, AdaptiveTrackSelectorDefaultsTest (on VideoTrackParameters), CI run 41215728299 (jvm 751 run, iOS simulator 741 run, 0 failed). |
 | `player/recovery` | 3 | 251 | S10 | todo | |
 | `player/renderer` | 4 | 522 | S10 | todo | |
-| `player/resolver` | 4 | 673 | S04 | todo | |
-| `player/sabr` (all but proto/ProtobufReader.kt) | 20 | 3626 | S05 | todo | |
+| `player/resolver` | 4 | 673 | S04 | done | AVPlayer reads no DASH, so the resolver keeps upstream's priority order and logs but hands AVPlayer HLS: `ManifestGenerator` describes a stream as an `HlsRendition` (URL, init and sidx ranges, codec, bandwidth, size) under NewPipe's creator rules, `AdaptiveDashManifest` builds the quality ladder as the variants of one master, `VideoPlaybackResolver` publishes video plus audio as one master (upstream's MergingMediaSource) to `LocalHlsProxy`, a Ktor CIO server on 127.0.0.1 that writes each media playlist from the stream's sidx and forwards byte ranges to googlevideo. `MediaSourceBuilder` builds HLS and progressive sources; `buildDashSource` has no counterpart. Live plays YouTube's own HLS manifest. Streams AVPlayer cannot decode are filtered out (`PlatformCodecSupport`, section 7). Tests: AdaptiveDashManifestTest (rungs compared with the single-stream rendition instead of NewPipe's MPD), HlsPlaylistsTest, LivePlaybackChainTest (live: master, media playlist and an fMP4 segment through the proxy, jvm and iOS), LocalHlsFfmpegJvmTest (ffmpeg decodes 10 s of the proxied HLS), CI run 41215728299 (jvm 751 run, iOS simulator 741 run, 0 failed). |
+| `player/sabr` (all but the files below) | 15 | 3174 | S05 | todo | Until S05, a SABR session resolves (`tryWebSabr`) but plays through its deciphered direct formats, upstream's own fallback; nothing routes playback into SABR. |
+| `player/sabr` SabrRoutingPolicy.kt, core/SabrCpn.kt, core/SabrBase64.kt, integration/SabrClientIdentity.kt, integration/SabrUrlResolver.kt | 5 | 452 | S04 | done | Pulled forward: InnerTubeVideoStreamExtractor's ladder decides and resolves SABR sessions with them (pure). SecureRandom becomes random UUID bytes, okio base64 Kotlin's, android.net.Uri `utils/Uri`. S05 must not port them again. |
 | `player/sabr/proto/ProtobufReader.kt` | 1 | 100 | S03 | done | Pulled forward: ArtistDiscographyParams (S03) reads protobuf with it. Verbatim apart from UTF-8 decoding. |
 | `player/service` | 1 | 67 | S11 | todo | |
 | `player/shorts` | 7 | 1013 | S15 | todo | |
 | `player/sponsorblock` | 1 | 290 | S10 | todo | |
-| `player/state` | 3 | 109 | S10 | todo | |
-| `player/stream` | 27 | 3659 | S04 | todo | |
+| `player/state` | 3 | 109 | S04 | done | Pulled forward: StreamProcessor and QualityManager build its options. Verbatim. |
+| `player/stream` (all but PlaybackLoadResolver.kt) | 26 | 3372 | S04 | done | NewPipe's stream types are ported under their own packages (`org.schabi.newpipe.extractor`: MediaFormat, Stream, VideoStream, AudioStream, DeliveryMethod, AudioTrackType, StreamType, ItagItem with its itag table, ParsingException), so the files keep their imports. android.net.Uri, SystemClock, ConcurrentHashMap and URLEncoder go to `utils/Uri`, TimeSource, Ktor's collections and atomicfu locks. The ladder runs unchanged; the music path skips formats AVPlayer cannot decode (section 7). Tests: every upstream test of the package except the two that move with PlaybackLoadResolver, CI run 41215728299 (jvm 751 run, iOS simulator 741 run, 0 failed); live: LivePlaybackChainTest. |
+| `player/stream/PlaybackLoadResolver.kt` | 1 | 287 | S10 | todo | Moved from S04: its five constructor dependencies are YouTubeRepository and SponsorBlockRepository (S07), ViewHistory and PlayerPreferences (S06) and VideoDownloadManager (S07/S18), and its only consumer is VideoPlayerViewModel (S14). PlaybackLoadResolverTest (mockk) and PlaybackReadinessRulesTest (its companion's rules) move with it. |
 | `player/subtitle` | 4 | 340 | S10 | todo | |
 | `player/surface` | 2 | 314 | S10 | todo | |
 | `player/tracker` | 1 | 149 | S10 | todo | |
@@ -156,13 +163,14 @@ A session may only change lines for its own session id. S22 requires zero `todo`
 | `utils/FlowCrashHandler.kt` | 1 | 210 | S13 | todo | Moved from S03: the uncaught-exception handler installed by FlowApplication/MainActivity. |
 | `utils/FlowCrashReportFormatter.kt` | 1 | 76 | S13 | todo | Moved from S03 with FlowCrashHandler, its only consumer; FlowCrashReportFormatterTest moves with it. |
 | `utils/FlowDiagnostics.kt` | 1 | 156 | S17 | todo | Moved from S03: ActivityManager diagnostics for the diagnostics screen. |
-| `utils/MusicPlayerUtils.kt` | 1 | 275 | S04 | todo | Moved from S03: music stream resolution on top of `player/stream` (InnerTubeVideoStreamExtractor, AudioStreamSelector), which S04 ports. |
+| `utils/MusicPlayerUtils.kt` | 1 | 275 | S04 | done | Resolves through the ported ladder. The audio language and quality are PlayerPreferences' defaults ("original", Auto) until S06 brings DataStore (`shortcut:` in the file); formats AVPlayer cannot play (Opus in WebM) are skipped. AudioLanguageMatchTest; live: LivePlaybackChainTest.aMusicTrackBecomesHlsAVPlayerCanOpen and the playback gate's song. |
 | `utils/RichTextRendering.kt` | 1 | 127 | S13 | todo | Moved from S03: Compose AnnotatedString rendering for comment and description composables; it needs ShareVideo's watch URL. RichTextTargetsTest's rendering case moves with it. |
 | `utils/SharedFiles.kt` | 1 | 12 | S19 | todo | Moved from S03: FileProvider share URIs for exports. |
 | `utils/ShareVideo.kt` | 1 | 162 | S13 | todo | Moved from S03: share and open-in-YouTube Intents; iOS needs UIActivityViewController and a presenting view controller. ShareVideoTest moves with it. |
 | `utils/TextUtilities.kt` | 1 | 103 | S13 | todo | Moved from S03: HtmlCompat/URLSpan comment formatting for ui/components/shared. |
-| `utils/cipher` | 5 | 1637 | S04 | todo | |
-| `utils/potoken` | 10 | 1480 | S04 | todo | |
+| `utils/cipher` | 5 | 1637 | S04 | done | CipherWebView runs upstream's exports and discovery script against the player script in JavaScriptCore (`JsContext`; GraalJS on the jvm test target only) with a few browser globals defined, in place of an Android WebView. PlayerJsFetcher caches in Application Support; PipePipeNsigDecoder on Ktor with its player id in `utils/SharedPreferences`. Tests: PipePipeNsigDecoderTest, SignatureCallSiteTest, StringArrayObfuscationTest, CI run 41215728299 (jvm 751 run, iOS simulator 741 run, 0 failed); live: LivePlaybackChainTest.thePlayerScriptsCipherRunsInThePlatformEngine (the current player script's n function and signature, jvm and iOS) and the gate's cipher step: JavaScriptCore in the app solved player 11a45ffb's signature and n parameter (41215728299). |
+| `utils/potoken` (all but NewPipePoTokenProvider.kt) | 9 | 1417 | S04 | done | PoTokenWebView is a WKWebView on iOS: upstream's po_token.html (compiled in from the pin), loaded with a youtube.com base URL, every subresource load blocked by a content rule list, and upstream's JavaScript interface as a user script over a script message handler. The jvm test target has no web view and reports it unsupported, as Android does. VisitorIdentityStore keeps its identity in `utils/SharedPreferences` (NSUserDefaults) and tells networks apart by NWPath's interfaces and gateways. Tests: JavaScriptUtilTest, PoTokenAttestationPolicyTest, RerollBudgetTest, VisitorIdTest, VisitorIdentityAgeTest, CI run 41215728299 (jvm 751 run, iOS simulator 741 run, 0 failed); live: the gate's PoToken step minted 124-character player and streaming tokens, not low-trust, in WKWebView (41215728299). |
+| `utils/potoken/NewPipePoTokenProvider.kt` | 1 | 63 | S07 | todo | Moved from S04: it serves NewPipe's YoutubeStreamExtractor, which iOS gets only if S07 ports the NewPipe path behind YouTubeRepository's StreamInfo calls. The InnerTube extractor mints through WebPoTokenSession, ported here. |
 | `utils/protobuf` | 1 | 91 | S03 | done | kotlinx-io Buffer for ByteArrayOutputStream. Covered by YouTubeSearchParamsTest and ReelParamsTest. |
 | `utils/relativedate` | 2 | 580 | S03 | done | Pulled forward from S07: the InnerTube parsers date items with RelativeUploadDateParser. Character.getType/digit → Kotlin's CharCategory and digitToInt. RelativeUploadDateParserTest. |
 | `widget/config` | 1 | 69 | S21 | todo | |
@@ -369,8 +377,11 @@ A session may only change lines for its own session id. S22 requires zero `todo`
 | AirPlay route picker | S11 | todo | |
 | Brightness / volume / seek gestures (volume via MPVolumeView) | S11 | todo | |
 | Open shared YouTube links (Share Extension + flow:// scheme; youtube.com links cannot be claimed) | S19 | todo | |
-| Adaptive DASH streams as local HLS for AVPlayer | S04 | todo | |
-| VP9 / WebM playback decision (bundled decoder vs H.264/AV1) | S04 | todo | |
+| Adaptive DASH streams as local HLS for AVPlayer | S04 | todo | Built: `player/resolver/LocalHlsProxy`, a loopback HTTP server (Ktor CIO on 127.0.0.1) rather than an AVAssetResourceLoaderDelegate, because AVFoundation lets a resource loader answer HLS playlists and keys but not media segments, and S05's SABR media must reach AVPlayer as segments through the same server. Info.plist allows local networking. Verified short of AVPlayer from a residential network (jvm: LivePlaybackChainTest serves master, media playlist and fMP4 segments for a video and a YouTube Music song; ffmpeg decodes 10 s of the proxied video plus audio). Not verified in AVPlayer: the gate in CI run 41215728299 is BLOCKED at the player response: every client, MWEB and WEB with a WKWebView PoToken included, answered "Sign in to confirm you're not a bot", and a fresh visitor was walled too (NETWORK_WALL), so no stream reached the proxy or AVPlayer. |
+| VP9 / WebM playback decision (bundled decoder vs H.264/AV1) | S04 | iOS limit | Decided in S04: no bundled decoder and no remux. iOS plays H.264 (to 1080p60) and AV1 in MP4 (to 2160p) only where VideoToolbox decodes AV1 in hardware (A17 Pro, M3 and later); VP9 rungs and Opus audio are never offered to AVPlayer (`PlatformCodecSupport`). Evidence, the gate's `codecs` on the iPhone simulator, iOS 26.5 (41215728299): AVURLAsset says playable for `video/mp4; avc1` yes, `video/mp4; av01` yes, `video/mp4; vp09` no, `video/webm; vp9` no, `audio/mp4; mp4a` yes, `audio/webm; opus` no, so remuxing VP9 into MP4 would not make it playable. VideoToolbox reports no hardware decoder at all on the simulator, so its AV1 answer is software decoding, which the port does not choose for 1440p and above on battery. Above 1080p on a device without AV1 hardware is therefore unavailable where upstream plays VP9. Device behaviour is **unverified**. |
+| Opus audio (YouTube's WebM audio, itags 249-251) | S04 | iOS limit | AVPlayer reads no WebM (`audio/webm; opus` not playable, gate evidence), so music and video play AAC (itag 140, or 139) where upstream prefers Opus 160 kb/s. |
+| AC-3 / EC-3 surround audio tracks (itags 380, 328) | S04 | iOS limit | NewPipe's itag table lacks them, so upstream's bridge gives them no byte ranges and ExoPlayer plays them progressively beside the video; an HLS master cannot carry a progressive file, so on iOS the audio selector passes them over for AAC (`canMergeAudio`). |
+| Live DVR through YouTube's DASH manifest | S04 | iOS limit | Upstream falls back to the live DASH manifest when there is no HLS one; AVPlayer reads no DASH. YouTube's live HLS manifest plays. |
 | Background downloads (URLSession background) | S18 | todo | |
 | New-upload checks via BGAppRefreshTask (best effort) | S18 | todo | |
 | Local media via Music library + Files import | S19 | todo | |
