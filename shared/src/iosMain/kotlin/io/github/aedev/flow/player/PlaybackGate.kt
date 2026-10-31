@@ -78,7 +78,19 @@ import platform.Foundation.NSSearchPathForDirectoriesInDomains
 import platform.Foundation.NSURL
 import platform.Foundation.NSUserDomainMask
 import platform.QuartzCore.CACurrentMediaTime
+import platform.AVFAudio.AVAudioSession
+import platform.AVFAudio.AVAudioSessionCategoryPlayback
+import platform.AVFAudio.setActive
+import platform.CoreGraphics.CGRectMake
+import platform.CoreGraphics.CGSizeMake
 import platform.UIKit.UIApplication
+import platform.UIKit.UIColor
+import platform.UIKit.UIFont
+import platform.UIKit.UIFontWeightRegular
+import platform.UIKit.UILabel
+import platform.UIKit.UIView
+import platform.darwin.dispatch_async
+import platform.darwin.dispatch_get_main_queue
 import platform.UIKit.UIDevice
 import platform.VideoToolbox.VTIsHardwareDecodeSupported
 import kotlin.time.Duration
@@ -97,15 +109,17 @@ private const val FALLBACK_SONG_ID = "lZUgQPTCTlo"
 private const val REQUIRED_ADVANCE_SECONDS = 5.0
 
 /**
- * The S04 go/no-go gate, run inside the app because AVPlayer and WKWebView need an app process. Swift
- * calls this in Debug builds only; with the launch argument `-flowPlaybackGate` it plays a real video
- * and a real YouTube Music song through the ported chain (client ladder, stream bridge, loopback HLS)
- * in AVPlayer, checks the cipher in JavaScriptCore and a PoToken mint in WKWebView, and writes the
- * verdict and every observation to `Documents/playback-gate.json` for CI.
+ * The S04 go/no-go gate, run inside the app because AVPlayer and WKWebView need an app process. It plays a
+ * real video and a real YouTube Music song through the ported chain (client ladder, stream bridge, loopback
+ * HLS) in AVPlayer, checks the cipher in JavaScriptCore and a PoToken mint in WKWebView, shows each verdict
+ * over the video, and writes the verdict and every observation to `Documents/playback-gate.json`.
+ *
+ * Swift calls it only in Debug builds, where it runs with the launch argument `-flowPlaybackGate` (CI), and
+ * in the `PLAYBACK_GATE` build CI makes for a phone, where [always] runs it on every launch.
  */
-fun startPlaybackGateIfRequested() {
+fun startPlaybackGateIfRequested(always: Boolean) {
     val arguments = NSProcessInfo.processInfo.arguments.map { it.toString() }
-    if (GATE_ARGUMENT !in arguments) return
+    if (!always && GATE_ARGUMENT !in arguments) return
     val videoId = arguments.getOrNull(arguments.indexOf("-gateVideo") + 1).takeIf { "-gateVideo" in arguments } ?: DEFAULT_VIDEO_ID
     val device = "${UIDevice.currentDevice.model} iOS ${UIDevice.currentDevice.systemVersion}"
     // Off the main thread, as the player's own extraction runs: only the video layer goes back to it.
@@ -127,6 +141,9 @@ private object PlaybackGate {
         device: String,
     ) {
         Log.w(TAG, "Playback gate started for $videoId")
+        // Sound even with the phone's silent switch on, so the gate is heard as well as seen.
+        AVAudioSession.sharedInstance().setCategory(AVAudioSessionCategoryPlayback, error = null)
+        AVAudioSession.sharedInstance().setActive(true, error = null)
         // FlowApplication's start-up wiring (S13): the visitor identity persists, and a visitor walled on every
         // client at /player is re-rolled once.
         val identityStore = VisitorIdentityStore()
@@ -230,6 +247,46 @@ private object PlaybackGate {
         val partial = Path(documents, "playback-gate.json.partial")
         partial.writeText(json)
         SystemFileSystem.atomicMove(partial, Path(documents, "playback-gate.json"))
+        showVerdicts(verdict)
+    }
+
+    private var overlay: UILabel? = null
+
+    // Each item's verdict over the video, for someone watching the phone rather than reading CI.
+    private fun showVerdicts(verdict: String) {
+        val text =
+            synchronized(lock) {
+                buildString {
+                    appendLine("Flow playback gate: $verdict")
+                    if (verdict == "RUNNING") appendLine("now: $running")
+                    listOf("cipher", "poToken", "music", "video").forEach { name ->
+                        val item = results[name] as? JsonObject ?: return@forEach
+                        val details =
+                            listOf("layer", "client", "codec", "presentationSize", "secondsAdvanced", "block", "error")
+                                .mapNotNull { key -> item[key]?.toString()?.trim('"')?.takeIf { it != "null" }?.let { "$key=${it.take(80)}" } }
+                        appendLine("$name: ${item["verdict"]?.toString()?.trim('"')} ${details.joinToString(" ")}")
+                    }
+                    append("Result: Files > On My iPhone > Flow > playback-gate.json")
+                }
+            }
+        dispatch_async(dispatch_get_main_queue()) {
+            @Suppress("DEPRECATION")
+            val window = UIApplication.sharedApplication.keyWindow ?: return@dispatch_async
+            val label =
+                overlay ?: UILabel().also { label ->
+                    label.numberOfLines = 0
+                    label.font = UIFont.monospacedSystemFontOfSize(12.0, UIFontWeightRegular)
+                    label.textColor = UIColor.whiteColor
+                    label.backgroundColor = UIColor.blackColor.colorWithAlphaComponent(0.7)
+                    window.addSubview(label)
+                    overlay = label
+                }
+            label.text = text
+            val width = window.bounds.useContents { size.width } - 24.0
+            val height = label.sizeThatFits(CGSizeMake(width, 10_000.0)).useContents { this.height }
+            label.setFrame(CGRectMake(12.0, 60.0, width, height))
+            window.bringSubviewToFront(label)
+        }
     }
     // What AVFoundation and VideoToolbox say they can open here: the evidence behind the VP9 decision.
     private fun codecEvidence() =
@@ -320,6 +377,7 @@ private object PlaybackGate {
             put("client", playback.usedClient.clientName)
             put("itag", playback.format.itag)
             put("mimeType", playback.format.mimeType)
+            put("codec", VideoCodecUtils.codecStringFromMimeType(playback.format.mimeType))
             observed.forEach { (key, value) -> put(key, value) }
         }
     }
@@ -359,6 +417,7 @@ private object PlaybackGate {
             put("client", result.usedClient.clientName)
             put("offered", all.joinToString { "${VideoCodecUtils.qualityHeightFromStream(it)}p ${VideoCodecUtils.codecKeyFromStream(it)}" })
             put("rungs", ladder.ifEmpty { listOf(anchor) }.joinToString { "${VideoCodecUtils.qualityHeightFromStream(it)}p ${it.codec}" })
+            put("codec", anchor.codec)
             put("audioItag", audio?.itag)
             observed.forEach { (key, value) -> put(key, value) }
         }
@@ -463,13 +522,16 @@ private object PlaybackGate {
         }
     }
 
-    // The video on screen, so CI's screenshot shows the frames AVPlayer decoded.
+    // The video on screen under the verdicts, so CI's screenshot and the person holding the phone see it.
     private fun showOnScreen(player: AVPlayer) {
         @Suppress("DEPRECATION")
         val window = UIApplication.sharedApplication.keyWindow ?: return
         val layer = AVPlayerLayer.playerLayerWithPlayer(player)
+        val view = UIView(frame = window.bounds)
         layer.frame = window.bounds
-        window.layer.addSublayer(layer)
+        view.layer.addSublayer(layer)
+        window.addSubview(view)
+        overlay?.let { window.bringSubviewToFront(it) }
         layers += layer
     }
 }

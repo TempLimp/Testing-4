@@ -4,9 +4,12 @@ import SwiftUI
 @main
 struct iOSApp: App {
     init() {
-        #if DEBUG
+        #if PLAYBACK_GATE
+        // The S04 playback gate build CI makes for a phone (ipa.yml): runs the gate on every launch.
+        PlaybackGateKt.startPlaybackGateIfRequested(always: true)
+        #elseif DEBUG
         // The S04 playback gate: runs only with the -flowPlaybackGate launch argument (CI).
-        PlaybackGateKt.startPlaybackGateIfRequested()
+        PlaybackGateKt.startPlaybackGateIfRequested(always: false)
         #endif
     }
 
