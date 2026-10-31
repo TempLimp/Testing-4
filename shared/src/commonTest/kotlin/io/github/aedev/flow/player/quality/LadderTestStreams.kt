@@ -7,8 +7,47 @@ import org.schabi.newpipe.extractor.stream.VideoStream
 
 internal object LadderTestStreams {
     private val H264_ITAGS = mapOf(144 to 160, 240 to 133, 360 to 134, 480 to 135, 720 to 136, 1080 to 137)
-    private val VP9_ITAGS = mapOf(144 to 278, 240 to 242, 360 to 243, 480 to 244, 720 to 247, 1080 to 248)
+    private val VP9_ITAGS = mapOf(144 to 278, 240 to 242, 360 to 243, 480 to 244, 720 to 247, 1080 to 248, 1440 to 271, 2160 to 313)
     private val VP9_HDR_ITAGS = mapOf(144 to 330, 240 to 331, 360 to 332, 480 to 333, 720 to 334, 1080 to 335)
+    private val AV1_ITAGS = mapOf(144 to 394, 240 to 395, 360 to 396, 480 to 397, 720 to 398, 1080 to 399, 1440 to 400, 2160 to 401)
+
+    fun av1(
+        height: Int,
+        bitrate: Int,
+    ) = stream(height, bitrate, "video/mp4; codecs=\"av01.0.08M.08\"", AV1_ITAGS.getValue(height))
+
+    /** An adaptive audio format as InnerTube describes it, e.g. Opus 251 in WebM or AAC 140 in MP4. */
+    fun audio(
+        itag: Int,
+        mimeType: String,
+        bitrate: Int,
+    ) = InnerTubeStreamBridge
+        .convertAudioFormats(
+            listOf(
+                Format(
+                    itag = itag,
+                    url = "https://rr1---sn-test.googlevideo.com/videoplayback?itag=$itag",
+                    mimeType = mimeType,
+                    bitrate = bitrate,
+                    width = null,
+                    height = null,
+                    contentLength = 3_400_000L,
+                    quality = "tiny",
+                    fps = null,
+                    qualityLabel = null,
+                    averageBitrate = bitrate,
+                    audioQuality = "AUDIO_QUALITY_MEDIUM",
+                    approxDurationMs = "212000",
+                    audioSampleRate = 48000,
+                    audioChannels = 2,
+                    loudnessDb = null,
+                    lastModified = 1_700_000_000_000_000L,
+                    signatureCipher = null,
+                    initRange = Range("0", "258"),
+                    indexRange = Range("259", "1012"),
+                ),
+            ),
+        ).single()
 
     fun h264(
         height: Int,

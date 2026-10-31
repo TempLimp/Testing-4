@@ -58,6 +58,7 @@ object ManifestGenerator {
             audioLanguage = audio?.audioLocale?.toLanguageTag()?.takeIf { it.isNotBlank() && it != "und" },
             audioName = audio?.audioTrackName,
             audioChannels = itagItem.audioChannels.coerceAtLeast(0),
+            mimeType = stream.format?.mimeType.orEmpty(),
         )
     }
 

@@ -7,9 +7,10 @@ import io.github.aedev.flow.network.platformHttpClient
 import io.github.aedev.flow.player.error.PlayerDiagnostics
 import io.github.aedev.flow.player.quality.AdaptiveLadder
 import io.github.aedev.flow.player.resolver.PlatformCodecSupport
+import io.github.aedev.flow.player.resolver.PlaybackEngineKind
 import io.github.aedev.flow.player.resolver.VideoPlaybackResolver
 import io.github.aedev.flow.player.resolver.canMergeAudio
-import io.github.aedev.flow.player.resolver.canPlay
+import io.github.aedev.flow.player.resolver.engineFor
 import io.github.aedev.flow.player.stream.AudioStreamSelector
 import io.github.aedev.flow.player.stream.InnerTubeStreamBridge
 import io.github.aedev.flow.player.stream.InnerTubeVideoStreamExtractor
@@ -51,7 +52,8 @@ class LivePlaybackChainTest {
                             ?: fail("no client resolved $VIDEO_ID and none reported a block:\n${diagnostics()}")
                     return@live blocked("video", "every client refused $VIDEO_ID ($block): ${clientRefusals()}")
                 }
-            val videos = InnerTubeStreamBridge.convertVideoFormats(result.videoFormats).filter { PlatformCodecSupport.canPlay(it) }
+            val videos =
+                InnerTubeStreamBridge.convertVideoFormats(result.videoFormats).filter { PlatformCodecSupport.engineFor(it) == PlaybackEngineKind.AVPLAYER }
             val audio =
                 AudioStreamSelector.selectPreferredAudioStream(
                     InnerTubeStreamBridge.convertAudioFormats(result.audioFormats),
@@ -83,7 +85,48 @@ class LivePlaybackChainTest {
         }
 
     @Test
-    fun aMusicTrackBecomesHlsAVPlayerCanOpen() =
+    fun aVp9VideoWithOpusBecomesFilesTheBundledEngineCanRead() =
+        live("bundled") {
+            val result =
+                InnerTubeVideoStreamExtractor.extract(VIDEO_ID) ?: run {
+                    val block =
+                        InnerTubeVideoStreamExtractor.blockOf(VIDEO_ID)
+                            ?: fail("no client resolved $VIDEO_ID and none reported a block:\n${diagnostics()}")
+                    return@live blocked("bundled", "every client refused $VIDEO_ID ($block): ${clientRefusals()}")
+                }
+            val vp9 =
+                InnerTubeStreamBridge
+                    .convertVideoFormats(result.videoFormats)
+                    .filter { VideoCodecUtils.codecKeyFromStream(it) == "vp9" }
+                    .maxByOrNull { VideoCodecUtils.qualityHeightFromStream(it) }
+                    ?: return@live blocked("bundled", "no VP9 offered to this network among ${result.videoFormats.map { it.mimeType }}")
+            val audio =
+                AudioStreamSelector.selectPreferredAudioStream(
+                    InnerTubeStreamBridge.convertAudioFormats(result.audioFormats),
+                    preferredAudioLanguage = "original",
+                    compatibilityFilter = { PlatformCodecSupport.canMergeAudio(it, PlaybackEngineKind.BUNDLED) },
+                )
+            assertNotNull(audio, "no audio among ${result.audioFormats.map { it.mimeType }}")
+            val source =
+                VideoPlaybackResolver(VIDEO_ID).resolve(
+                    videoStreams = listOf(vp9),
+                    audioStream = audio,
+                    dashManifestUrl = null,
+                    hlsUrl = null,
+                    durationSeconds = result.playerResponse.videoDetails?.lengthSeconds?.toLongOrNull() ?: 0,
+                )
+            assertNotNull(source, "nothing resolved")
+            assertTrue(source.engine == PlaybackEngineKind.BUNDLED && source.audioUri != null, "$source")
+            checkFile(source.uri)
+            checkFile(source.audioUri!!)
+            println(
+                "LIVE PLAYBACK: bundled OK via ${result.usedClient.clientName}: ${VideoCodecUtils.qualityHeightFromStream(vp9)}p ${vp9.codec}, " +
+                    "audio itag ${audio.itag} ${audio.codec} of ${result.audioFormats.joinToString { "${it.itag} ${VideoCodecUtils.codecStringFromMimeType(it.mimeType)} ${it.averageBitrate}" }}",
+            )
+        }
+
+    @Test
+    fun aMusicTrackBecomesASourceItsEngineCanOpen() =
         live("music") {
             val songId =
                 YouTube
@@ -104,9 +147,14 @@ class LivePlaybackChainTest {
                     durationSeconds = playback.videoDetails?.lengthSeconds?.toLongOrNull() ?: 0,
                 )
             assertNotNull(source, "nothing resolved for $songId")
-            val master = http.get(source.uri).bodyAsText()
-            checkMediaPlaylist(source.uri, master.lines().first { it.endsWith(".m3u8") && !it.startsWith("#") })
-            println("LIVE PLAYBACK: music OK $songId via ${playback.usedClient.clientName} itag ${playback.format.itag} ${playback.format.mimeType}")
+            // Upstream's music format choice prefers WebM (Opus), which the bundled engine plays; AAC plays in AVPlayer.
+            if (source.engine == PlaybackEngineKind.BUNDLED) {
+                checkFile(source.uri)
+            } else {
+                val master = http.get(source.uri).bodyAsText()
+                checkMediaPlaylist(source.uri, master.lines().first { it.endsWith(".m3u8") && !it.startsWith("#") })
+            }
+            println("LIVE PLAYBACK: music OK $songId via ${playback.usedClient.clientName} itag ${playback.format.itag} ${playback.format.mimeType} on ${source.engine}")
         }
 
     @Test
@@ -141,6 +189,16 @@ class LivePlaybackChainTest {
                 .readRawBytes()
         assertTrue(bytes.size.toLong() == length.toLong(), "segment is ${bytes.size} bytes, playlist says $length")
         assertTrue(bytes.copyOfRange(4, 8).decodeToString() == "moof", "segment does not start with a moof box")
+    }
+
+    // The bundled engine's read: a bounded byte range of the proxy's file route, answered 206 with the container's magic.
+    private suspend fun checkFile(uri: String) {
+        val response = http.get(uri) { header("Range", "bytes=0-65535") }
+        val bytes = response.readRawBytes()
+        assertTrue(response.status.value == 206 && bytes.size == 65_536, "$uri answered ${response.status} with ${bytes.size} bytes")
+        val webm = bytes.copyOfRange(0, 4).contentEquals(byteArrayOf(0x1A, 0x45, 0xDF.toByte(), 0xA3.toByte()))
+        val mp4 = bytes.copyOfRange(4, 8).decodeToString() == "ftyp"
+        assertTrue(if (uri.endsWith(".webm")) webm else mp4, "$uri does not start like its container")
     }
 
     private fun diagnostics() = PlayerDiagnostics.entries().takeLast(40).joinToString("\n")

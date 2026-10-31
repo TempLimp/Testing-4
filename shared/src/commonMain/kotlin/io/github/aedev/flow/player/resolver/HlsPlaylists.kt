@@ -28,6 +28,8 @@ data class HlsRendition(
     val audioChannels: Int = 0,
     /** Mean bits per second over the whole stream, once measured; 0 when unknown. */
     val averageBandwidth: Int = 0,
+    /** The container, e.g. `video/webm`: the bundled engine reads WebM renditions as files ([LocalHlsProxy.publishFiles]). */
+    val mimeType: String = "",
 ) {
     /**
      * The rates HLS asks for, read off the sidx: BANDWIDTH is the peak segment bit rate (AVPlayer logs -12318,

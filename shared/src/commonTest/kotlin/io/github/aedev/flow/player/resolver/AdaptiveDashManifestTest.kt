@@ -51,13 +51,14 @@ class AdaptiveDashManifestTest {
 
     @Test
     fun aWebMRungKeepsItsCodec() {
-        // Upstream checks the container survives into the ladder; AVPlayer cannot open it, which
-        // VideoPlaybackResolver's PlatformCodecSupport filter keeps out before a ladder is built.
+        // Upstream checks the container survives into the ladder; AVPlayer cannot open it, so
+        // VideoPlaybackResolver hands a VP9 stream to the bundled engine instead of building a ladder.
         val ladder = AdaptiveDashManifest.build(listOf(vp9(360, 600_000), vp9(720, 2_000_000)), 212)!!
 
         val single = singleStreamManifest(vp9(360, 600_000))
         assertThat(ladder.representations.first().codecs).isEqualTo(single.video.single().codecs)
-        assertThat(PlatformCodecSupport.canPlay(vp9(360, 600_000))).isFalse()
+        assertThat(ladder.representations.first().mimeType).isEqualTo("video/webm")
+        assertThat(PlatformCodecSupport.engineFor(vp9(360, 600_000))).isEqualTo(PlaybackEngineKind.BUNDLED)
     }
 
     @Test

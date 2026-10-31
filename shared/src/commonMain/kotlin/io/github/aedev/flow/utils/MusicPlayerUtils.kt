@@ -209,7 +209,7 @@ object MusicPlayerUtils {
         val audioFormats =
             formats
                 .filter { format -> format.audioTrack?.isAutoDubbed != true && !format.url.isNullOrEmpty() }
-                // iOS limit: AVPlayer reads no WebM, so Opus formats are left out and AAC plays instead.
+                // What one of iOS's engines decodes: Opus plays in the bundled engine, and is left out for AAC while AirPlay is on.
                 .filter { format -> PlatformCodecSupport.canPlay(format.mimeType.substringBefore(';'), VideoCodecUtils.codecStringFromMimeType(format.mimeType)) }
                 .preferNonDrc()
 

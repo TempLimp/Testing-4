@@ -27,7 +27,8 @@ import org.schabi.newpipe.extractor.stream.VideoStream
  * 3. Direct progressive stream - Last resort, may buffer
  *
  * Streams AVPlayer cannot decode ([PlatformCodecSupport]: WebM, VP9, Opus, AV1 without a hardware
- * decoder) are never handed to it.
+ * decoder) are never handed to it: when the stream upstream's selection chose is one of them, the
+ * source is for the bundled engine instead, which reads the same streams as files from [LocalHlsProxy].
  */
 class VideoPlaybackResolver(
     private val mediaId: String = "",
@@ -97,13 +98,21 @@ class VideoPlaybackResolver(
             )
         }
 
-        val playableVideo = videoStreams.filter { PlatformCodecSupport.canPlay(it) }
+        // The engine follows the stream upstream's selection put first; a ladder holds one codec (AdaptiveLadder).
+        val decodable = videoStreams.filter { PlatformCodecSupport.canPlay(it) }
+        val engine =
+            (decodable.sortedWith(bestFirst).firstOrNull() ?: audioStream)?.let { PlatformCodecSupport.engineFor(it) }
+                ?: PlaybackEngineKind.AVPLAYER
+        val playableVideo = decodable.filter { PlatformCodecSupport.decodes(engine, it) }
         if (playableVideo.size < videoStreams.size) {
-            Log.d(TAG, "Dropped ${videoStreams.size - playableVideo.size} video streams this device cannot decode")
+            Log.d(TAG, "Dropped ${videoStreams.size - playableVideo.size} video streams $engine cannot decode")
         }
-        val playableAudio = audioStream?.takeIf { PlatformCodecSupport.canPlay(it) }
+        val playableAudio = audioStream?.takeIf { PlatformCodecSupport.decodes(engine, it) }
         if (audioStream != null && playableAudio == null) {
-            Log.w(TAG, "Audio stream ${audioStream.format?.mimeType} ${audioStream.codec} cannot be decoded here")
+            Log.w(TAG, "Audio stream ${audioStream.format?.mimeType} ${audioStream.codec} cannot be decoded beside $engine")
+        }
+        if (engine == PlaybackEngineKind.BUNDLED) {
+            return bundledSource(playableVideo, playableAudio, durationSeconds, asAdaptiveLadder)
         }
 
         val ladder = if (asAdaptiveLadder) createLadder(playableVideo, durationSeconds) else null
@@ -161,6 +170,34 @@ class VideoPlaybackResolver(
         }
     }
 
+    private val bestFirst =
+        compareByDescending<VideoStream> { VideoCodecUtils.qualityHeightFromStream(it) }
+            .thenBy { VideoCodecUtils.playbackCodecRank(it) }
+            .thenByDescending { it.bitrate }
+
+    /**
+     * The bundled engine's source: one video stream and the audio beside it, each published as a file. A ladder starts
+     * on its lowest rung, as an AVPlayer ladder that cannot be built does, and Auto's own checks step up from there.
+     */
+    // shortcut: the bundled engine plays one stream, not a ladder; S10's QualityManager switches rungs by reopening at the position.
+    private suspend fun bundledSource(
+        video: List<VideoStream>,
+        audio: AudioStream?,
+        durationSeconds: Long,
+        asAdaptiveLadder: Boolean,
+    ): MediaSource? {
+        val stream = if (asAdaptiveLadder) video.minByOrNull { it.bitrate } else video.sortedWith(bestFirst).firstOrNull()
+        val videoPart = stream?.let { progressivePart(it, durationSeconds) }
+        val audioPart = audio?.let { progressivePart(it, durationSeconds) }
+        if ((stream != null && videoPart == null) || (audio != null && audioPart == null)) {
+            Log.e(TAG, "The bundled engine reads streams with their byte ranges; the ${if (stream != null && videoPart == null) "video" else "audio"} has none")
+            return null
+        }
+        val durationMs = (videoPart ?: audioPart)?.durationMs ?: return null.also { Log.e(TAG, "Failed to create any media source!") }
+        Log.d(TAG, "Bundled engine: ${stream?.let { "${VideoCodecUtils.qualityHeightFromStream(it)}p ${it.codec}" } ?: "no video"}, audio ${audio?.codec}")
+        return MediaSourceBuilder.buildBundledSource(HlsPresentation(listOfNotNull(videoPart?.rendition), audioPart?.rendition, durationMs), mediaId)
+    }
+
     private suspend fun presentation(
         video: List<Part.Rendition>,
         audio: Part.Rendition?,
@@ -200,12 +237,7 @@ class VideoPlaybackResolver(
         if (videoStreams.isEmpty()) return null
 
         // Sort by quality and prefer video-only streams (they can use generated manifests)
-        val sortedStreams =
-            videoStreams.sortedWith(
-                compareByDescending<VideoStream> { VideoCodecUtils.qualityHeightFromStream(it) }
-                    .thenBy { VideoCodecUtils.playbackCodecRank(it) }
-                    .thenByDescending { it.bitrate },
-            )
+        val sortedStreams = videoStreams.sortedWith(bestFirst)
 
         val bestStream =
             if (preferMuxed) {

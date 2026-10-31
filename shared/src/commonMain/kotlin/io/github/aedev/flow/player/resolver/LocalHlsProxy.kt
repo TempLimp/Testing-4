@@ -46,7 +46,8 @@ import kotlin.concurrent.atomics.incrementAndFetch
  *   first asks for it;
  * - `/p/{id}/{n}.mp4`: rendition `n`'s bytes, each byte range forwarded to googlevideo with the user
  *   agent and headers the minting client needs ([GoogleVideoRequestPolicy]), its 403s logged and
- *   classified as upstream's data source does.
+ *   classified as upstream's data source does. The bundled engine reads the same route as a file
+ *   (`.webm` for a WebM rendition), so both engines fetch through one request policy.
  *
  * A loopback server rather than an `AVAssetResourceLoaderDelegate`: AVFoundation lets a resource loader
  * answer HLS playlists and keys but not media segments, and S05's SABR streams (bytes that arrive over
@@ -75,6 +76,7 @@ object LocalHlsProxy {
                         get("/p/{id}/master.m3u8") { serveMaster(call) }
                         get("/p/{id}/{rendition}.m3u8") { serveMedia(call) }
                         get("/p/{id}/{rendition}.mp4") { serveBytes(call) }
+                        get("/p/{id}/{rendition}.webm") { serveBytes(call) }
                     }
                 }.start(wait = false)
             port = started.engine.resolvedConnectors().first().port
@@ -91,6 +93,15 @@ object LocalHlsProxy {
         // Only the latest few videos are ever playing or preloaded; older ones are dropped.
         (id.toInt() - MAX_PRESENTATIONS).takeIf { it > 0 }?.let { evict(it.toString()) }
         return "http://$HOST:$port/p/$id/master.m3u8"
+    }
+
+    /**
+     * Publishes [presentation] for the bundled engine, which reads each rendition as one file through the same
+     * byte-range route AVPlayer's segments take: their URLs, in [HlsPresentation.renditions] order.
+     */
+    suspend fun publishFiles(presentation: HlsPresentation): List<String> {
+        val base = publish(presentation).substringBeforeLast('/')
+        return presentation.renditions.mapIndexed { index, rendition -> "$base/$index.${if (rendition.mimeType.endsWith("/webm")) "webm" else "mp4"}" }
     }
 
     private fun evict(id: String) {
@@ -175,7 +186,7 @@ object LocalHlsProxy {
             upstream.headers[HttpHeaders.ContentRange]?.let { call.response.header(HttpHeaders.ContentRange, it) }
             call.response.header(HttpHeaders.AcceptRanges, "bytes")
             call.respondBytesWriter(
-                contentType = ContentType.parse(if (rendition.isAudio) "audio/mp4" else "video/mp4"),
+                contentType = ContentType.parse(rendition.mimeType.ifEmpty { if (rendition.isAudio) "audio/mp4" else "video/mp4" }),
                 status = status,
                 contentLength = upstream.headers[HttpHeaders.ContentLength]?.toLongOrNull(),
             ) {
