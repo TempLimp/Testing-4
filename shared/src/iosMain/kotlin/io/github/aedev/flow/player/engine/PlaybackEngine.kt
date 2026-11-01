@@ -84,6 +84,11 @@ data class PlaybackStats(
     val audioUnderruns: Int,
     /** Where the first frame (or audio, with no video) handed over after the last seek starts; -1 before any. */
     val seekLandedMs: Long,
+    /** The pixel buffers handed to the display: "NV12" or "P010", and "full range" when so. */
+    val pixelFormat: String?,
+    /** The colour primaries and transfer function attached to them, as Core Video names them (PQ is "SMPTE_ST_2084_PQ"). */
+    val colorPrimaries: String?,
+    val transferFunction: String?,
 )
 
 object PlaybackEngines {
@@ -143,6 +148,9 @@ class AvPlayerEngine : PlaybackEngine {
             audioRendering = isPlaying(),
             audioUnderruns = access?.numberOfStalls?.toInt() ?: 0,
             seekLandedMs = -1,
+            pixelFormat = null,
+            colorPrimaries = null,
+            transferFunction = null,
         )
     }
 

@@ -52,6 +52,9 @@ final class BundledEngine: NSObject, PlaybackEngine {
     private var underruns = 0
     private var seekLandedMs: Int64 = -1
     private var pictureSize: String?
+    private var pixelFormat: String?
+    private var colorPrimaries: String?
+    private var transferFunction: String?
 
     private var pictureInPicture: AVPictureInPictureController?
     private var watchdog: DispatchSourceTimer?
@@ -148,7 +151,10 @@ final class BundledEngine: NSObject, PlaybackEngine {
             audioQueuedMs: Int64(audioQueuedMs),
             audioRendering: audio != nil && audioRenderer.status == .rendering && audioRenderer.error == nil,
             audioUnderruns: Int32(underruns),
-            seekLandedMs: seekLandedMs
+            seekLandedMs: seekLandedMs,
+            pixelFormat: pixelFormat,
+            colorPrimaries: colorPrimaries,
+            transferFunction: transferFunction
         )
     }
 
@@ -279,6 +285,9 @@ final class BundledEngine: NSObject, PlaybackEngine {
                 framesDecoded += 1
                 framesDropped += skipped
                 pictureSize = decoder.pictureSize
+                pixelFormat = decoder.pixelFormatName
+                colorPrimaries = decoder.colourPrimariesName
+                transferFunction = decoder.transferFunctionName
                 // A seek decodes from the keyframe before its target; the frames ending before the target are not shown.
                 if CMTimeCompare(end, seekTarget) <= 0 && CMTimeCompare(time, seekTarget) < 0 { return }
                 if CMTimeCompare(late, Self.lateTolerance) > 0 {

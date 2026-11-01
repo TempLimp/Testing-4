@@ -33,6 +33,10 @@ final class TrackDecoder {
     /// Frames passed over while skipping to a keyframe, taken by the engine as dropped.
     private(set) var skippedFrames = 0
     private(set) var pictureSize: String?
+    /** What the last picture was handed over as: the pixel format, and the colour attached to it. */
+    private(set) var pixelFormatName: String?
+    private(set) var colourPrimariesName: String?
+    private(set) var transferFunctionName: String?
 
     private var io: UnsafeMutablePointer<AVIOContext>?
     private var format: UnsafeMutablePointer<AVFormatContext>?
@@ -215,6 +219,7 @@ final class TrackDecoder {
             CVPixelBufferPoolCreate(nil, nil, attributes as CFDictionary, &pool)
             poolShape = (width, height, pixelFormat)
             pictureSize = "\(width)x\(height)"
+            pixelFormatName = (deep ? "P010" : "NV12") + (full ? " full range" : "")
         }
         var created: CVPixelBuffer?
         guard let pool, CVPixelBufferPoolCreatePixelBuffer(nil, pool, &created) == kCVReturnSuccess, let pixels = created else {
@@ -268,6 +273,8 @@ final class TrackDecoder {
         case AVCOL_SPC_BT709: matrix = kCVImageBufferYCbCrMatrix_ITU_R_709_2
         default: matrix = hd ? kCVImageBufferYCbCrMatrix_ITU_R_709_2 : kCVImageBufferYCbCrMatrix_ITU_R_601_4
         }
+        colourPrimariesName = primaries as String
+        transferFunctionName = transfer as String
         CVBufferSetAttachment(pixels, kCVImageBufferColorPrimariesKey, primaries, .shouldPropagate)
         CVBufferSetAttachment(pixels, kCVImageBufferTransferFunctionKey, transfer, .shouldPropagate)
         CVBufferSetAttachment(pixels, kCVImageBufferYCbCrMatrixKey, matrix, .shouldPropagate)
