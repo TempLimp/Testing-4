@@ -848,14 +848,16 @@ private object PlaybackGate {
                 if (edr) edrCurrentMax = maxOf(edrCurrentMax, withContext(Dispatchers.Main) { UIScreen.mainScreen.currentEDRHeadroom })
             }
             val wallSeconds = window.elapsedNow().inWholeMilliseconds / 1000.0
-            val cpuPercent = (cpuSeconds() - cpuBefore) / wallSeconds * 100
+            // A rung that failed before its window ran has no rates to give (null, not NaN).
+            fun perSecond(amount: Double) = if (wallSeconds >= 1) amount / wallSeconds else null
+            val cpuPercent = perSecond((cpuSeconds() - cpuBefore) * 100)
             val advancedSeconds = (engine.currentPositionMs() - positionBefore) / 1000.0
             val after = engine.stats()
             val rendered = after.framesRendered - before.framesRendered
             val dropped = after.framesDropped - before.framesDropped
             val underruns = after.audioUnderruns - before.audioUnderruns
             val droppedShare = if (rendered + dropped > 0) dropped.toDouble() / (rendered + dropped) else 0.0
-            val realtime = advancedSeconds / wallSeconds
+            val realtime = perSecond(advancedSeconds) ?: 0.0
             val seek = seekCheck(engine, fps)
             val pip = if (pictureInPicture) pictureInPictureCheck(engine) else null
             val played = engine.error() == null && advancedSeconds >= REQUIRED_ADVANCE_SECONDS && after.audioRendering && (fps == 0 || rendered > 0)
@@ -883,7 +885,7 @@ private object PlaybackGate {
                 put("framesRendered", rendered)
                 put("framesDropped", dropped)
                 put("droppedPercent", droppedShare * 100)
-                put("framesPerSecondShown", rendered / wallSeconds)
+                put("framesPerSecondShown", perSecond(rendered.toDouble()))
                 put("maxVideoLateMs", after.maxVideoLateMs)
                 put("lateFrameBoundMs", LATE_FRAME_BOUND_MS)
                 put("audioRendering", after.audioRendering)
