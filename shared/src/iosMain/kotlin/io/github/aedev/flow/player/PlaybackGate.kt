@@ -727,8 +727,8 @@ private object PlaybackGate {
         val view = UIView(frame = window.bounds)
         layer.frame = window.bounds
         view.layer.addSublayer(layer)
-        window.addSubview(view)
-        fontSample?.let { window.bringSubviewToFront(it) }
+        val sample = fontSample
+        if (sample != null) sample.superview?.insertSubview(view, belowSubview = sample) else window.addSubview(view)
         overlay?.let { window.bringSubviewToFront(it) }
         videoViews += view
     }
@@ -971,10 +971,11 @@ private object PlaybackGate {
         val window = UIApplication.sharedApplication.keyWindow ?: return
         val root = window.rootViewController ?: return
         val sample = ComposeUIViewController { CondensedFontSample() }
+        // A child view controller's view belongs in its parent's view; the videos go under it there (showOnScreen).
         root.addChildViewController(sample)
         val (width, height) = window.bounds.useContents { size.width to size.height }
         sample.view.setFrame(CGRectMake(0.0, height - 200.0, width, 170.0))
-        window.addSubview(sample.view)
+        root.view.addSubview(sample.view)
         sample.didMoveToParentViewController(root)
         fontSample = sample.view
     }

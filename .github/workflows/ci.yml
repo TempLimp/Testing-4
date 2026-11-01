@@ -297,6 +297,9 @@ jobs:
             if [ -f "$RESULT" ] && ! grep -q '"verdict":"RUNNING"' "$RESULT"; then break; fi
             if ! pgrep -f 'Flow.app/Flow' > /dev/null; then
               echo "::error::The app is no longer running"
+              # iOS writes the crash report a little later; the app's own log says why now.
+              xcrun simctl spawn "$SIM_ID" log show --last 3m --style compact --predicate 'process == "Flow"' | grep -Ei 'exception|terminat|abort|crash|fatal|uncaught|error' | tail -n 60 || true
+              sleep 20
               break
             fi
             sleep 5
