@@ -47,7 +47,7 @@ final class BundledEngineTests: XCTestCase {
         engine.audioTap = tone.listen
         engine.open(video: nil, audio: clip("opus.webm"), durationMs: 0)
         engine.play()
-        let clock = clockRate(engine, from: 1_000, to: 3_000)
+        let (clock, _) = clockRate(engine, from: 1_000, to: 3_000)
         let stats = engine.stats()
         XCTAssertNil(engine.error())
         XCTAssertEqual(stats.audioDecoder, "opus")
@@ -112,7 +112,7 @@ final class BundledEngineTests: XCTestCase {
         show(engine)
         engine.open(video: clip(video), audio: clip(audio), durationMs: 6_000)
         engine.play()
-        let clock = clockRate(engine, from: 1_000, to: 4_500)
+        let (clock, droppedByFirstSecond) = clockRate(engine, from: 1_000, to: 4_500)
         let stats = engine.stats()
         XCTAssertNil(engine.error())
         XCTAssertEqual(stats.videoDecoder, decoders.0)
@@ -134,6 +134,8 @@ final class BundledEngineTests: XCTestCase {
             "flashAt": flashAt, "toneAt": toneAt, "driftMs": (toneAt - flashAt) * 1000,
             "framesRendered": stats.framesRendered, "framesDropped": stats.framesDropped,
             "maxVideoLateMs": stats.maxVideoLateMs, "audioUnderruns": stats.audioUnderruns, "clockRate": clock,
+            // Whether drops come at the start (a one-time stall) or spread over the clip (steady slowness).
+            "droppedByFirstSecond": droppedByFirstSecond,
         ])
         engine.close()
     }
@@ -166,13 +168,13 @@ final class BundledEngineTests: XCTestCase {
 
     // The clock follows the sound device and must keep real time: media seconds over wall seconds between two
     // positions read well before the clip ends (a runner slow to wake this thread then cannot run it into the end).
-    private func clockRate(_ engine: BundledEngine, from: Int64, to: Int64) -> Double {
+    private func clockRate(_ engine: BundledEngine, from: Int64, to: Int64) -> (rate: Double, droppedAtStart: Int32) {
         waitUntil(engine, reaches: from)
-        let (startPosition, startTime) = (engine.currentPositionMs(), Date())
+        let (startPosition, startTime, droppedAtStart) = (engine.currentPositionMs(), Date(), engine.stats().framesDropped)
         waitUntil(engine, reaches: to)
         let (endPosition, endTime) = (engine.currentPositionMs(), Date())
         XCTAssertGreaterThanOrEqual(endPosition, to, "the clock did not reach \(to) ms")
-        return Double(endPosition - startPosition) / 1000 / endTime.timeIntervalSince(startTime)
+        return (Double(endPosition - startPosition) / 1000 / endTime.timeIntervalSince(startTime), droppedAtStart)
     }
 
     // One line per check in Documents/engine-tests.jsonl, which CI copies into its evidence.
