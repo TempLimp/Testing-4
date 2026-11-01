@@ -1,5 +1,6 @@
 import AVFoundation
 import AVKit
+import FFmpeg
 @testable import Flow
 import Shared
 import XCTest
@@ -34,6 +35,27 @@ final class BundledEngineTests: XCTestCase {
     // here. The real 10-bit check is the phone gate's hdrAv1 item, which shows HDR on a P010 display path.
     func testTenBitVp9DecodesInSyncDisplayIsCheckedOnThePhone() throws {
         try playsInSync(video: "vp9-10bit.webm", audio: "opus.webm", decoders: ("vp9", "opus"), allowedDropShare: 0.5)
+    }
+
+    // A file between one and two chunks long, as the HDR video's 2.5 MB audio was on the phone (2026-11-01, every rung
+    // failed to open on a 416 for bytes from 4 MiB): read to its end, with no request past it.
+    func testAShortFileIsReadToItsEndWithoutAskingPastIt() {
+        ClipProtocol.refusedRanges = 0
+        let size = 3 * 1024 * 1024 + 123
+        let reader = RangeReader(url: URL(string: "clip:///zeros-\(size)")!)
+        var buffer = [UInt8](repeating: 0, count: 1 << 16)
+        var total = 0
+        while true {
+            let read = buffer.withUnsafeMutableBufferPointer { reader.read(into: $0.baseAddress!, count: $0.count) }
+            guard read > 0 else {
+                XCTAssertEqual(read, flow_averror_eof(), "read failed: \(reader.error ?? "no error")")
+                break
+            }
+            total += Int(read)
+        }
+        XCTAssertEqual(total, size)
+        XCTAssertNil(reader.error)
+        XCTAssertEqual(ClipProtocol.refusedRanges, 0, "asked for bytes past the end")
     }
 
     // Each decoder alone, no renderer: 6 s of 30 fps decoded and converted to the display's pixel format.
@@ -259,8 +281,11 @@ private final class Onset {
     }
 }
 
-/// Serves the test bundle's clips at clip:///name, honouring Range as LocalHlsProxy's file route does.
+/// Serves the test bundle's clips at clip:///name, honouring Range as LocalHlsProxy's file route does, and
+/// clip:///zeros-N as N zero bytes. Counts the ranges it had to refuse (416).
 final class ClipProtocol: URLProtocol {
+    static var refusedRanges = 0
+
     override class func canInit(with request: URLRequest) -> Bool {
         request.url?.scheme == "clip"
     }
@@ -270,9 +295,10 @@ final class ClipProtocol: URLProtocol {
     }
 
     override func startLoading() {
+        let name = request.url?.lastPathComponent ?? ""
+        let synthetic = name.hasPrefix("zeros-") ? Int(name.dropFirst(6)).map { Data(count: $0) } : nil
         guard let url = request.url,
-              let file = Bundle(for: ClipProtocol.self).url(forResource: url.lastPathComponent, withExtension: nil),
-              let data = try? Data(contentsOf: file) else {
+              let data = synthetic ?? Bundle(for: ClipProtocol.self).url(forResource: name, withExtension: nil).flatMap({ try? Data(contentsOf: $0) }) else {
             client?.urlProtocol(self, didFailWithError: URLError(.fileDoesNotExist))
             return
         }
@@ -284,6 +310,7 @@ final class ClipProtocol: URLProtocol {
             let start = Int(bounds.first ?? "") ?? 0
             let end = min(Int(bounds.count > 1 ? bounds[1] : "") ?? data.count - 1, data.count - 1)
             guard start < data.count, start <= end else {
+                Self.refusedRanges += 1
                 let refused = HTTPURLResponse(url: url, statusCode: 416, httpVersion: "HTTP/1.1", headerFields: ["Content-Range": "bytes */\(data.count)"])!
                 client?.urlProtocol(self, didReceive: refused, cacheStoragePolicy: .notAllowed)
                 client?.urlProtocolDidFinishLoading(self)

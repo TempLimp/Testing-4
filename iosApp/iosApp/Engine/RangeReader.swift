@@ -30,7 +30,8 @@ final class RangeReader {
         defer { lock.unlock() }
         if size >= 0 && position >= size { return flow_averror_eof() }
         let index = position / Self.chunkSize
-        for ahead in 0...Self.chunksAhead { request(index + ahead, attempt: 1) }
+        // Ahead only once the size is known: a chunk past the end of a short file is answered 416.
+        for ahead in 0...(size < 0 ? 0 : Self.chunksAhead) { request(index + ahead, attempt: 1) }
         while chunks[index] == nil && failure == nil && !cancelled { lock.wait() }
         if cancelled { return flow_averror_exit() }
         guard let chunk = chunks[index] else { return flow_averror_eio() }
@@ -109,6 +110,12 @@ final class RangeReader {
         }
         loading[index] = nil
         guard !cancelled else { return }
+        if response?.statusCode == 416 {
+            // Range Not Satisfiable: nothing there, the end of the file (an empty one, when it is the first chunk).
+            chunks[index] = Data()
+            if index == 0 && size < 0 { size = 0 }
+            return
+        }
         guard let data, let response, error == nil, (200...299).contains(response.statusCode) else {
             if attempt < Self.attempts {
                 request(index, attempt: attempt + 1)
