@@ -29,11 +29,10 @@ final class BundledEngineTests: XCTestCase {
         try playsInSync(video: "vp9.webm", audio: "opus.webm", decoders: ("vp9", "opus"))
     }
 
-    // CI's simulator dropped no 10-bit frame in the runs of 2026-10-31 and 28-33 of 139 (mostly by skipping to a
-    // keyframe after a stall of about a second) in all three of 2026-11-01, same image and Xcode, while every 8-bit test
-    // dropped none and shown frames stayed within 40 ms. testDecodersRunFasterThanRealTime tells whether decoding or the
-    // simulator's display of P010 is the slow part; this test bounds sync and decoding, and half the frames may drop.
-    func testTenBitVp9WithOpusPlaysInSync() throws {
+    // Decoding and sync of 10-bit only: the simulator's display of P010 stalls on some CI hosts (28-33 of 139 frames
+    // dropped on 2026-11-01, none the day before, while decoding runs at 0.68 ms a frame), so half the frames may drop
+    // here. The real 10-bit check is the phone gate's hdrAv1 item, which shows HDR on a P010 display path.
+    func testTenBitVp9DecodesInSyncDisplayIsCheckedOnThePhone() throws {
         try playsInSync(video: "vp9-10bit.webm", audio: "opus.webm", decoders: ("vp9", "opus"), allowedDropShare: 0.5)
     }
 
