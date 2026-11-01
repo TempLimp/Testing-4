@@ -22,7 +22,7 @@ enum class AppFont(
     }
 }
 
-private val CondensedWeights =
+internal val CondensedWeights =
     listOf(FontWeight.Normal, FontWeight.Medium, FontWeight.SemiBold, FontWeight.Bold, FontWeight.ExtraBold)
 
 /**

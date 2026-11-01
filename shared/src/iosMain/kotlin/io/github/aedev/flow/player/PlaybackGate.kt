@@ -42,7 +42,41 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.ComposeUIViewController
+import io.github.aedev.flow.ui.theme.AppFont
+import io.github.aedev.flow.ui.theme.CONDENSED_FAMILY
+import io.github.aedev.flow.ui.theme.CondensedWeights
+import io.github.aedev.flow.ui.theme.appFontFamily
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.NonCancellable
 import kotlinx.serialization.json.JsonArray
+import platform.UIKit.UIAction
+import platform.UIKit.UIButton
+import platform.UIKit.UIButtonTypeSystem
+import platform.UIKit.UIControlStateNormal
+import platform.UIKit.UIFontDescriptor
+import platform.UIKit.UIFontDescriptorFamilyAttribute
+import platform.UIKit.UIFontDescriptorTraitsAttribute
+import platform.UIKit.UIFontWeightBold
+import platform.UIKit.UIFontWeightHeavy
+import platform.UIKit.UIFontWeightMedium
+import platform.UIKit.UIFontWeightTrait
+import platform.UIKit.UIFontWeightSemibold
+import platform.UIKit.UIScreen
+import platform.UIKit.addChildViewController
+import platform.UIKit.didMoveToParentViewController
+import platform.UIKit.systemBlueColor
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -129,8 +163,31 @@ private const val DEFAULT_VIDEO_ID = "aqz-KE-bpKQ"
 private const val FALLBACK_SONG_ID = "lZUgQPTCTlo"
 private const val REQUIRED_ADVANCE_SECONDS = 5.0
 
-// What the gate checks, in order; music, video, vp9 and av1 must all pass for a PASS.
-private val ITEMS = listOf("cipher", "poToken", "music", "video", "vp9", "av1")
+// What the gate checks, in order. Every item after the cipher and the PoToken must pass for a PASS.
+private val ITEMS = listOf("cipher", "poToken", "fonts", "pip", "music", "video", "h264At1080p", "vp9", "av1", "hdrAv1", "longRun")
+
+// "The World in HDR in 4K (ULTRA HD)" (Jacob + Katie Schwarz): offered as 10-bit AV1 HDR (BT.2020, PQ) from 144p to
+// 2160p60 through VISIONOS, the client upstream's ladder asks first; no VP9 profile 2 on any client asked (probed
+// 2026-11-01), and no 8K rung to waste the run on.
+private const val HDR_VIDEO_ID = "tO01J-M3g0U"
+
+// The long run: VP9 2160p60 for this long, measured in windows of this length.
+private const val LONG_RUN_WINDOWS = 20
+private const val LONG_RUN_WINDOW_SECONDS = 30
+
+// UIKit's weights for the port's condensed FontWeights (AppFont.kt).
+private val UI_FONT_WEIGHTS = mapOf(400 to UIFontWeightRegular, 500 to UIFontWeightMedium, 600 to UIFontWeightSemibold, 700 to UIFontWeightBold, 800 to UIFontWeightHeavy)
+
+/** A line in each of the port's condensed weights, through its own Compose font family, for the gate's screenshot. */
+@Composable
+private fun CondensedFontSample() {
+    val family = appFontFamily(AppFont.CONDENSED, null) { null }
+    Column(Modifier.fillMaxSize().background(Color.Black).padding(horizontal = 12.dp, vertical = 6.dp)) {
+        CondensedWeights.forEach { weight ->
+            BasicText("Condensed ${weight.weight}: Flow plays VP9, AV1 and Opus", style = TextStyle(color = Color.White, fontSize = 18.sp, fontFamily = family, fontWeight = weight))
+        }
+    }
+}
 
 // The bundled engine's measurement window, after its clock has started.
 private const val WINDOW_SECONDS = 20
@@ -217,11 +274,13 @@ private fun machine(): String =
 // Reasons in which the client never answered, was not asked, or answered without a stream to make playable.
 private val NO_STREAM_OFFERED = Regex("timeout or null response|not asked|no visitorData|PoToken unavailable|demoted|no adaptive formats|live but no hls")
 private object PlaybackGate {
-    // The gate writes its result before this, whatever a step is doing; CI waits a little longer.
-    private val DEADLINE = 22.minutes
+    // The gate writes its result before this, whatever a step is doing; CI's wait covers it only when every
+    // playback step is BLOCKED there, as on GitHub's walled runners.
+    private val DEADLINE = 40.minutes
 
     private val videoViews = mutableListOf<UIView>()
-    private var extraction: VideoExtractionResult? = null
+    private val extractions = mutableMapOf<String, VideoExtractionResult>()
+    private var fontSample: UIView? = null
     private val lock = SynchronizedObject()
     private val results = linkedMapOf<String, JsonElement>()
     private var running = "start"
@@ -253,6 +312,11 @@ private object PlaybackGate {
             },
         )
         record("codecs", codecEvidence())
+        // The long run takes ten minutes untouched: the screen must not lock, and the battery is read as it goes.
+        withContext(Dispatchers.Main) {
+            UIApplication.sharedApplication.idleTimerDisabled = true
+            UIDevice.currentDevice.batteryMonitoringEnabled = true
+        }
         val watchdog =
             CoroutineScope(Dispatchers.Default).launch {
                 delay(DEADLINE)
@@ -260,10 +324,15 @@ private object PlaybackGate {
             }
         step("cipher", 60.seconds) { cipher() }
         step("poToken", 100.seconds) { poToken(videoId) }
+        step("fonts", 30.seconds) { fonts() }
+        step("pip", 7.minutes) { pictureInPictureByTap(videoId) }
         step("music", 150.seconds) { music() }
         step("video", 150.seconds) { video(videoId) }
+        step("h264At1080p", 150.seconds) { h264At1080p(videoId) }
         step("vp9", 360.seconds) { codecLadder(videoId, "vp9") }
         step("av1", 360.seconds) { codecLadder(videoId, "av1") }
+        step("hdrAv1", 8.minutes) { codecLadder(HDR_VIDEO_ID, "av1", deep = true) }
+        step("longRun", 13.minutes) { longRun(videoId) }
         watchdog.cancel()
         finish(deadlineReached = false)
     }
@@ -329,7 +398,7 @@ private object PlaybackGate {
                 val items = ITEMS.map(::verdictOf)
                 when {
                     "FAIL" in items || null in items -> "FAIL"
-                    listOf("music", "video", "vp9", "av1").all { verdictOf(it) == "PASS" } -> "PASS"
+                    ITEMS.drop(2).all { verdictOf(it) == "PASS" } -> "PASS"
                     else -> "BLOCKED"
                 }
             }
@@ -367,7 +436,7 @@ private object PlaybackGate {
                     ITEMS.forEach { name ->
                         val item = results[name] as? JsonObject ?: return@forEach
                         val details =
-                            listOf("layer", "client", "engine", "codec", "presentationSize", "secondsAdvanced", "highestSustained", "block", "error")
+                            listOf("layer", "engine", "codec", "presentationSize", "highestSustained", "sustainedWholeTime", "active", "block", "error")
                                 .mapNotNull { key -> item[key]?.toString()?.trim('"')?.takeIf { it != "null" }?.let { "$key=${it.take(80)}" } }
                         appendLine("$name: ${item["verdict"]?.toString()?.trim('"')} ${details.joinToString(" ")}")
                     }
@@ -388,7 +457,9 @@ private object PlaybackGate {
                 }
             label.text = text
             val width = window.bounds.useContents { size.width } - 24.0
-            val height = label.sizeThatFits(CGSizeMake(width, 10_000.0)).useContents { this.height }
+            // Above the font sample along the bottom; the file has everything the label has no room for.
+            val room = window.bounds.useContents { size.height } - 60.0 - 210.0
+            val height = minOf(label.sizeThatFits(CGSizeMake(width, 10_000.0)).useContents { this.height }, room)
             label.setFrame(CGRectMake(12.0, 60.0, width, height))
             window.bringSubviewToFront(label)
         }
@@ -536,7 +607,7 @@ private object PlaybackGate {
     }
 
     private suspend fun extraction(videoId: String): VideoExtractionResult? =
-        extraction ?: InnerTubeVideoStreamExtractor.extract(videoId)?.also { extraction = it }
+        extractions[videoId] ?: InnerTubeVideoStreamExtractor.extract(videoId)?.also { extractions[videoId] = it }
 
     private fun failed(
         what: String,
@@ -568,10 +639,11 @@ private object PlaybackGate {
     private fun networkRefusal(id: String): String? =
         networkRefusal(id, PlayerDiagnostics.entries().lastOrNull { "ALL clients failed $id: " in it.message }?.message)
 
-    /** Plays [source] until it has advanced [REQUIRED_ADVANCE_SECONDS], and reports what AVPlayer saw. */
+    /** Plays [source] until it has advanced [requiredSeconds], and reports what AVPlayer saw. */
     private suspend fun observe(
         source: MediaSource,
         expectVideo: Boolean,
+        requiredSeconds: Double = REQUIRED_ADVANCE_SECONDS,
     ): JsonObject {
         val engine = AvPlayerEngine()
         engine.prepare(source)
@@ -611,7 +683,7 @@ private object PlaybackGate {
                 }
             }
             val advanced = lastTime - (firstTime ?: lastTime)
-            if (advanced >= REQUIRED_ADVANCE_SECONDS && (!expectVideo || frames > 0)) break
+            if (advanced >= requiredSeconds && (!expectVideo || frames > 0)) break
         }
 
         // Only a master with an EXT-X-MEDIA audio group has an audible selection group; an audio-only master has
@@ -621,7 +693,7 @@ private object PlaybackGate {
         val advanced = lastTime - (firstTime ?: lastTime)
         val ready = item.status == AVPlayerItemStatusReadyToPlay
         val audioPresent = hasAudio || audibleSelected
-        val pass = ready && audioPresent && advanced >= REQUIRED_ADVANCE_SECONDS && (!expectVideo || (hasVideo && frames > 0))
+        val pass = ready && audioPresent && advanced >= requiredSeconds && (!expectVideo || (hasVideo && frames > 0))
         val access = item.accessLog()?.events?.lastOrNull() as? AVPlayerItemAccessLogEvent
         val errors = item.errorLog()?.events?.mapNotNull { it as? AVPlayerItemErrorLogEvent }.orEmpty()
         // Stopped before the next check: the bundled engine's measurements must not share the phone with it.
@@ -656,6 +728,7 @@ private object PlaybackGate {
         layer.frame = window.bounds
         view.layer.addSublayer(layer)
         window.addSubview(view)
+        fontSample?.let { window.bringSubviewToFront(it) }
         overlay?.let { window.bringSubviewToFront(it) }
         videoViews += view
     }
@@ -667,13 +740,15 @@ private object PlaybackGate {
     private suspend fun codecLadder(
         videoId: String,
         codecKey: String,
+        deep: Boolean = false,
     ): JsonObject {
         stage("$codecKey: player response")
         val result = extraction(videoId) ?: return blockedOrFailed(codecKey, videoId, "every client failed")
         val all = InnerTubeStreamBridge.convertVideoFormats(result.videoFormats)
         val rungs =
             all
-                .filter { VideoCodecUtils.codecKeyFromStream(it) == codecKey && !AdaptiveLadder.isHighBitDepth(it) && PlatformCodecSupport.engineFor(it) == PlaybackEngineKind.BUNDLED }
+                // Upstream keeps 10-bit and HDR on a ladder of their own (AdaptiveLadder.isHighBitDepth).
+                .filter { VideoCodecUtils.codecKeyFromStream(it) == codecKey && AdaptiveLadder.isHighBitDepth(it) == deep && PlatformCodecSupport.engineFor(it) == PlaybackEngineKind.BUNDLED }
                 .groupBy(VideoCodecUtils::qualityHeightFromStream)
                 .map { (_, sameHeight) -> sameHeight.maxBy { it.bitrate } }
                 .sortedByDescending(VideoCodecUtils::qualityHeightFromStream)
@@ -681,17 +756,21 @@ private object PlaybackGate {
             return buildJsonObject {
                 put("verdict", "BLOCKED")
                 put("layer", currentStage())
-                put("block", "no $codecKey stream for the bundled engine among ${all.size} offered")
+                put("block", "no ${if (deep) "10-bit " else ""}$codecKey stream for the bundled engine among ${all.size} offered")
+                put("deepFormatsOffered", all.filter(AdaptiveLadder::isHighBitDepth).joinToString { it.codec.orEmpty() })
             }
         }
-        val audios = InnerTubeStreamBridge.convertAudioFormats(result.audioFormats)
         val audio =
-            AudioStreamSelector.selectPreferredAudioStream(
-                if (codecKey == "vp9") audios.filter { it.codec == "opus" }.ifEmpty { audios } else audios,
-                preferredAudioLanguage = "original",
-                compatibilityFilter = { PlatformCodecSupport.canMergeAudio(it, PlaybackEngineKind.BUNDLED) },
-            )
-        val duration = result.playerResponse.videoDetails?.lengthSeconds?.toLongOrNull() ?: 0
+            if (codecKey == "vp9") {
+                opusAudio(result)
+            } else {
+                AudioStreamSelector.selectPreferredAudioStream(
+                    InnerTubeStreamBridge.convertAudioFormats(result.audioFormats),
+                    preferredAudioLanguage = "original",
+                    compatibilityFilter = { PlatformCodecSupport.canMergeAudio(it, PlaybackEngineKind.BUNDLED) },
+                )
+            }
+        val duration = result.durationSeconds()
         val measured = mutableListOf<JsonObject>()
         var highestSustained: Int? = null
         for (stream in rungs) {
@@ -703,7 +782,7 @@ private object PlaybackGate {
                 if (source == null || source.engine != PlaybackEngineKind.BUNDLED) {
                     failed(codecKey, videoId, "${height}p resolved to ${source?.engine ?: "nothing"}")
                 } else {
-                    measure(source, fps = VideoCodecUtils.frameRateFromStream(stream), pictureInPicture = codecKey == "vp9" && measured.isEmpty())
+                    measure(source, fps = VideoCodecUtils.frameRateFromStream(stream), pictureInPicture = codecKey == "vp9" && !deep && measured.isEmpty(), edr = deep)
                 }
             measured +=
                 buildJsonObject {
@@ -720,7 +799,10 @@ private object PlaybackGate {
             put("verdict", if (allPlayed && highestSustained != null) "PASS" else "FAIL")
             put("client", result.usedClient.clientName)
             put("engine", PlaybackEngineKind.BUNDLED.name)
+            put("id", videoId)
             put("codec", codecKey)
+            put("tenBit", deep)
+            put("deepFormatsOffered", all.filter(AdaptiveLadder::isHighBitDepth).joinToString { it.codec.orEmpty() })
             put("highestSustained", highestSustained?.let { "${it}p" })
             put("audioItag", audio?.itag)
             put("audioCodec", audio?.codec)
@@ -737,6 +819,7 @@ private object PlaybackGate {
         source: MediaSource,
         fps: Int,
         pictureInPicture: Boolean,
+        edr: Boolean = false,
     ): JsonObject {
         // Made on the main thread, where its layers belong.
         val engine =
@@ -754,10 +837,14 @@ private object PlaybackGate {
             val positionBefore = engine.currentPositionMs()
             val thermalStart = NSProcessInfo.processInfo.thermalState
             var thermalMax = thermalStart
+            // How far above SDR white the screen may go, and went, while the picture was up (HDR shows as headroom > 1).
+            val edrPotential = if (edr) withContext(Dispatchers.Main) { UIScreen.mainScreen.potentialEDRHeadroom } else null
+            var edrCurrentMax = 0.0
             val window = TimeSource.Monotonic.markNow()
             while (window.elapsedNow() < WINDOW_SECONDS.seconds && engine.error() == null) {
                 delay(500)
                 thermalMax = maxOf(thermalMax, NSProcessInfo.processInfo.thermalState)
+                if (edr) edrCurrentMax = maxOf(edrCurrentMax, withContext(Dispatchers.Main) { UIScreen.mainScreen.currentEDRHeadroom })
             }
             val wallSeconds = window.elapsedNow().inWholeMilliseconds / 1000.0
             val cpuPercent = (cpuSeconds() - cpuBefore) / wallSeconds * 100
@@ -781,6 +868,13 @@ private object PlaybackGate {
                 put("videoDecoder", after.videoDecoder)
                 put("audioDecoder", after.audioDecoder)
                 put("videoSize", after.videoSize)
+                put("pixelFormat", after.pixelFormat)
+                put("colorPrimaries", after.colorPrimaries)
+                put("transferFunction", after.transferFunction)
+                edrPotential?.let {
+                    put("edrHeadroomPotential", it)
+                    put("edrHeadroomCurrentMax", edrCurrentMax)
+                }
                 put("startupMs", startupMs)
                 put("windowSeconds", wallSeconds)
                 put("secondsAdvanced", advancedSeconds)
@@ -847,4 +941,287 @@ private object PlaybackGate {
                 put("started", active)
             }
         }
+
+    /**
+     * The condensed font on a device (PARITY's S02 row): the faces iOS has in Avenir Next Condensed, the face CoreText
+     * picks for each weight the port maps, and a line in each drawn through the port's own Compose family, left on
+     * screen for the screenshot.
+     */
+    private suspend fun fonts(): JsonObject =
+        withContext(Dispatchers.Main) {
+            val faces = UIFont.fontNamesForFamilyName(CONDENSED_FAMILY).map { it.toString() }
+            val picked =
+                CondensedWeights.associate { weight ->
+                    val traits = mapOf<Any?, Any?>(UIFontWeightTrait to UI_FONT_WEIGHTS.getValue(weight.weight))
+                    val attributes = mapOf<Any?, Any?>(UIFontDescriptorFamilyAttribute to CONDENSED_FAMILY, UIFontDescriptorTraitsAttribute to traits)
+                    weight.weight to UIFont.fontWithDescriptor(UIFontDescriptor.fontDescriptorWithFontAttributes(attributes), size = 18.0).fontName
+                }
+            showFontSample()
+            val distinct = picked.values.all { it.startsWith("AvenirNextCondensed") } && picked.values.toSet().size == CondensedWeights.size
+            buildJsonObject {
+                put("verdict", if (distinct) "PASS" else "FAIL")
+                put("family", CONDENSED_FAMILY)
+                put("faces", faces.joinToString())
+                picked.forEach { (weight, name) -> put("weight$weight", name) }
+            }
+        }
+
+    private fun showFontSample() {
+        @Suppress("DEPRECATION")
+        val window = UIApplication.sharedApplication.keyWindow ?: return
+        val root = window.rootViewController ?: return
+        val sample = ComposeUIViewController { CondensedFontSample() }
+        root.addChildViewController(sample)
+        val (width, height) = window.bounds.useContents { size.width to size.height }
+        sample.view.setFrame(CGRectMake(0.0, height - 200.0, width, 170.0))
+        window.addSubview(sample.view)
+        sample.didMoveToParentViewController(root)
+        fontSample = sample.view
+    }
+
+    /**
+     * Picture in Picture opened the only way iOS allows it, by a tap: the bundled engine plays VP9 at 1080p, a button
+     * starts Picture in Picture on its sample-buffer layer, and the gate checks the window came up and the video kept
+     * playing in it for 5 s. S11 gives the player its own button.
+     */
+    private suspend fun pictureInPictureByTap(videoId: String): JsonObject {
+        stage("pip: player response")
+        val result = extraction(videoId) ?: return blockedOrFailed("pip", videoId, "every client failed")
+        val stream =
+            InnerTubeStreamBridge
+                .convertVideoFormats(result.videoFormats)
+                .filter {
+                    VideoCodecUtils.codecKeyFromStream(it) == "vp9" && !AdaptiveLadder.isHighBitDepth(it) &&
+                        VideoCodecUtils.qualityHeightFromStream(it) <= 1080 && PlatformCodecSupport.engineFor(it) == PlaybackEngineKind.BUNDLED
+                }.maxByOrNull(VideoCodecUtils::qualityHeightFromStream)
+                ?: return buildJsonObject {
+                    put("verdict", "BLOCKED")
+                    put("layer", currentStage())
+                    put("block", "no VP9 stream for the bundled engine offered")
+                }
+        val source =
+            VideoPlaybackResolver(videoId).resolve(listOf(stream), opusAudio(result), null, null, result.durationSeconds())
+                ?: return failed("pip", videoId, "nothing resolved")
+        val engine = withContext(Dispatchers.Main) { PlaybackEngines.create(PlaybackEngineKind.BUNDLED).also { showOnScreen(it.layer) } }
+        engine.prepare(source)
+        engine.play()
+        var button: UIView? = null
+        try {
+            val opening = TimeSource.Monotonic.markNow()
+            while (opening.elapsedNow() < 40.seconds && engine.error() == null && !(engine.isPlaying() && engine.currentPositionMs() > 0)) delay(100)
+            val controller =
+                withContext(Dispatchers.Main) { engine.pictureInPictureController() }
+                    ?: return failed("pip", videoId, "no controller; supported=${AVPictureInPictureController.isPictureInPictureSupported()}")
+            val tapped = CompletableDeferred<Boolean>()
+            button =
+                withContext(Dispatchers.Main) {
+                    showButton("Start Picture in Picture") {
+                        val possible = controller.pictureInPicturePossible
+                        controller.startPictureInPicture()
+                        tapped.complete(possible)
+                    }
+                }
+            stage("pip: TAP \"Start Picture in Picture\"")
+            val possibleAtTap = withTimeoutOrNull(5.minutes) { tapped.await() } ?: return failed("pip", videoId, "nobody tapped within 5 minutes")
+            stage("pip: window")
+            val asked = TimeSource.Monotonic.markNow()
+            while (asked.elapsedNow() < 5.seconds && !withContext(Dispatchers.Main) { controller.pictureInPictureActive }) delay(100)
+            val active = withContext(Dispatchers.Main) { controller.pictureInPictureActive }
+            val before = engine.stats()
+            val positionBefore = engine.currentPositionMs()
+            var stayedActive = active
+            val inWindow = TimeSource.Monotonic.markNow()
+            while (active && inWindow.elapsedNow() < 6.seconds) {
+                delay(500)
+                stayedActive = stayedActive && withContext(Dispatchers.Main) { controller.pictureInPictureActive }
+            }
+            val played = (engine.currentPositionMs() - positionBefore) / 1000.0
+            val after = engine.stats()
+            withContext(Dispatchers.Main) { if (controller.pictureInPictureActive) controller.stopPictureInPicture() }
+            delay(1_000)
+            return buildJsonObject {
+                put("verdict", if (active && stayedActive && played >= 5.0 && engine.error() == null) "PASS" else "FAIL")
+                put("engine", PlaybackEngineKind.BUNDLED.name)
+                put("videoSize", after.videoSize)
+                put("possibleAtTap", possibleAtTap)
+                put("active", active)
+                put("stayedActive", stayedActive)
+                put("secondsPlayedInWindow", played)
+                put("framesRenderedInWindow", after.framesRendered - before.framesRendered)
+                put("framesDroppedInWindow", after.framesDropped - before.framesDropped)
+                put("error", engine.error())
+            }
+        } finally {
+            withContext(NonCancellable + Dispatchers.Main) { button?.removeFromSuperview() }
+            engine.close()
+        }
+    }
+
+    private fun showButton(
+        title: String,
+        onTap: () -> Unit,
+    ): UIView? {
+        @Suppress("DEPRECATION")
+        val window = UIApplication.sharedApplication.keyWindow ?: return null
+        val button = UIButton.buttonWithType(UIButtonTypeSystem, primaryAction = UIAction.actionWithTitle(title, image = null, identifier = null) { _ -> onTap() })
+        button.backgroundColor = UIColor.systemBlueColor
+        button.setTitleColor(UIColor.whiteColor, forState = UIControlStateNormal)
+        button.titleLabel?.font = UIFont.boldSystemFontOfSize(22.0)
+        button.layer.cornerRadius = 14.0
+        val (width, height) = window.bounds.useContents { size.width to size.height }
+        button.setFrame(CGRectMake((width - 320.0) / 2, height / 2 - 40.0, 320.0, 80.0))
+        window.addSubview(button)
+        window.bringSubviewToFront(button)
+        return button
+    }
+
+    /**
+     * AVPlayer held to the 1080p H.264 rung for 30 s, the variant that logged `-12318 Segment exceeds specified
+     * bandwidth` in S04 before fcc0d6c stated each rendition's measured peak as BANDWIDTH. A master with that one
+     * variant leaves AVPlayer nothing to switch to.
+     */
+    private suspend fun h264At1080p(videoId: String): JsonObject {
+        stage("h264At1080p: player response")
+        val result = extraction(videoId) ?: return blockedOrFailed("h264At1080p", videoId, "every client failed")
+        val stream =
+            InnerTubeStreamBridge
+                .convertVideoFormats(result.videoFormats)
+                .filter {
+                    PlatformCodecSupport.engineFor(it) == PlaybackEngineKind.AVPLAYER && VideoCodecUtils.codecKeyFromStream(it) == "h264" &&
+                        VideoCodecUtils.qualityHeightFromStream(it) == 1080
+                }.maxByOrNull { it.bitrate }
+                ?: return failed("h264At1080p", videoId, "no 1080p H.264 offered")
+        val audio =
+            AudioStreamSelector.selectPreferredAudioStream(
+                InnerTubeStreamBridge.convertAudioFormats(result.audioFormats),
+                preferredAudioLanguage = "original",
+                compatibilityFilter = { PlatformCodecSupport.canMergeAudio(it) },
+            )
+        stage("h264At1080p: HLS proxy")
+        val source =
+            VideoPlaybackResolver(videoId).resolve(listOf(stream), audio, null, null, result.durationSeconds())
+                ?: return failed("h264At1080p", videoId, "nothing resolved")
+        stage("h264At1080p: AVPlayer")
+        val observed = observe(source, expectVideo = true, requiredSeconds = 30.0)
+        val at1080p = observed["presentationSize"]?.toString()?.trim('"') == "1920x1080"
+        val clean = observed["segmentExceedsBandwidth12318"]?.toString() == "false"
+        return buildJsonObject {
+            put("id", videoId)
+            put("codec", stream.codec)
+            put("bitrate", stream.bitrate)
+            observed.forEach { (key, value) -> put(key, value) }
+            put("verdict", if (observed["verdict"]?.toString()?.trim('"') == "PASS" && at1080p && clean) "PASS" else "FAIL")
+        }
+    }
+
+    /**
+     * VP9 2160p60 with Opus for ten minutes, measured every 30 s: frames shown and dropped, the clock against real
+     * time, gaps in the sound, CPU, the hottest thermal state and the battery level. It passes when it played the
+     * ten minutes; whether it stayed sustained, and when the phone warmed, is what it is for.
+     */
+    private suspend fun longRun(videoId: String): JsonObject {
+        stage("longRun: player response")
+        val result = extraction(videoId) ?: return blockedOrFailed("longRun", videoId, "every client failed")
+        val stream =
+            InnerTubeStreamBridge
+                .convertVideoFormats(result.videoFormats)
+                .filter {
+                    VideoCodecUtils.codecKeyFromStream(it) == "vp9" && !AdaptiveLadder.isHighBitDepth(it) &&
+                        VideoCodecUtils.qualityHeightFromStream(it) == 2160 && PlatformCodecSupport.engineFor(it) == PlaybackEngineKind.BUNDLED
+                }.maxByOrNull { it.bitrate }
+                ?: return buildJsonObject {
+                    put("verdict", "BLOCKED")
+                    put("layer", currentStage())
+                    put("block", "no VP9 2160p offered")
+                }
+        val source =
+            VideoPlaybackResolver(videoId).resolve(listOf(stream), opusAudio(result), null, null, result.durationSeconds())
+                ?: return failed("longRun", videoId, "nothing resolved")
+        val (batteryState, batteryStart) =
+            withContext(Dispatchers.Main) { UIDevice.currentDevice.batteryState to UIDevice.currentDevice.batteryLevel }
+        val engine = withContext(Dispatchers.Main) { PlaybackEngines.create(PlaybackEngineKind.BUNDLED).also { showOnScreen(it.layer) } }
+        engine.prepare(source)
+        engine.play()
+        try {
+            val opening = TimeSource.Monotonic.markNow()
+            while (opening.elapsedNow() < 40.seconds && engine.error() == null && !(engine.isPlaying() && engine.currentPositionMs() > 0)) delay(100)
+            val windows = mutableListOf<JsonObject>()
+            var sustainedWholeTime = true
+            var firstWarmerAtSeconds: Int? = null
+            var totalSeconds = 0.0
+            for (index in 1..LONG_RUN_WINDOWS) {
+                if (engine.error() != null) break
+                stage("longRun: window $index of $LONG_RUN_WINDOWS")
+                val before = engine.stats()
+                val cpuBefore = cpuSeconds()
+                val positionBefore = engine.currentPositionMs()
+                var thermalMax = NSProcessInfo.processInfo.thermalState
+                val window = TimeSource.Monotonic.markNow()
+                while (window.elapsedNow() < LONG_RUN_WINDOW_SECONDS.seconds && engine.error() == null) {
+                    delay(1_000)
+                    thermalMax = maxOf(thermalMax, NSProcessInfo.processInfo.thermalState)
+                }
+                val wallSeconds = window.elapsedNow().inWholeMilliseconds / 1000.0
+                val after = engine.stats()
+                val advanced = (engine.currentPositionMs() - positionBefore) / 1000.0
+                val rendered = after.framesRendered - before.framesRendered
+                val dropped = after.framesDropped - before.framesDropped
+                val underruns = after.audioUnderruns - before.audioUnderruns
+                val droppedShare = if (rendered + dropped > 0) dropped.toDouble() / (rendered + dropped) else 0.0
+                val realtime = advanced / wallSeconds
+                val sustained = droppedShare <= SUSTAINED_DROPPED_SHARE && realtime >= SUSTAINED_REALTIME && underruns == 0 && rendered > 0
+                sustainedWholeTime = sustainedWholeTime && sustained
+                totalSeconds += advanced
+                if (firstWarmerAtSeconds == null && thermalMax != NSProcessInfoThermalState.NSProcessInfoThermalStateNominal) {
+                    firstWarmerAtSeconds = index * LONG_RUN_WINDOW_SECONDS
+                }
+                val battery = withContext(Dispatchers.Main) { UIDevice.currentDevice.batteryLevel }
+                windows +=
+                    buildJsonObject {
+                        put("endsAtSeconds", index * LONG_RUN_WINDOW_SECONDS)
+                        put("sustained", sustained)
+                        put("framesRendered", rendered)
+                        put("framesDropped", dropped)
+                        put("droppedPercent", droppedShare * 100)
+                        put("realtime", realtime)
+                        put("audioUnderruns", underruns)
+                        put("cpuPercentOfOneCore", (cpuSeconds() - cpuBefore) / wallSeconds * 100)
+                        put("thermalMax", thermalName(thermalMax))
+                        put("batteryPercent", battery * 100)
+                    }
+            }
+            val batteryEnd = withContext(Dispatchers.Main) { UIDevice.currentDevice.batteryLevel }
+            val playedAll = windows.size == LONG_RUN_WINDOWS && totalSeconds >= LONG_RUN_WINDOWS * LONG_RUN_WINDOW_SECONDS * 0.95
+            return buildJsonObject {
+                put("verdict", if (playedAll && engine.error() == null) "PASS" else "FAIL")
+                put("engine", PlaybackEngineKind.BUNDLED.name)
+                put("codec", stream.codec)
+                put("videoSize", engine.stats().videoSize)
+                put("audioDecoder", engine.stats().audioDecoder)
+                put("secondsPlayed", totalSeconds)
+                put("sustainedWholeTime", sustainedWholeTime)
+                put("firstWarmerThanNominalAtSeconds", firstWarmerAtSeconds)
+                // Charging at the start would heat the phone and refill the battery; the run asks for it unplugged.
+                put("batteryStateAtStart", batteryState.name.removePrefix("UIDeviceBatteryState").lowercase())
+                put("batteryPercentStart", batteryStart * 100)
+                put("batteryPercentEnd", batteryEnd * 100)
+                put("error", engine.error())
+                put("windows", JsonArray(windows))
+            }
+        } finally {
+            engine.close()
+        }
+    }
+
+    // The audio YouTube pairs with VP9: Opus, chosen among the Opus streams by upstream's own rules.
+    private fun opusAudio(result: VideoExtractionResult) =
+        InnerTubeStreamBridge.convertAudioFormats(result.audioFormats).let { audios ->
+            AudioStreamSelector.selectPreferredAudioStream(
+                audios.filter { it.codec == "opus" }.ifEmpty { audios },
+                preferredAudioLanguage = "original",
+                compatibilityFilter = { PlatformCodecSupport.canMergeAudio(it, PlaybackEngineKind.BUNDLED) },
+            )
+        }
+
+    private fun VideoExtractionResult.durationSeconds(): Long = playerResponse.videoDetails?.lengthSeconds?.toLongOrNull() ?: 0
 }
