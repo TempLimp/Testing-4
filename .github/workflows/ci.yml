@@ -129,6 +129,37 @@ jobs:
         run: |
           xcrun simctl boot "$SIM_ID" || true
           xcrun simctl bootstatus "$SIM_ID" -b
+      - name: Start real proxies (S03's app proxy)
+        # tinyproxy (HTTP) and microsocks (SOCKS5), each plain and with credentials, for ProxyRoutingTest; Homebrew has
+        # no pinned versions of either, so the versions used are printed.
+        run: |
+          brew install tinyproxy microsocks
+          brew list --versions tinyproxy microsocks
+          mkdir -p build/proxy-check
+          for port in 8888 8889; do
+            {
+              echo "Port $port"
+              echo "Listen 127.0.0.1"
+              echo "Allow 127.0.0.1"
+              echo "ConnectPort 443"
+              echo "LogLevel Info"
+              echo "LogFile \"$PWD/build/proxy-check/tinyproxy-$port.log\""
+              if [ "$port" = 8889 ]; then echo "BasicAuth flow s3cret"; fi
+            } > "build/proxy-check/tinyproxy-$port.conf"
+            nohup tinyproxy -d -c "build/proxy-check/tinyproxy-$port.conf" > /dev/null 2>&1 &
+          done
+          nohup microsocks -i 127.0.0.1 -p 1080 > build/proxy-check/microsocks-1080.log 2>&1 &
+          nohup microsocks -i 127.0.0.1 -p 1081 -u flow -P s3cret > build/proxy-check/microsocks-1081.log 2>&1 &
+          printf '%s\n' "http-plain http 127.0.0.1 8888 - -" "http-auth http 127.0.0.1 8889 flow s3cret" \
+            "socks-plain socks5 127.0.0.1 1080 - -" "socks-auth socks5 127.0.0.1 1081 flow s3cret" > build/proxy-check/proxies.txt
+          sleep 2
+          # Each proxy carries curl first, so a failure later is the app's, not the proxy's.
+          curl -sS -o /dev/null -w 'curl via http-plain: %{http_code}\n' -x http://127.0.0.1:8888 https://example.com/
+          curl -sS -o /dev/null -w 'curl via http-auth: %{http_code}\n' -x http://flow:s3cret@127.0.0.1:8889 https://example.com/
+          curl -sS -o /dev/null -w 'curl via socks-plain: %{http_code}\n' --socks5-hostname 127.0.0.1:1080 https://example.com/
+          curl -sS -o /dev/null -w 'curl via socks-auth: %{http_code}\n' --socks5-hostname flow:s3cret@127.0.0.1:1081 https://example.com/
+          # The app's requests are counted from here on.
+          for log in build/proxy-check/*.log; do wc -l < "$log" > "$log.before"; done
       - name: Shared tests on the iOS simulator
         # Everything but the live playback chain, which runs next in a process of its own.
         run: |
@@ -136,6 +167,26 @@ jobs:
           ./gradlew :shared:iosSimulatorArm64Test -PiosSimulatorDevice="$SIM_ID" -PexcludeTests=io.github.aedev.flow.player.LivePlaybackChainTest --stacktrace || status=$?
           mkdir -p ios-test-results/unit
           cp shared/build/test-results/iosSimulatorArm64Test/*.xml ios-test-results/unit/ || true
+          exit $status
+      - name: Proxy check result (S03's app proxy)
+        # ProxyRoutingTest's requests, as each proxy's own log has them (after curl's, which came first).
+        if: ${{ !cancelled() }}
+        run: |
+          grep -ho 'PROXY CHECK: [^<]*' ios-test-results/unit/*.xml || echo "no proxy check lines"
+          status=0
+          for log in build/proxy-check/*.log; do
+            echo "== $log (app's lines)"
+            tail -n +"$(( $(cat "$log.before") + 1 ))" "$log" | tee "$log.app"
+          done
+          for port in 8888 8889; do
+            for host in example.com www.youtube.com; do
+              grep -q "CONNECT $host:443" "build/proxy-check/tinyproxy-$port.log.app" || { echo "::error::tinyproxy on $port never carried the app to $host"; status=1; }
+            done
+          done
+          for port in 1080 1081; do
+            count=$(grep -c 'connected to' "build/proxy-check/microsocks-$port.log.app" || true)
+            test "$count" -ge 2 || { echo "::error::microsocks on $port carried $count of the app's connections"; status=1; }
+          done
           exit $status
       - name: Live playback tests on the iOS simulator
         # LivePlaybackChainTest: the ladder, the loopback HLS proxy and the cipher in JavaScriptCore.
