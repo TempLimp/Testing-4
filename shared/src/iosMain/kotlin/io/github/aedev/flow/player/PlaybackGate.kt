@@ -742,8 +742,9 @@ private object PlaybackGate {
         codecKey: String,
         deep: Boolean = false,
     ): JsonObject {
-        stage("$codecKey: player response")
-        val result = extraction(videoId) ?: return blockedOrFailed(codecKey, videoId, "every client failed")
+        val label = if (deep) "hdr $codecKey" else codecKey
+        stage("$label: player response")
+        val result = extraction(videoId) ?: return blockedOrFailed(label, videoId, "every client failed")
         val all = InnerTubeStreamBridge.convertVideoFormats(result.videoFormats)
         val rungs =
             all
@@ -776,11 +777,11 @@ private object PlaybackGate {
         for (stream in rungs) {
             val height = VideoCodecUtils.qualityHeightFromStream(stream)
             if ((height < 1440 && highestSustained != null) || measured.size >= 5) break
-            stage("$codecKey: ${height}p")
+            stage("$label: ${height}p")
             val source = VideoPlaybackResolver(videoId).resolve(listOf(stream), audio, null, null, duration)
             val rung =
                 if (source == null || source.engine != PlaybackEngineKind.BUNDLED) {
-                    failed(codecKey, videoId, "${height}p resolved to ${source?.engine ?: "nothing"}")
+                    failed(label, videoId, "${height}p resolved to ${source?.engine ?: "nothing"}")
                 } else {
                     measure(source, fps = VideoCodecUtils.frameRateFromStream(stream), pictureInPicture = codecKey == "vp9" && !deep && measured.isEmpty(), edr = deep)
                 }
