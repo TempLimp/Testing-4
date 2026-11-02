@@ -14,6 +14,8 @@ icu4j = "77.1"
 atomicfu = "0.32.1"
 # JavaScript engine for the jvm test target only, standing in for JavaScriptCore (never shipped).
 graaljs = "24.2.2"
+# SABR's brotli media on the jvm test target, the decoder upstream pins (iOS decodes brotli with libcompression).
+brotli = "0.1.2"
 
 [libraries]
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
@@ -36,6 +38,7 @@ ktor-server-cio = { module = "io.ktor:ktor-server-cio", version.ref = "ktor" }
 atomicfu = { module = "org.jetbrains.kotlinx:atomicfu", version.ref = "atomicfu" }
 graal-polyglot = { module = "org.graalvm.polyglot:polyglot", version.ref = "graaljs" }
 graal-js = { module = "org.graalvm.polyglot:js-community", version.ref = "graaljs" }
+brotli-dec = { module = "org.brotli:dec", version.ref = "brotli" }
 kotlin-test ={ module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 

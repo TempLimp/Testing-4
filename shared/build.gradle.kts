@@ -92,6 +92,7 @@ kotlin {
             implementation(libs.icu4j)
             implementation(libs.graal.polyglot)
             implementation(libs.graal.js)
+            implementation(libs.brotli.dec)
         }
         commonTest {
             kotlin.srcDir(generateFixturePath)

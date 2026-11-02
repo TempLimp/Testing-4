@@ -50,6 +50,9 @@ open class Subject<T>(
     fun isEqualTo(expected: Any?) =
         if (expected.isIntegral() && actual.isIntegral()) {
             assertEquals((expected as Number).toLong(), (actual as Number).toLong(), message)
+        } else if (expected is ByteArray && actual is ByteArray) {
+            // Truth compares arrays by their elements.
+            assertTrue(expected.contentEquals(actual), "${describe()} is not <${expected.contentToString()}>: <${actual.contentToString()}>")
         } else {
             assertEquals(expected, actual, message)
         }
@@ -58,7 +61,12 @@ open class Subject<T>(
 
     private fun Any?.isIntegral() = this is Int || this is Long || this is Short || this is Byte
 
-    fun isNotEqualTo(unexpected: Any?) = assertNotEquals(unexpected, actual, message)
+    fun isNotEqualTo(unexpected: Any?) =
+        if (unexpected is ByteArray && actual is ByteArray) {
+            assertTrue(!unexpected.contentEquals(actual), "${describe()} equals <${unexpected.contentToString()}>")
+        } else {
+            assertNotEquals(unexpected, actual, message)
+        }
 
     fun isNull() = assertNull(actual, message)
 
@@ -124,6 +132,8 @@ class StringSubject(
     fun startsWith(prefix: String) = assertTrue(nonNull().startsWith(prefix), "${describe()} does not start with <$prefix>")
 
     fun endsWith(suffix: String) = assertTrue(nonNull().endsWith(suffix), "${describe()} does not end with <$suffix>")
+
+    fun hasLength(length: Int) = assertEquals(length, nonNull().length, describe())
 
     fun isEmpty() = assertTrue(nonNull().isEmpty(), "${describe()} is not empty")
 
