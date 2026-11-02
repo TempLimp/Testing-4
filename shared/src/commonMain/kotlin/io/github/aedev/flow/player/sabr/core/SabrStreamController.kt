@@ -482,17 +482,33 @@ class SabrStreamController(
             return
         }
 
+        val formatMeta = sessionState.formatMetadata[header.itag]
+        val isAudio = formatMeta?.isAudio ?: (header.itag in KNOWN_AUDIO_ITAGS)
+        // Init segments are not part of the media timeline — never report them as buffered
+        val range =
+            if (header.isInitSegment) {
+                null
+            } else {
+                FormatBufferedRange(
+                    formatId = FormatId(header.itag, header.lmt),
+                    startTimeMs = header.timeRangeStartMs,
+                    durationMs = header.durationMs,
+                    startSequence = header.sequenceNumber,
+                    endSequence = header.sequenceNumber,
+                )
+            }
+
         attestationRetried = false
         // Re-sent segments would corrupt the append-only byte pipe — drop duplicates
         if (!sessionState.markSegmentConsumed(header.itag, header.sequenceNumber, header.isInitSegment)) {
             Log.v(TAG, "Duplicate segment dropped: itag=${header.itag}, seq=${header.sequenceNumber}, init=${header.isInitSegment}")
+            // A reload empties the reported ranges, so the server re-sends from the playhead what the pipe already has.
+            // Reported again, the next request moves the server on; dropped unreported, it re-sends the same forever.
+            if (range != null && sessionState.addBufferedRangeIfNew(isAudio, range)) sawMediaInResponse = true
             return
         }
         // Only a new segment counts: a session that re-sends what it already sent is as wedged as an empty one.
         sawMediaInResponse = true
-
-        val formatMeta = sessionState.formatMetadata[header.itag]
-        val isAudio = formatMeta?.isAudio ?: (header.itag in KNOWN_AUDIO_ITAGS)
 
         val segment =
             SabrSegment(
@@ -507,19 +523,7 @@ class SabrStreamController(
                 startDataRange = header.startDataRange,
             )
 
-        // Init segments are not part of the media timeline — never report them as buffered
-        if (!header.isInitSegment) {
-            val formatId = FormatId(header.itag, header.lmt)
-            val range =
-                FormatBufferedRange(
-                    formatId = formatId,
-                    startTimeMs = header.timeRangeStartMs,
-                    durationMs = header.durationMs,
-                    startSequence = header.sequenceNumber,
-                    endSequence = header.sequenceNumber,
-                )
-            sessionState.addBufferedRange(isAudio, range)
-        }
+        range?.let { sessionState.addBufferedRange(isAudio, it) }
 
         Log.d(
             TAG,

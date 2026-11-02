@@ -231,6 +231,17 @@ class SabrSessionState {
         list.add(range)
     }
 
+    /** [addBufferedRange], unless a range already reported holds its segment: false then. */
+    fun addBufferedRangeIfNew(
+        isAudio: Boolean,
+        range: FormatBufferedRange,
+    ): Boolean {
+        val list = if (isAudio) audioBufferedRanges else videoBufferedRanges
+        if (list.any { it.formatId == range.formatId && range.startSequence in it.startSequence..it.endSequence }) return false
+        addBufferedRange(isAudio, range)
+        return true
+    }
+
     fun clearBufferedRanges() {
         audioBufferedRanges.clear()
         videoBufferedRanges.clear()

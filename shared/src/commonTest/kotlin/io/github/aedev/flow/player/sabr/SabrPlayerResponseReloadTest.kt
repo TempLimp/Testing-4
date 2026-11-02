@@ -1,9 +1,17 @@
 package io.github.aedev.flow.player.sabr
 
+import io.github.aedev.flow.player.sabr.core.SabrEvent
 import io.github.aedev.flow.player.sabr.core.SabrSessionState
+import io.github.aedev.flow.player.sabr.core.SabrStreamController
+import io.github.aedev.flow.player.sabr.network.SabrDataSource
 import io.github.aedev.flow.player.sabr.proto.FormatBufferedRange
 import io.github.aedev.flow.player.sabr.proto.FormatId
 import io.github.aedev.flow.testing.assertThat
+import io.ktor.utils.io.ByteReadChannel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 
 class SabrPlayerResponseReloadTest {
@@ -96,6 +104,69 @@ class SabrPlayerResponseReloadTest {
         assertThat(state.selectedAudioFormatId).isEqualTo(FormatId(140, 1_700_000_000, "acont=original:lang=en-US"))
         assertThat(state.selectedVideoFormatId).isEqualTo(FormatId(137, 1_700_000_001))
         assertThat(state.audioTrackId).isEqualTo("fresh-track")
+    }
+
+    /**
+     * A reload empties the ranges the session reports holding, so GVS re-sends from the playhead what the session
+     * already has. Dropped as duplicates and left unreported, every later request drew the same segments again until the
+     * session called itself wedged; reported again, the next request moves GVS on.
+     */
+    @Test
+    fun segmentsTheServerSendsAgainAfterAReloadAreReportedAgain() =
+        runTest {
+            val fixture = SabrFixture.session("h264")
+            val state =
+                SabrSessionState().apply {
+                    streamingUrl = "https://gvs.example/videoplayback"
+                    selectedVideoItag = fixture.videoItag
+                    selectedVideoLmt = fixture.videoLmt
+                    selectedAudioItag = fixture.audioItag
+                    selectedAudioLmt = fixture.audioLmt
+                    durationMs = fixture.durationMs
+                }
+            // GVS answering every request with the recording's first response: the same segments each time.
+            val controller = SabrStreamController(Replay(SabrFixture.response(fixture, 1)), state)
+            val errors = mutableListOf<Int>()
+            backgroundScope.launch(Dispatchers.Unconfined) { controller.events.filterIsInstance<SabrEvent.Error>().collect { errors += it.code } }
+
+            controller.startSession()
+            val held = state.videoBufferedRanges.toList() to state.audioBufferedRanges.toList()
+            assertThat(held.first).isNotEmpty()
+            assertThat(held.second).isNotEmpty()
+
+            state.applyPlayerResponseReload(
+                streamingUrl = state.streamingUrl,
+                ustreamerConfig = ByteArray(0),
+                poToken = "",
+                visitorId = "",
+                cpn = state.cpn,
+                audioItag = fixture.audioItag,
+                audioLmt = fixture.audioLmt,
+                videoItag = fixture.videoItag,
+                videoLmt = fixture.videoLmt,
+                audioTrackId = "",
+                audioXtags = "",
+                videoXtags = "",
+            )
+            controller.onPlayerResponseReloaded()
+            controller.requestNextSegments()
+            assertThat(state.videoBufferedRanges.toList() to state.audioBufferedRanges.toList()).isEqualTo(held)
+            assertThat(errors).isEmpty()
+
+            // Sent again once reported, the same segments are no progress: three times and the session is wedged.
+            repeat(3) { controller.requestNextSegments() }
+            assertThat(errors).containsExactly(-3)
+        }
+
+    private class Replay(
+        private val response: ByteArray,
+    ) : SabrDataSource("test") {
+        override suspend fun <T> open(
+            url: String,
+            body: ByteArray,
+            visitorId: String?,
+            read: suspend (ByteReadChannel) -> T,
+        ): T = read(ByteReadChannel(response))
     }
 
     /**
