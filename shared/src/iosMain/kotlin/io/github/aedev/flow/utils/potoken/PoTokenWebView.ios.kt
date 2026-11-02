@@ -278,27 +278,8 @@ actual class PoTokenWebView private constructor(
         private const val TAG = "PoTokenWebView"
         private const val HANDLER = "flowPoToken"
 
-        // upstream's @JavascriptInterface methods, posted to the native side in call order.
         private val BRIDGE_SCRIPT =
-            """
-            (function() {
-                function post(m, a) { window.webkit.messageHandlers.$HANDLER.postMessage({ m: m, a: a || [] }); }
-                window.${BotGuardPage.JS_INTERFACE} = {
-                    downloadAndRunBotguard: function() { post('downloadAndRunBotguard'); },
-                    onRunBotguardResult: function(r) { post('onRunBotguardResult', [String(r)]); },
-                    onJsInitializationError: function(e) { post('onJsInitializationError', [String(e)]); },
-                    onMinterCreated: function() { post('onMinterCreated'); },
-                    onObtainPoTokenResult: function(id, t) { post('onObtainPoTokenResult', [String(id), String(t)]); },
-                    onObtainPoTokenError: function(id, e) { post('onObtainPoTokenError', [String(id), String(e)]); }
-                };
-                window.addEventListener('error', function(e) {
-                    post('uncaught', ['Uncaught ' + e.message, String(e.filename) + ' (' + e.lineno + ')']);
-                });
-                window.addEventListener('unhandledrejection', function(e) {
-                    post('uncaught', ['Uncaught (in promise) ' + e.reason, '']);
-                });
-            })();
-            """.trimIndent()
+            BotGuardPage.bridgeScript("function(m, a) { window.webkit.messageHandlers.$HANDLER.postMessage({ m: m, a: a }); }")
 
         // Every subresource load: the page itself comes from loadHTMLString and is not one.
         private const val BLOCK_ALL_LOADS =

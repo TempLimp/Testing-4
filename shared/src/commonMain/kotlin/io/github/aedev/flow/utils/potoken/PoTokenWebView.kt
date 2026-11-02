@@ -62,6 +62,31 @@ internal object BotGuardPage {
     /** The page with the call that starts the attestation once it has loaded. */
     val html: String = PO_TOKEN_HTML.replaceFirst("</script>", "\n$JS_INTERFACE.downloadAndRunBotguard()</script>")
 
+    /**
+     * Upstream's `@JavascriptInterface` methods and the page's uncaught errors, posted to the native side in call
+     * order as `{ m: method, a: args }` through [post], a JavaScript function of (method, args).
+     */
+    fun bridgeScript(post: String): String =
+        """
+        (function() {
+            var post = $post;
+            window.$JS_INTERFACE = {
+                downloadAndRunBotguard: function() { post('downloadAndRunBotguard', []); },
+                onRunBotguardResult: function(r) { post('onRunBotguardResult', [String(r)]); },
+                onJsInitializationError: function(e) { post('onJsInitializationError', [String(e)]); },
+                onMinterCreated: function() { post('onMinterCreated', []); },
+                onObtainPoTokenResult: function(id, t) { post('onObtainPoTokenResult', [String(id), String(t)]); },
+                onObtainPoTokenError: function(id, e) { post('onObtainPoTokenError', [String(id), String(e)]); }
+            };
+            window.addEventListener('error', function(e) {
+                post('uncaught', ['Uncaught ' + e.message, String(e.filename) + ' (' + e.lineno + ')']);
+            });
+            window.addEventListener('unhandledrejection', function(e) {
+                post('uncaught', ['Uncaught (in promise) ' + e.reason, '']);
+            });
+        })();
+        """.trimIndent()
+
     fun runBotGuardScript(parsedChallengeData: String): String =
         """try {
             data = $parsedChallengeData
