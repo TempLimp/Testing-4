@@ -79,7 +79,8 @@ final class BundledEngine: NSObject, PlaybackEngine {
         open(
             video: hasVideo ? URL(string: source.uri) : nil,
             audio: (hasVideo ? source.audioUri : source.uri).flatMap { URL(string: $0) },
-            durationMs: source.durationMs
+            durationMs: source.durationMs,
+            streamed: source.streamed
         )
     }
 
@@ -194,15 +195,16 @@ final class BundledEngine: NSObject, PlaybackEngine {
 
     // MARK: Opening
 
-    /// Opens a video file and an audio file (either may be absent) and starts feeding the renderers.
-    func open(video videoURL: URL?, audio audioURL: URL?, durationMs: Int64) {
+    /// Opens a video file and an audio file (either may be absent) and starts feeding the renderers. [streamed] files
+    /// arrive as they are read (a SABR session's tracks) and cannot seek.
+    func open(video videoURL: URL?, audio audioURL: URL?, durationMs: Int64, streamed: Bool = false) {
         lock.lock()
         let generation = self.generation
         lock.unlock()
         control.async { [self] in
             do {
-                let videoTrack = try videoURL.map { try TrackDecoder(url: $0, kind: .video) }
-                let audioTrack = try audioURL.map { try TrackDecoder(url: $0, kind: .audio) }
+                let videoTrack = try videoURL.map { try TrackDecoder(url: $0, kind: .video, streamed: streamed) }
+                let audioTrack = try audioURL.map { try TrackDecoder(url: $0, kind: .audio, streamed: streamed) }
                 lock.lock()
                 guard generation == self.generation, !closed else {
                     lock.unlock()

@@ -26,7 +26,7 @@ final class TrackDecoder {
     }
 
     let kind: Kind
-    private let reader: RangeReader
+    private let reader: ByteSource
     private(set) var decoderName = ""
     /// The container's duration, 0 when it does not say.
     private(set) var durationSeconds = 0.0
@@ -60,12 +60,14 @@ final class TrackDecoder {
     private var audioFormat: CMAudioFormatDescription?
     private var pcm: [Float] = []
 
-    init(url: URL, kind: Kind) throws {
+    /// [streamed]: the proxy sends the track as it arrives (MediaSource.streamed), read in order and never sought.
+    init(url: URL, kind: Kind, streamed: Bool = false) throws {
         self.kind = kind
-        reader = RangeReader(url: url)
+        reader = streamed ? StreamReader(url: url) : RangeReader(url: url)
         let bufferSize: Int32 = 1 << 16
         guard let buffer = av_malloc(Int(bufferSize))?.assumingMemoryBound(to: UInt8.self) else { throw EngineError("no memory") }
-        io = avio_alloc_context(buffer, bufferSize, 0, Unmanaged.passUnretained(reader).toOpaque(), rangeReaderRead, nil, rangeReaderSeek)
+        // Without a seek callback FFmpeg takes the input as unseekable, as it does a live stream.
+        io = avio_alloc_context(buffer, bufferSize, 0, Unmanaged.passUnretained(reader as AnyObject).toOpaque(), byteSourceRead, nil, streamed ? nil : rangeReaderSeek)
         guard let io else {
             av_free(buffer)
             throw EngineError("no memory")

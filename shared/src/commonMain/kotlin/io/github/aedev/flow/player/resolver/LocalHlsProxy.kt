@@ -5,6 +5,7 @@ import io.github.aedev.flow.network.ProxyAwareClient
 import io.github.aedev.flow.player.datasource.GoogleVideoRequestPolicy
 import io.github.aedev.flow.player.error.PlayerDiagnostics
 import io.github.aedev.flow.player.error.StreamDenialClassifier
+import io.github.aedev.flow.player.sabr.integration.SabrProxySession
 import io.github.aedev.flow.utils.Log
 import io.ktor.client.request.header
 import io.ktor.client.request.prepareGet
@@ -27,6 +28,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.ktor.util.collections.ConcurrentMap
 import io.ktor.utils.io.copyTo
+import io.ktor.utils.io.writeFully
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -65,6 +67,7 @@ object LocalHlsProxy {
     private val nextId = AtomicInt(0)
     private val presentations = ConcurrentMap<String, HlsPresentation>()
     private val segmentCache = ConcurrentMap<String, List<SidxSegment>>()
+    private val sabrSessions = ConcurrentMap<String, SabrProxySession>()
 
     /** Starts the server once; returns the port it listens on. */
     suspend fun start(): Int =
@@ -77,6 +80,11 @@ object LocalHlsProxy {
                         get("/p/{id}/{rendition}.m3u8") { serveMedia(call) }
                         get("/p/{id}/{rendition}.mp4") { serveBytes(call) }
                         get("/p/{id}/{rendition}.webm") { serveBytes(call) }
+                        get("/s/{id}/master.m3u8") { serveSabrMaster(call) }
+                        get("/s/{id}/{track}.m3u8") { serveSabrMedia(call) }
+                        get("/s/{id}/{track}.mp4") { serveSabrBytes(call) }
+                        get("/s/{id}/pipe/{track}.mp4") { serveSabrPipe(call) }
+                        get("/s/{id}/pipe/{track}.webm") { serveSabrPipe(call) }
                     }
                 }.start(wait = false)
             port = started.engine.resolvedConnectors().first().port
@@ -104,7 +112,37 @@ object LocalHlsProxy {
         return presentation.renditions.mapIndexed { index, rendition -> "$base/$index.${if (rendition.mimeType.endsWith("/webm")) "webm" else "mp4"}" }
     }
 
+    /**
+     * Publishes a SABR [session] for [engine]: AVPlayer gets an HLS master of its formats, the bundled engine each track
+     * as a stream ([SabrProxySession]). Evicting it later ends the session, as upstream's MediaLoader.releaseSabr does.
+     */
+    suspend fun publishSabr(
+        session: SabrProxySession,
+        engine: PlaybackEngineKind,
+        mediaId: String = "",
+    ): MediaSource {
+        val port = start()
+        val id = nextId.incrementAndFetch().toString()
+        sabrSessions[id] = session
+        (id.toInt() - MAX_PRESENTATIONS).takeIf { it > 0 }?.let { evict(it.toString()) }
+        val base = "http://$HOST:$port/s/$id"
+        if (engine == PlaybackEngineKind.AVPLAYER) {
+            return MediaSource("$base/master.m3u8", MediaSourceBuilder.MIME_HLS, mediaId, durationMs = session.durationMs)
+        }
+        val (video, audio) = session.tracks
+        return MediaSource(
+            uri = "$base/pipe/0.${video.extension}",
+            mimeType = video.container,
+            mediaId = mediaId,
+            engine = PlaybackEngineKind.BUNDLED,
+            audioUri = "$base/pipe/1.${audio.extension}",
+            durationMs = session.durationMs,
+            streamed = true,
+        )
+    }
+
     private fun evict(id: String) {
+        sabrSessions.remove(id)?.close()
         val presentation = presentations.remove(id) ?: return
         presentation.renditions.indices.forEach { segmentCache.remove("$id/$it") }
     }
@@ -195,6 +233,82 @@ object LocalHlsProxy {
         }
     }
 
+    private fun sabrTrack(call: ApplicationCall): Pair<SabrProxySession, SabrProxySession.Track>? {
+        val session = call.parameters["id"]?.let { sabrSessions[it] } ?: return null
+        val track = call.parameters["track"]?.toIntOrNull()?.let { session.tracks.getOrNull(it) } ?: return null
+        return session to track
+    }
+
+    private suspend fun serveSabrMaster(call: ApplicationCall) {
+        val session = call.parameters["id"]?.let { sabrSessions[it] } ?: return call.respondText("", status = HttpStatusCode.NotFound)
+        // Both renditions come from the init segments the session's first response carries.
+        val renditions = session.tracks.map { session.rendition(it)?.first ?: return call.respondText("", status = HttpStatusCode.BadGateway) }
+        val video = renditions.filterNot { it.isAudio }
+        val shown = HlsPresentation(video, renditions.firstOrNull { it.isAudio }, session.durationMs)
+        call.respondText(HlsPlaylists.master(shown) { "${renditions.indexOf(it)}.m3u8" }, ContentType.parse(HLS_MIME))
+    }
+
+    private suspend fun serveSabrMedia(call: ApplicationCall) {
+        val (session, track) = sabrTrack(call) ?: return call.respondText("", status = HttpStatusCode.NotFound)
+        val (rendition, segments) = session.rendition(track) ?: return call.respondText("", status = HttpStatusCode.BadGateway)
+        call.respondText(HlsPlaylists.media(rendition, segments, "${call.parameters["track"]}.mp4"), ContentType.parse(HLS_MIME))
+    }
+
+    // AVPlayer's byte ranges of the file: the init segment, or the segments the sidx places there, as SABR delivers them.
+    private suspend fun serveSabrBytes(call: ApplicationCall) {
+        val (session, track) = sabrTrack(call) ?: return call.respondText("", status = HttpStatusCode.NotFound)
+        val (_, index) = session.rendition(track) ?: return call.respondText("", status = HttpStatusCode.BadGateway)
+        val init = session.init(track) ?: return call.respondText("", status = HttpStatusCode.BadGateway)
+        val size = index.lastOrNull()?.let { it.offset + it.size } ?: init.size.toLong()
+        val range = call.request.header(HttpHeaders.Range)?.let { BYTE_RANGE.find(it) }
+        val first = range?.groupValues?.get(1)?.toLong() ?: 0L
+        val last = (range?.groupValues?.get(2)?.takeIf { it.isNotEmpty() }?.toLong() ?: (size - 1)).coerceAtMost(size - 1)
+        if (first > last) return call.respondText("", status = HttpStatusCode.RequestedRangeNotSatisfiable)
+
+        suspend fun slice(at: Long): ByteArray? {
+            if (at < init.size) return init.copyOfRange(at.toInt(), minOf(init.size.toLong(), last + 1).toInt())
+            val entry = index.firstOrNull { at >= it.offset && at < it.offset + it.size } ?: return null
+            val timeMs = index.takeWhile { it !== entry }.sumOf { it.durationSeconds } * 1000
+            val segment = session.segmentFor(track, entry.offset, timeMs.toLong(), (entry.durationSeconds * 1000).toLong()) ?: return null
+            val from = (at - segment.startDataRange).toInt()
+            return segment.data.copyOfRange(from, minOf(segment.data.size.toLong(), last + 1 - segment.startDataRange).toInt())
+        }
+        val head = slice(first) ?: return call.respondText("", status = HttpStatusCode.NotFound)
+        call.response.header(HttpHeaders.ContentRange, "bytes $first-$last/$size")
+        call.response.header(HttpHeaders.AcceptRanges, "bytes")
+        call.respondBytesWriter(ContentType.parse(track.container), HttpStatusCode.PartialContent, last - first + 1) {
+            var bytes = head
+            var at = first
+            while (true) {
+                writeFully(bytes)
+                at += bytes.size
+                if (at > last) break
+                // A range across segments waits for the next; one that never comes ends the response short.
+                bytes = slice(at) ?: break
+            }
+        }
+    }
+
+    // The bundled engine's read of a track: upstream's pipe, the init segment and then the segments in order.
+    private suspend fun serveSabrPipe(call: ApplicationCall) {
+        val (session, track) = sabrTrack(call) ?: return call.respondText("", status = HttpStatusCode.NotFound)
+        val init = session.init(track) ?: return call.respondText("", status = HttpStatusCode.BadGateway)
+        call.respondBytesWriter(ContentType.parse(track.container), HttpStatusCode.OK) {
+            try {
+                writeFully(init)
+                flush()
+                var segment = session.nextSegment(track, null)
+                while (segment != null) {
+                    writeFully(segment.data)
+                    flush()
+                    segment = session.nextSegment(track, segment)
+                }
+            } finally {
+                session.readerGone(track)
+            }
+        }
+    }
+
     private suspend fun <T> fetch(
         url: String,
         range: String?,
@@ -223,4 +337,5 @@ object LocalHlsProxy {
     }
 
     private const val HLS_MIME = "application/vnd.apple.mpegurl"
+    private val BYTE_RANGE = Regex("""bytes=(\d+)-(\d*)""")
 }

@@ -139,12 +139,7 @@ final class RangeReader {
     }
 }
 
-/// FFmpeg's I/O callbacks over a RangeReader passed as the opaque pointer.
-let rangeReaderRead: @convention(c) (UnsafeMutableRawPointer?, UnsafeMutablePointer<UInt8>?, Int32) -> Int32 = { opaque, buffer, size in
-    guard let opaque, let buffer else { return flow_averror_eio() }
-    return Unmanaged<RangeReader>.fromOpaque(opaque).takeUnretainedValue().read(into: buffer, count: Int(size))
-}
-
+/// FFmpeg's seek callback over a RangeReader passed as the opaque pointer (byteSourceRead reads it).
 let rangeReaderSeek: @convention(c) (UnsafeMutableRawPointer?, Int64, Int32) -> Int64 = { opaque, offset, whence in
     guard let opaque else { return -1 }
     return Unmanaged<RangeReader>.fromOpaque(opaque).takeUnretainedValue().seek(offset: offset, whence: whence)

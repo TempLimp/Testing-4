@@ -5,7 +5,9 @@ package io.github.aedev.flow.player.resolver
  * [LocalHlsProxy] serves, YouTube's own HLS manifest, or a progressive URL, which AVPlayer opens as an
  * AVURLAsset ([liveTargetOffsetMs] is AVPlayerItem's offset from the live edge); or, for the bundled
  * engine, the proxy's file URLs: [uri] the video (or the audio when there is none) and [audioUri] the
- * audio beside it, with [mimeType] the container of [uri].
+ * audio beside it, with [mimeType] the container of [uri]. A [streamed] source (a SABR session's tracks) arrives as
+ * the engine reads it, as upstream's progressive pipes did: read in order, it cannot seek; the player rebuilds the session
+ * to seek, as upstream does.
  */
 data class MediaSource(
     val uri: String,
@@ -15,6 +17,7 @@ data class MediaSource(
     val engine: PlaybackEngineKind = PlaybackEngineKind.AVPLAYER,
     val audioUri: String? = null,
     val durationMs: Long = 0,
+    val streamed: Boolean = false,
 )
 
 /**
