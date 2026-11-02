@@ -8,15 +8,22 @@ plugins {
 // Upstream's JSON fixtures, read in place so the ported tests see exactly what upstream's do. The iOS
 // simulator runs tests as host processes, so the same absolute path works there.
 val upstreamTestResources = rootProject.file("upstream/app/src/test/resources")
+// The SABR fixture lives with the simulator tests that also replay it (iosAppTests' resources).
+val sabrFixture = rootProject.file("iosApp/iosAppTests/Sabr")
 val generateFixturePath = tasks.register("generateFixturePath") {
     val out = layout.buildDirectory.dir("generated/fixturePath/kotlin")
     val path = upstreamTestResources.absolutePath.replace('\\', '/')
+    val sabrPath = sabrFixture.absolutePath.replace('\\', '/')
     inputs.property("path", path)
+    inputs.property("sabrPath", sabrPath)
     outputs.dir(out)
     doLast {
         val file = out.get().file("io/github/aedev/flow/testing/FixturePath.kt").asFile
         file.parentFile.mkdirs()
-        file.writeText("package io.github.aedev.flow.testing\n\ninternal const val UPSTREAM_TEST_RESOURCES = \"$path\"\n")
+        file.writeText(
+            "package io.github.aedev.flow.testing\n\ninternal const val UPSTREAM_TEST_RESOURCES = \"$path\"\n\n" +
+                "internal const val SABR_FIXTURE_DIR = \"$sabrPath\"\n",
+        )
     }
 }
 
@@ -116,6 +123,6 @@ tasks.withType<org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeSimu
         device.set(it)
         standalone.set(false)
     }
-    // CI runs the live playback tests in a step of their own, so a crash there cannot stop the rest.
-    providers.gradleProperty("excludeTests").orNull?.let { filter.excludeTestsMatching(it) }
+    // CI runs the live playback tests in a step of their own, so a crash there cannot stop the rest (comma-separated).
+    providers.gradleProperty("excludeTests").orNull?.split(',')?.forEach { filter.excludeTestsMatching(it) }
 }

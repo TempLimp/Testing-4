@@ -14,3 +14,11 @@ built. Both licences are compatible with this app's GPL-3.0: LGPL-2.1-or-later c
 the app's complete source (including that script) is public, so anyone can rebuild it against a modified FFmpeg.
 
 FFmpeg is a trademark of Fabrice Bellard, originator of the FFmpeg project.
+
+## Test media
+
+Not part of the app: data the tests read.
+
+| Media | Licence | Where | What |
+|---|---|---|---|
+| Big Buck Bunny, (c) copyright 2008, Blender Foundation, [www.bigbuckbunny.org](https://www.bigbuckbunny.org) | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) | `iosApp/iosAppTests/Sabr/` | About 30 s of YouTube's 144p H.264 and AAC, and 144p VP9 and Opus, as GVS sent them in two SABR sessions (UMP responses, `SabrFixtureRecorderJvmTest`), replayed offline by `SabrReplayTest` and `SabrReplayTests` |
