@@ -3,8 +3,10 @@
 Prints one line per layer, so the CI log shows which one failed: cipher (JavaScriptCore), PoToken (WKWebView), the
 YouTube Music song (in the engine its format goes to), the video in AVPlayer (S04) and held at 1080p, the video's VP9 and
 AV1 rungs and an HDR video's 10-bit AV1 rungs in the bundled engine (S04b), one line per rung with its measurements,
-Picture in Picture opened by a tap, the condensed font, and ten minutes of VP9 2160p60 in 30 s windows. BLOCKED means
-no client offered this runner a stream it can play before SABR (S05): a warning, as for the live smoke test. A fault in
+Picture in Picture opened by a tap, the condensed font, and ten minutes of VP9 2160p60 in 30 s windows; and (S05) a forced
+SABR session at 1080p H.264 in AVPlayer and one as it comes (VP9 2160p, Opus) in the bundled engine. BLOCKED means no
+client offered this runner a stream it can play: a warning, as for the live smoke test. SKIPPED is an item switched off
+for the run, with why. A fault in
 a layer the port owns (cipher, PoToken mint, HLS proxy, either engine once it had a stream), a crash or a missing
 verdict fails.
 """
@@ -12,7 +14,7 @@ verdict fails.
 import json
 import sys
 
-LAYERS = ("cipher", "poToken", "fonts", "pip", "music", "video", "h264At1080p", "vp9", "av1", "hdrAv1", "longRun")
+LAYERS = ("cipher", "poToken", "fonts", "sabrH264", "sabrVp9", "pip", "music", "video", "h264At1080p", "vp9", "av1", "hdrAv1", "longRun")
 RUNG_FIELDS = (
     "verdict", "sustained", "videoSize", "videoDecoder", "audioDecoder", "pixelFormat", "transferFunction", "edrHeadroomPotential",
     "edrHeadroomCurrentMax", "realtime", "framesPerSecondShown", "droppedPercent",

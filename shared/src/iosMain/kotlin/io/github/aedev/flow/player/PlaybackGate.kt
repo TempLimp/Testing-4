@@ -17,6 +17,8 @@ import io.github.aedev.flow.player.resolver.PlaybackEngineKind
 import io.github.aedev.flow.player.resolver.VideoPlaybackResolver
 import io.github.aedev.flow.player.resolver.canMergeAudio
 import io.github.aedev.flow.player.resolver.engineFor
+import io.github.aedev.flow.player.sabr.integration.SabrMediaSourceFactory
+import io.github.aedev.flow.player.sabr.integration.SabrStreamInfo
 import io.github.aedev.flow.player.stream.AudioStreamSelector
 import io.github.aedev.flow.player.stream.InnerTubeStreamBridge
 import io.github.aedev.flow.player.stream.InnerTubeVideoStreamExtractor
@@ -79,6 +81,7 @@ import platform.UIKit.didMoveToParentViewController
 import platform.UIKit.systemBlueColor
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonObjectBuilder
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
@@ -163,8 +166,16 @@ private const val DEFAULT_VIDEO_ID = "aqz-KE-bpKQ"
 private const val FALLBACK_SONG_ID = "lZUgQPTCTlo"
 private const val REQUIRED_ADVANCE_SECONDS = 5.0
 
-// What the gate checks, in order. Every item after the cipher and the PoToken must pass for a PASS.
-private val ITEMS = listOf("cipher", "poToken", "fonts", "pip", "music", "video", "h264At1080p", "vp9", "av1", "hdrAv1", "longRun")
+// What the gate checks, in order. Every item after the cipher and the PoToken must pass for a PASS, but those
+// [SWITCHED_OFF] for a run, which record why instead.
+private val ITEMS = listOf("cipher", "poToken", "fonts", "sabrH264", "sabrVp9", "pip", "music", "video", "h264At1080p", "vp9", "av1", "hdrAv1", "longRun")
+
+// S05's run (2026-11-02) leaves out the ten minutes of VP9: they passed in S04b's verification pass, and took the battery under 5 %.
+private val SWITCHED_OFF =
+    mapOf(
+        "longRun" to "switched off for S05's run: VP9 2160p60 for ten minutes passed in S04b's verification pass " +
+            "(docs/evidence/s04b-verify), and took the battery under 5 %",
+    )
 
 // "The World in HDR in 4K (ULTRA HD)" (Jacob + Katie Schwarz): offered as 10-bit AV1 HDR (BT.2020, PQ) from 144p to
 // 2160p60 through VISIONOS, the client upstream's ladder asks first; no VP9 profile 2 on any client asked (probed
@@ -215,6 +226,10 @@ private const val SUSTAINED_REALTIME = 0.98
  * seek's landing, and Picture in Picture once. 2160p and 1440p are always tried; below them it stops at the first
  * rung the phone sustains. The S04 video stays on AVPlayer with H.264, as before.
  *
+ * S05 adds SABR: upstream's forced SABR session at 1080p H.264 in AVPlayer, and as it comes (VP9 2160p with Opus) in the
+ * bundled engine, both fed by one session each through LocalHlsProxy, measured as above but for the seek (a SABR session
+ * seeks by being rebuilt, S10).
+ *
  * Swift calls it only in Debug builds, where it runs with the launch argument `-flowPlaybackGate` (CI), and
  * in the `PLAYBACK_GATE` build CI makes for a phone, where [always] runs it on every launch.
  */
@@ -231,7 +246,8 @@ fun startPlaybackGateIfRequested(always: Boolean) {
  * Why the ladder found nothing to play, when that is this network's answer and not a fault in a layer the port
  * owns: every client refused the viewer (a bot wall, or a status such as LOGIN_REQUIRED or UNPLAYABLE), never
  * answered, was not asked, or is WEB, whose answer is SABR-only (its formats carry neither a URL nor a cipher;
- * measured 2026-10-31: 0 of 22 and 0 of 40) and plays from S05. Null when any client answered with formats the
+ * measured 2026-10-31: 0 of 22 and 0 of 40), which upstream's ladder passes over (tryWebSabr keeps a session only beside
+ * direct formats; S05 plays SABR where upstream routes to it). Null when any client answered with formats the
  * port failed to make playable (a ciphered client such as MWEB, TV_TIZEN's solve, an n-transform, an
  * exception): those are faults. [report] is the ladder's own "ALL clients failed" line.
  */
@@ -325,6 +341,8 @@ private object PlaybackGate {
         step("cipher", 60.seconds) { cipher() }
         step("poToken", 100.seconds) { poToken(videoId) }
         step("fonts", 30.seconds) { fonts() }
+        step("sabrH264", 150.seconds) { sabrH264(videoId) }
+        step("sabrVp9", 240.seconds) { sabrVp9(videoId) }
         step("pip", 7.minutes) { pictureInPictureByTap(videoId) }
         step("music", 150.seconds) { music() }
         step("video", 150.seconds) { video(videoId) }
@@ -355,6 +373,16 @@ private object PlaybackGate {
         timeout: Duration,
         block: suspend () -> JsonObject,
     ) {
+        SWITCHED_OFF[name]?.let { why ->
+            record(
+                name,
+                buildJsonObject {
+                    put("verdict", "SKIPPED")
+                    put("why", why)
+                },
+            )
+            return
+        }
         stage(name)
         val result =
             withTimeoutOrNull(timeout) {
@@ -398,7 +426,7 @@ private object PlaybackGate {
                 val items = ITEMS.map(::verdictOf)
                 when {
                     "FAIL" in items || null in items -> "FAIL"
-                    ITEMS.drop(2).all { verdictOf(it) == "PASS" } -> "PASS"
+                    ITEMS.drop(2).filterNot { it in SWITCHED_OFF }.all { verdictOf(it) == "PASS" } -> "PASS"
                     else -> "BLOCKED"
                 }
             }
@@ -821,6 +849,7 @@ private object PlaybackGate {
         fps: Int,
         pictureInPicture: Boolean,
         edr: Boolean = false,
+        seeks: Boolean = true,
     ): JsonObject {
         // Made on the main thread, where its layers belong.
         val engine =
@@ -858,13 +887,13 @@ private object PlaybackGate {
             val underruns = after.audioUnderruns - before.audioUnderruns
             val droppedShare = if (rendered + dropped > 0) dropped.toDouble() / (rendered + dropped) else 0.0
             val realtime = perSecond(advancedSeconds) ?: 0.0
-            val seek = seekCheck(engine, fps)
+            val seek = if (seeks) seekCheck(engine, fps) else null
             val pip = if (pictureInPicture) pictureInPictureCheck(engine) else null
             val played = engine.error() == null && advancedSeconds >= REQUIRED_ADVANCE_SECONDS && after.audioRendering && (fps == 0 || rendered > 0)
             val inSync = after.maxVideoLateMs <= LATE_FRAME_BOUND_MS
             val sustained = played && droppedShare <= SUSTAINED_DROPPED_SHARE && realtime >= SUSTAINED_REALTIME && underruns == 0
             return buildJsonObject {
-                put("verdict", if (played && inSync && seek["landed"]?.toString() == "true") "PASS" else "FAIL")
+                put("verdict", if (played && inSync && (seek == null || seek["landed"]?.toString() == "true")) "PASS" else "FAIL")
                 put("uri", source.uri)
                 put("sustained", sustained)
                 put("error", engine.error())
@@ -894,7 +923,7 @@ private object PlaybackGate {
                 put("thermalStart", thermalName(thermalStart))
                 put("thermalMax", thermalName(thermalMax))
                 put("thermalEnd", thermalName(NSProcessInfo.processInfo.thermalState))
-                put("seek", seek)
+                put("seek", seek ?: JsonPrimitive("not checked: a SABR session seeks by being rebuilt at the position (upstream's sabrSeekTo, S10)"))
                 pip?.let { put("pictureInPicture", it) }
             }
         } finally {
@@ -1084,6 +1113,82 @@ private object PlaybackGate {
      * bandwidth` in S04 before fcc0d6c stated each rendition's measured peak as BANDWIDTH. A master with that one
      * variant leaves AVPlayer nothing to switch to.
      */
+    /**
+     * S05: upstream's forced SABR (extract with forceSabr: MWEB, then WEB, with a BotGuard token), asked at 1080p H.264
+     * as upstream's own quality-targeted resolve asks for a session, played in AVPlayer through LocalHlsProxy for 20 s.
+     */
+    private suspend fun sabrH264(videoId: String): JsonObject {
+        stage("sabrH264: forced SABR")
+        val forced = forcedSabr(videoId) ?: return blockedOrFailed("sabrH264", videoId, "forced SABR resolved nothing")
+        val info =
+            InnerTubeVideoStreamExtractor.resolveSabrDownload(videoId, targetHeight = 1080, preferredCodec = "h264", client = forced.usedClient)
+                ?: return failed("sabrH264", videoId, "no 1080p H.264 SABR session from ${forced.usedClient.clientName}")
+        stage("sabrH264: SABR session")
+        val result = SabrMediaSourceFactory.create(info, videoId, info.durationMs) ?: return failed("sabrH264", videoId, "no engine for ${info.videoMimeType}")
+        try {
+            if (result.mediaSource.engine != PlaybackEngineKind.AVPLAYER) return failed("sabrH264", videoId, "${info.videoMimeType} went to ${result.mediaSource.engine}")
+            stage("sabrH264: AVPlayer")
+            val observed = observe(result.mediaSource, expectVideo = true, requiredSeconds = 20.0)
+            return buildJsonObject {
+                sabrFields(videoId, forced.usedClient.clientName, info)
+                observed.forEach { (key, value) -> put(key, value) }
+            }
+        } finally {
+            result.session.close()
+        }
+    }
+
+    /** S05: upstream's forced SABR as it comes (the tallest rung: VP9 2160p with Opus), in the bundled engine for [WINDOW_SECONDS]. */
+    private suspend fun sabrVp9(videoId: String): JsonObject {
+        stage("sabrVp9: forced SABR")
+        val forced = forcedSabr(videoId) ?: return blockedOrFailed("sabrVp9", videoId, "forced SABR resolved nothing")
+        val session = forced.sabrInfo ?: return failed("sabrVp9", videoId, "forced SABR came back without a session")
+        // Should upstream's choice of tallest rung be AV1 another time, the VP9 rung at that height is asked for instead.
+        val info =
+            if (VideoCodecUtils.codecKeyFromMimeType(session.videoMimeType) == "vp9") {
+                session
+            } else {
+                InnerTubeVideoStreamExtractor.resolveSabrDownload(videoId, targetHeight = session.videoHeight, preferredCodec = "vp9", client = forced.usedClient)
+                    ?: return failed("sabrVp9", videoId, "no VP9 SABR session at ${session.videoHeight}p")
+            }
+        stage("sabrVp9: SABR session")
+        val result = SabrMediaSourceFactory.create(info, videoId, info.durationMs) ?: return failed("sabrVp9", videoId, "no engine for ${info.videoMimeType}")
+        try {
+            if (result.mediaSource.engine != PlaybackEngineKind.BUNDLED) return failed("sabrVp9", videoId, "${info.videoMimeType} went to ${result.mediaSource.engine}")
+            stage("sabrVp9: bundled engine ${info.videoHeight}p")
+            val fps = forced.videoFormats.firstOrNull { it.itag == info.videoItag }?.fps ?: 0
+            val rung = measure(result.mediaSource, fps = fps, pictureInPicture = false, seeks = false)
+            return buildJsonObject {
+                sabrFields(videoId, forced.usedClient.clientName, info)
+                put("fps", fps)
+                rung.forEach { (key, value) -> put(key, value) }
+                // As the S04b ladder rungs: a PASS needs it played, in sync and sustained at this rung.
+                put("verdict", if (rung["verdict"]?.toString()?.trim('"') == "PASS" && rung["sustained"]?.toString() == "true") "PASS" else "FAIL")
+            }
+        } finally {
+            result.session.close()
+        }
+    }
+
+    private suspend fun forcedSabr(videoId: String): VideoExtractionResult? =
+        extractions["sabr:$videoId"] ?: InnerTubeVideoStreamExtractor.extract(videoId, forceSabr = true)?.also { extractions["sabr:$videoId"] = it }
+
+    private fun JsonObjectBuilder.sabrFields(
+        videoId: String,
+        client: String,
+        info: SabrStreamInfo,
+    ) {
+        put("id", videoId)
+        put("sabr", true)
+        put("client", client)
+        put("engine", SabrMediaSourceFactory.engineFor(info)?.name)
+        put("videoItag", info.videoItag)
+        put("videoMimeType", info.videoMimeType)
+        put("height", info.videoHeight)
+        put("audioItag", info.audioItag)
+        put("audioMimeType", info.audioMimeType)
+    }
+
     private suspend fun h264At1080p(videoId: String): JsonObject {
         stage("h264At1080p: player response")
         val result = extraction(videoId) ?: return blockedOrFailed("h264At1080p", videoId, "every client failed")
