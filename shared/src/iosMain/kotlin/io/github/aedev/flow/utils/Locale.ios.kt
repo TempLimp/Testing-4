@@ -4,7 +4,6 @@ package io.github.aedev.flow.utils
 
 import platform.Foundation.NSLocale
 import platform.Foundation.NSLocaleCountryCode
-import platform.Foundation.NSLocaleIdentifier
 import platform.Foundation.NSLocaleLanguageCode
 import platform.Foundation.NSLocaleScriptCode
 import platform.Foundation.NSMakeRange
@@ -16,6 +15,7 @@ import platform.Foundation.decomposedStringWithCanonicalMapping
 import platform.Foundation.localeIdentifier
 import platform.Foundation.localizedStringForCountryCode
 import platform.Foundation.localizedStringForLanguageCode
+import platform.Foundation.localizedStringForScriptCode
 import platform.Foundation.preferredLanguages
 import platform.Foundation.uppercaseStringWithLocale
 
@@ -31,8 +31,16 @@ actual class Locale(
     actual fun toLanguageTag(): String =
         listOf(language.ifEmpty { "und" }, script, country).filter(String::isNotEmpty).joinToString("-")
 
-    actual fun getDisplayName(inLocale: Locale): String =
-        if (language.isEmpty() && country.isEmpty()) "" else inLocale.ns.displayNameForKey(NSLocaleIdentifier, ns.localeIdentifier).orEmpty()
+    // Java's and Android's shape, "language (script,country)", not CLDR's localized pattern (zh: "中文（台灣）").
+    actual fun getDisplayName(inLocale: Locale): String {
+        val parts =
+            listOf(
+                language to getDisplayLanguage(inLocale),
+                script to (if (script.isEmpty()) "" else inLocale.ns.localizedStringForScriptCode(script).orEmpty()),
+                country to getDisplayCountry(inLocale),
+            ).filter { it.first.isNotEmpty() }.map { (code, name) -> name.ifEmpty { code } }
+        return if (parts.size < 2) parts.firstOrNull().orEmpty() else "${parts[0]} (${parts.drop(1).joinToString(",")})"
+    }
 
     actual fun getDisplayLanguage(inLocale: Locale): String =
         if (language.isEmpty()) "" else inLocale.ns.localizedStringForLanguageCode(language).orEmpty()
