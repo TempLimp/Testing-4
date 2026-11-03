@@ -2,12 +2,15 @@
 
 package io.github.aedev.flow.utils
 
+import platform.Foundation.NSCaseInsensitiveSearch
+import platform.Foundation.NSDiacriticInsensitiveSearch
 import platform.Foundation.NSLocale
 import platform.Foundation.NSLocaleCountryCode
 import platform.Foundation.NSLocaleLanguageCode
 import platform.Foundation.NSLocaleScriptCode
 import platform.Foundation.NSMakeRange
 import platform.Foundation.NSString
+import platform.Foundation.NSWidthInsensitiveSearch
 import platform.Foundation.canonicalLocaleIdentifierFromString
 import platform.Foundation.compare
 import platform.Foundation.currentLocale
@@ -82,7 +85,13 @@ actual fun Char.titlecase(locale: Locale): String {
     return titlecaseChar().toString()
 }
 
-actual fun collator(locale: Locale): Comparator<String> =
-    Comparator { a, b -> (a as NSString).compare(b, options = 0u, range = NSMakeRange(0u, a.length.toULong()), locale = locale.ns).toInt() }
+actual fun collator(
+    locale: Locale,
+    primaryStrength: Boolean,
+): Comparator<String> {
+    // PRIMARY in ICU sets case, accent and width differences aside; Foundation spells those out as options.
+    val options = if (primaryStrength) NSCaseInsensitiveSearch or NSDiacriticInsensitiveSearch or NSWidthInsensitiveSearch else 0u
+    return Comparator { a, b -> (a as NSString).compare(b, options = options, range = NSMakeRange(0u, a.length.toULong()), locale = locale.ns).toInt() }
+}
 
 actual fun String.normalizeNfd(): String = (this as NSString).decomposedStringWithCanonicalMapping

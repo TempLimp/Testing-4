@@ -38,14 +38,24 @@ expect class Locale {
 val Locale.displayLanguage: String
     get() = getDisplayLanguage(Locale.getDefault())
 
+/** `Locale.getDisplayName()`: the locale's name in the app's language. */
+val Locale.displayName: String
+    get() = getDisplayName(Locale.getDefault())
+
 /** A region-only locale, like `Locale("", code)`. */
 fun regionLocale(country: String): Locale = Locale.forLanguageTag("und-$country")
 
 /** `Char.titlecase(locale)`: the first letter of a display name, as the platform capitalises it in [locale]. */
 expect fun Char.titlecase(locale: Locale): String
 
-/** Compares strings the way [locale]'s collation orders them, as `java.text.Collator` does. */
-expect fun collator(locale: Locale): Comparator<String>
+/**
+ * Compares strings the way [locale]'s collation orders them, as `java.text.Collator` does. [primaryStrength] is
+ * `Collator.PRIMARY`: case, accents and width do not tell strings apart.
+ */
+expect fun collator(
+    locale: Locale,
+    primaryStrength: Boolean = false,
+): Comparator<String>
 
 /** Unicode canonical decomposition (NFD), as `java.text.Normalizer` with `Form.NFD`. */
 expect fun String.normalizeNfd(): String

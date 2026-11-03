@@ -111,18 +111,22 @@ import io.github.aedev.flow.innertube.pages.toVideoCommentsPage
 import io.github.aedev.flow.innertube.pages.toVideoDescriptionPage
 import io.github.aedev.flow.innertube.pages.toVideoPlaylistPage
 import io.github.aedev.flow.innertube.pages.videoCommentsContinuation
+import io.github.aedev.flow.network.AppProxyConfig
 import io.github.aedev.flow.utils.Log
 import io.github.aedev.flow.utils.PerformanceDispatcher
 import io.github.aedev.flow.utils.avatarImageIdentityKey
 import io.github.aedev.flow.utils.relativedate.RelativeUploadDateParser
 import io.ktor.client.call.body
 import io.ktor.client.statement.bodyAsText
+import io.ktor.util.collections.ConcurrentMap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.offsetAt
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -133,13 +137,9 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import io.github.aedev.flow.network.AppProxyConfig
-import io.ktor.util.collections.ConcurrentMap
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.offsetAt
 import kotlin.jvm.JvmInline
-import kotlin.time.Clock
 import kotlin.random.Random
+import kotlin.time.Clock
 
 /**
  * Parse useful data with [InnerTube] sending requests.
@@ -481,6 +481,22 @@ object YouTube {
         runCatching {
             val response = channelBrowseJson(browseId = channelId)
             response.toChannelPage(response.toChannelHeader(channelId))
+        }
+
+    /**
+     * The header and the creator's keywords (`microformatDataRenderer.tags`) from one browse: the fields
+     * upstream reads through NewPipe's ChannelInfo, which parses this same response. Not upstream's: the
+     * port's stand-in for that extractor, which iOS does not have.
+     */
+    suspend fun channelInfo(channelId: String): Result<Pair<ChannelHeader, List<String>>> =
+        runCatching {
+            val response = channelBrowseJson(browseId = channelId)
+            val tags =
+                ((((response as? JsonObject)?.get("microformat") as? JsonObject)?.get("microformatDataRenderer") as? JsonObject)
+                    ?.get("tags") as? JsonArray)
+                    ?.mapNotNull { (it as? JsonPrimitive)?.contentOrNull }
+                    .orEmpty()
+            response.toChannelHeader(channelId) to tags
         }
 
     private fun JsonElement.toChannelPage(header: ChannelHeader): ChannelPage {

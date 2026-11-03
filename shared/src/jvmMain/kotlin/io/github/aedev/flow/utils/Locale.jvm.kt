@@ -36,8 +36,11 @@ actual class Locale(
 
 actual fun Char.titlecase(locale: Locale): String = titlecase(locale.java)
 
-actual fun collator(locale: Locale): Comparator<String> {
-    val collator = Collator.getInstance(locale.java)
+actual fun collator(
+    locale: Locale,
+    primaryStrength: Boolean,
+): Comparator<String> {
+    val collator = Collator.getInstance(locale.java).apply { if (primaryStrength) strength = Collator.PRIMARY }
     return Comparator { a, b -> collator.compare(a, b) }
 }
 
