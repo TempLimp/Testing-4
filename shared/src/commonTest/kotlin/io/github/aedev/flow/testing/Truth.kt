@@ -18,6 +18,8 @@ fun assertThat(actual: Boolean?): BooleanSubject = BooleanSubject(actual, null)
 
 fun assertThat(actual: Float?): FloatSubject = FloatSubject(actual, null)
 
+fun assertThat(actual: Double?): DoubleSubject = DoubleSubject(actual, null)
+
 fun <T> assertThat(actual: Iterable<T>?): IterableSubject<T> = IterableSubject(actual, null)
 
 fun <K, V> assertThat(actual: Map<K, V>?): MapSubject<K, V> = MapSubject(actual, null)
@@ -98,12 +100,29 @@ open class ComparableSubject<T : Comparable<T>>(
 
     fun isLessThan(other: T) = assertTrue(nonNull() < other, "${describe()} is not less than <$other>")
 
+    fun isAnyOf(vararg candidates: T) = assertTrue(nonNull() in candidates, "${describe()} is none of ${candidates.toList()}")
+
     fun isAtLeast(other: T) = assertTrue(nonNull() >= other, "${describe()} is not at least <$other>")
 
     fun isAtMost(other: T) = assertTrue(nonNull() <= other, "${describe()} is not at most <$other>")
 
     /** Truth's `isIn(Range.closed(a, b))`. */
     fun isIn(range: ClosedRange<T>) = assertTrue(nonNull() in range, "${describe()} is not in $range")
+}
+
+class DoubleSubject(
+    actual: Double?,
+    message: String?,
+) : ComparableSubject<Double>(actual, message) {
+    fun isWithin(tolerance: Double): TolerantDouble = TolerantDouble(nonNull(), tolerance, describe())
+
+    class TolerantDouble(
+        private val actual: Double,
+        private val tolerance: Double,
+        private val description: String,
+    ) {
+        fun of(expected: Double) = assertTrue(abs(actual - expected) <= tolerance, "$description is not within $tolerance of $expected")
+    }
 }
 
 class FloatSubject(
@@ -196,6 +215,16 @@ class IterableSubject<T>(
     }
 
     fun containsExactlyElementsIn(expected: Iterable<*>): Ordered = containsExactly(*expected.toList().toTypedArray())
+
+    fun containsAtLeastElementsIn(expected: Iterable<*>): Ordered = containsAtLeast(*expected.toList().toTypedArray())
+
+    fun containsNoneOf(vararg excluded: Any?) {
+        val present = excluded.filter { it in list }
+        assertTrue(present.isEmpty(), "${describe()} contains $present")
+    }
+
+    fun containsAnyOf(vararg candidates: Any?) =
+        assertTrue(candidates.any { it in list }, "${describe()} contains none of ${candidates.toList()}")
 
     /** Every one of [expected], with others allowed; [Ordered.inOrder] then wants them in this order. */
     fun containsAtLeast(vararg expected: Any?): Ordered {
