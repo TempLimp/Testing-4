@@ -16,6 +16,12 @@ atomicfu = "0.32.1"
 graaljs = "24.2.2"
 # SABR's brotli media on the jvm test target, the decoder upstream pins (iOS decodes brotli with libcompression).
 brotli = "0.1.2"
+# Room, DataStore and KSP at the versions upstream pins (its comment: DataStore 1.2.1 breaks its tests on Windows).
+room = "2.8.4"
+datastore = "1.1.7"
+ksp = "2.3.11"
+# The SQLite Room 2.8.4 is built against, bundled so jvm and iOS run the same SQLite.
+sqlite = "2.6.2"
 
 [libraries]
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
@@ -39,6 +45,11 @@ atomicfu = { module = "org.jetbrains.kotlinx:atomicfu", version.ref = "atomicfu"
 graal-polyglot = { module = "org.graalvm.polyglot:polyglot", version.ref = "graaljs" }
 graal-js = { module = "org.graalvm.polyglot:js-community", version.ref = "graaljs" }
 brotli-dec = { module = "org.brotli:dec", version.ref = "brotli" }
+room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+room-testing = { module = "androidx.room:room-testing", version.ref = "room" }
+sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "sqlite" }
+datastore-preferences-core = { module = "androidx.datastore:datastore-preferences-core", version.ref = "datastore" }
 kotlin-test ={ module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 
@@ -47,3 +58,5 @@ kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref 
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+room = { id = "androidx.room", version.ref = "room" }
