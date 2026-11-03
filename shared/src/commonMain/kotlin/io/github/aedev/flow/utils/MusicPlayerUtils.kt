@@ -1,6 +1,7 @@
 package io.github.aedev.flow.utils
 
 import io.github.aedev.flow.data.local.MusicAudioQuality
+import io.github.aedev.flow.data.local.PlayerPreferences
 import io.github.aedev.flow.innertube.models.YouTubeClient
 import io.github.aedev.flow.innertube.models.response.PlayerResponse
 import io.github.aedev.flow.player.audio.LoudnessGain
@@ -21,6 +22,7 @@ import kotlinx.atomicfu.locks.SynchronizedObject
 import kotlinx.atomicfu.locks.synchronized
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.io.IOException
@@ -71,11 +73,13 @@ object MusicPlayerUtils {
     )
 
     private suspend fun loadAudioSelectionPreferences(): AudioSelectionPreferences {
-        // shortcut: PlayerPreferences' defaults ("original", Auto), which every install has until DataStore
-        // and the settings screens land (S06, S17); S06 reads preferredAudioLanguage and musicAudioQuality here.
+        val playerPreferences = PlayerPreferences()
         return AudioSelectionPreferences(
-            preferredAudioLanguage = "original",
-            musicAudioQuality = MusicAudioQuality.AUTO.resolve(onWifi = NetworkState.isOnWifi()),
+            preferredAudioLanguage = playerPreferences.preferredAudioLanguage.first(),
+            musicAudioQuality =
+                playerPreferences.musicAudioQuality
+                    .first()
+                    .resolve(onWifi = NetworkState.isOnWifi()),
         )
     }
 

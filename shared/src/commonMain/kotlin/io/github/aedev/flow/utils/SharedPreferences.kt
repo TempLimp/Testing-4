@@ -21,6 +21,11 @@ interface SharedPreferences {
         defValue: Int,
     ): Int
 
+    fun getBoolean(
+        key: String,
+        defValue: Boolean,
+    ): Boolean
+
     fun contains(key: String): Boolean
 
     fun edit(): Editor
@@ -39,6 +44,11 @@ interface SharedPreferences {
         fun putInt(
             key: String,
             value: Int,
+        ): Editor
+
+        fun putBoolean(
+            key: String,
+            value: Boolean,
         ): Editor
 
         fun remove(key: String): Editor
@@ -70,6 +80,11 @@ internal class MapEditor(
     override fun putInt(
         key: String,
         value: Int,
+    ) = apply { puts[key] = value }
+
+    override fun putBoolean(
+        key: String,
+        value: Boolean,
     ) = apply { puts[key] = value }
 
     override fun remove(key: String) = apply { removes += key }

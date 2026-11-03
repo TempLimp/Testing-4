@@ -23,6 +23,11 @@ actual fun sharedPreferences(name: String): SharedPreferences {
             defValue: Int,
         ): Int = values[key] as? Int ?: defValue
 
+        override fun getBoolean(
+            key: String,
+            defValue: Boolean,
+        ): Boolean = values[key] as? Boolean ?: defValue
+
         override fun contains(key: String): Boolean = values.containsKey(key)
 
         override fun edit(): SharedPreferences.Editor =

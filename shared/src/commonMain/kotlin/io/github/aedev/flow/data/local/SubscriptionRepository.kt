@@ -1,0 +1,377 @@
+package io.github.aedev.flow.data.local
+
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.MutablePreferences
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
+import io.github.aedev.flow.data.engagement.FeedInvalidationBus
+import io.github.aedev.flow.data.local.AppDatabase
+import io.github.aedev.flow.data.profile.StoreScope
+import io.github.aedev.flow.utils.ThumbnailUrlResolver
+import kotlinx.atomicfu.locks.SynchronizedObject
+import kotlinx.atomicfu.locks.synchronized
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlin.concurrent.Volatile
+import kotlin.time.Clock
+
+private val subscriptionsDataStore: DataStore<Preferences> by safePreferencesDataStore(
+    name = "subscriptions",
+    scope = StoreScope.PROFILE_LIBRARY,
+)
+
+class SubscriptionRepository private constructor() {
+    companion object : SynchronizedObject() {
+        @Volatile
+        private var instance: SubscriptionRepository? = null
+
+        fun getInstance(): SubscriptionRepository =
+            instance ?: synchronized(this) {
+                instance ?: SubscriptionRepository().also { instance = it }
+            }
+
+        // Keys format: "channel_{channelId}" -> JSON string with channel info
+        private fun channelKey(channelId: String) = stringPreferencesKey("channel_$channelId")
+
+        /** "unsub_{channelId}" -> epoch ms the user unsubscribed. See [unsubscribedTombstones]. */
+        private fun unsubscribedKey(channelId: String) = stringPreferencesKey("unsub_$channelId")
+
+        private const val UNSUBSCRIBED_PREFIX = "unsub_"
+
+        private const val SUBSCRIPTIONS_ORDER_KEY = "subscriptions_order"
+
+        /**
+         * How long an unsubscribe is remembered. Device sync resolves subscribe-vs-unsubscribe by
+         * comparing their timestamps, so forgetting a tombstone lets a peer that still holds the
+         * subscription resurrect it. Long enough that any realistic sync gap is covered, bounded so
+         * the store cannot grow without limit.
+         */
+        private const val UNSUBSCRIBE_TOMBSTONE_RETENTION_MS = 365L * 24 * 60 * 60 * 1000
+    }
+
+    /**
+     * Subscribe to a channel
+     */
+    suspend fun subscribe(channel: ChannelSubscription) {
+        subscriptionsDataStore.edit { preferences ->
+            val safeChannel = channel.withPreservedThumbnail(preferences)
+
+            // Save channel data
+            preferences[channelKey(safeChannel.channelId)] = serializeChannel(safeChannel)
+            preferences.remove(unsubscribedKey(safeChannel.channelId)) // re-subscribing clears the tombstone
+
+            // Update order list
+            val currentOrder = preferences[stringPreferencesKey(SUBSCRIPTIONS_ORDER_KEY)] ?: ""
+            val orderList =
+                if (currentOrder.isEmpty()) {
+                    mutableListOf()
+                } else {
+                    currentOrder.split(",").toMutableList()
+                }
+
+            if (!orderList.contains(safeChannel.channelId)) {
+                orderList.add(0, safeChannel.channelId)
+                preferences[stringPreferencesKey(SUBSCRIPTIONS_ORDER_KEY)] = orderList.joinToString(",")
+            }
+        }
+    }
+
+    suspend fun subscribeAll(channels: Collection<ChannelSubscription>) {
+        if (channels.isEmpty()) return
+
+        subscriptionsDataStore.edit { preferences ->
+            val currentOrder =
+                preferences[stringPreferencesKey(SUBSCRIPTIONS_ORDER_KEY)]
+                    .orEmpty()
+                    .split(",")
+                    .filter { it.isNotEmpty() }
+            val knownIds = currentOrder.toMutableSet()
+            val newIds = mutableListOf<String>()
+
+            channels.forEach { channel ->
+                val safeChannel = channel.withPreservedThumbnail(preferences)
+                preferences[channelKey(safeChannel.channelId)] = serializeChannel(safeChannel)
+                preferences.remove(unsubscribedKey(safeChannel.channelId))
+                if (knownIds.add(safeChannel.channelId)) {
+                    newIds += safeChannel.channelId
+                }
+            }
+
+            if (newIds.isNotEmpty()) {
+                preferences[stringPreferencesKey(SUBSCRIPTIONS_ORDER_KEY)] =
+                    (newIds.asReversed() + currentOrder).joinToString(",")
+            }
+        }
+    }
+
+    /**
+     * Unsubscribe from a channel
+     */
+    suspend fun unsubscribe(channelId: String) {
+        val now = Clock.System.now().toEpochMilliseconds()
+        subscriptionsDataStore.edit { preferences ->
+            preferences.remove(channelKey(channelId))
+            // Remember *when*, so device sync can tell an unsubscribe from "this device never knew
+            // about the channel" and the removal actually reaches the other device.
+            preferences[unsubscribedKey(channelId)] = now.toString()
+            prune(preferences, now)
+
+            // Update order list
+            val currentOrder = preferences[stringPreferencesKey(SUBSCRIPTIONS_ORDER_KEY)] ?: ""
+            if (currentOrder.isNotEmpty()) {
+                val orderList = currentOrder.split(",").toMutableList()
+                orderList.remove(channelId)
+                preferences[stringPreferencesKey(SUBSCRIPTIONS_ORDER_KEY)] = orderList.joinToString(",")
+            }
+        }
+
+        AppDatabase
+            .profile()
+            .cacheDao()
+            .deleteSubscriptionFeedForChannel(channelId)
+        FeedInvalidationBus.emit(FeedInvalidationBus.Event.ChannelUnsubscribed(channelId))
+    }
+
+    /**
+     * Check if subscribed to a channel
+     */
+    fun isSubscribed(channelId: String): Flow<Boolean> =
+        subscriptionsDataStore.data.map { preferences ->
+            preferences.contains(channelKey(channelId))
+        }
+
+    /**
+     * Get all subscriptions
+     */
+    fun getAllSubscriptions(): Flow<List<ChannelSubscription>> =
+        subscriptionsDataStore.data.map { preferences ->
+            val orderString = preferences[stringPreferencesKey(SUBSCRIPTIONS_ORDER_KEY)] ?: ""
+            if (orderString.isEmpty()) {
+                emptyList()
+            } else {
+                val orderList = orderString.split(",")
+                orderList.mapNotNull { channelId ->
+                    val channelData = preferences[channelKey(channelId)]
+                    channelData?.let { deserializeChannel(it) }
+                }
+            }
+        }
+
+    /** The channels whose bell is on. */
+    fun notifyingChannelIds(): Flow<Set<String>> =
+        getAllSubscriptions()
+            .map(::notifyingIds)
+            .distinctUntilChanged()
+
+    /**
+     * Get all subscription IDs as a Set
+     */
+    suspend fun getAllSubscriptionIds(): Set<String> {
+        val orderString =
+            subscriptionsDataStore.data
+                .map { preferences ->
+                    preferences[stringPreferencesKey(SUBSCRIPTIONS_ORDER_KEY)] ?: ""
+                }.first()
+
+        return if (orderString.isEmpty()) {
+            emptySet()
+        } else {
+            orderString.split(",").toSet()
+        }
+    }
+
+    /**
+     * Channels this device has explicitly unsubscribed from, mapped to when it happened.
+     *
+     * Device sync ships these as tombstones. Without them an unsubscribe is indistinguishable from
+     * "never subscribed", and the peer that still holds the channel puts it straight back.
+     */
+    suspend fun unsubscribedTombstones(): Map<String, Long> =
+        subscriptionsDataStore.data
+            .map { preferences ->
+                preferences
+                    .asMap()
+                    .mapNotNull { (key, value) ->
+                        if (!key.name.startsWith(UNSUBSCRIBED_PREFIX)) return@mapNotNull null
+                        val at = (value as? String)?.toLongOrNull() ?: return@mapNotNull null
+                        key.name.removePrefix(UNSUBSCRIBED_PREFIX) to at
+                    }.toMap()
+            }.first()
+
+    /** Record a peer's unsubscribe so it keeps propagating to any third device. */
+    suspend fun recordUnsubscribedAt(tombstones: Map<String, Long>) {
+        if (tombstones.isEmpty()) return
+        val now = Clock.System.now().toEpochMilliseconds()
+        subscriptionsDataStore.edit { preferences ->
+            tombstones.forEach { (channelId, at) ->
+                val existing = preferences[unsubscribedKey(channelId)]?.toLongOrNull() ?: 0L
+                if (at > existing) preferences[unsubscribedKey(channelId)] = at.toString()
+            }
+            prune(preferences, now)
+        }
+    }
+
+    /** Drop tombstones past the retention window so the store cannot grow without limit. */
+    private fun prune(
+        preferences: MutablePreferences,
+        now: Long,
+    ) {
+        val cutoff = now - UNSUBSCRIBE_TOMBSTONE_RETENTION_MS
+        preferences
+            .asMap()
+            .keys
+            .filter { it.name.startsWith(UNSUBSCRIBED_PREFIX) }
+            .forEach { key ->
+                val at = (preferences[key] as? String)?.toLongOrNull()
+                if (at == null || at < cutoff) preferences.remove(key)
+            }
+    }
+
+    /**
+     * Get subscription by channel ID
+     */
+    fun getSubscription(channelId: String): Flow<ChannelSubscription?> =
+        subscriptionsDataStore.data.map { preferences ->
+            val channelData = preferences[channelKey(channelId)]
+            channelData?.let { deserializeChannel(it) }
+        }
+
+    suspend fun repairVideoThumbnailSubscriptions(fetchChannelThumbnail: suspend (String) -> String): Int {
+        val subscriptions = getAllSubscriptions().first()
+        val repairs =
+            subscriptions
+                .filter { ThumbnailUrlResolver.isUnusableChannelAvatar(it.channelThumbnail) }
+                .mapNotNull { subscription ->
+                    val avatar = fetchChannelThumbnail(subscription.channelId).trim()
+                    if (avatar.isNotEmpty() && !ThumbnailUrlResolver.isUnusableChannelAvatar(avatar)) {
+                        subscription.channelId to subscription.copy(channelThumbnail = avatar)
+                    } else {
+                        null
+                    }
+                }.toMap()
+
+        if (repairs.isEmpty()) return 0
+
+        subscriptionsDataStore.edit { preferences ->
+            repairs.forEach { (channelId, subscription) ->
+                preferences[channelKey(channelId)] = serializeChannel(subscription)
+            }
+        }
+        return repairs.size
+    }
+
+    private fun serializeChannel(channel: ChannelSubscription): String = SubscriptionRecordCodec.encode(channel)
+
+    private fun ChannelSubscription.withPreservedThumbnail(preferences: Preferences): ChannelSubscription {
+        val existing = preferences[channelKey(channelId)]?.let { deserializeChannel(it) }
+        return if (
+            ThumbnailUrlResolver.isUnusableChannelAvatar(channelThumbnail) &&
+            existing?.channelThumbnail?.isNotBlank() == true &&
+            !ThumbnailUrlResolver.isUnusableChannelAvatar(existing.channelThumbnail)
+        ) {
+            copy(channelThumbnail = existing.channelThumbnail)
+        } else {
+            this
+        }
+    }
+
+    private fun deserializeChannel(data: String): ChannelSubscription? = SubscriptionRecordCodec.decode(data)
+
+    /**
+     * Update the notification state for a channel
+     */
+    suspend fun updateNotificationState(
+        channelId: String,
+        enabled: Boolean,
+    ) {
+        var turnedOn = false
+        subscriptionsDataStore.edit { preferences ->
+            val channelData = preferences[channelKey(channelId)]
+            if (channelData != null) {
+                val subscription = deserializeChannel(channelData)
+                if (subscription != null) {
+                    val updated = subscription.copy(isNotificationEnabled = enabled)
+                    preferences[channelKey(channelId)] = serializeChannel(updated)
+                    turnedOn = enabled && !subscription.isNotificationEnabled
+                }
+            }
+        }
+        if (turnedOn) bellsTurnedOn.tryEmit(channelId)
+    }
+
+    // Every bell in the app writes through updateNotificationState, so this is the one place that
+    // knows a viewer just asked for alerts. Nothing replays: with no shell listening, it is dropped.
+    private val bellsTurnedOn = MutableSharedFlow<String>(extraBufferCapacity = 1)
+
+    /** A channel whose bell the viewer just turned on. */
+    val notificationsTurnedOn: SharedFlow<String> = bellsTurnedOn.asSharedFlow()
+
+    /**
+     * Record that the subscription feed has just fetched these channels.
+     *
+     * Written in one [DataStore] transaction so a refresh over hundreds of channels does not
+     * produce hundreds of preference commits.
+     */
+    suspend fun markFeedFetched(
+        channelIds: Collection<String>,
+        fetchedAt: Long,
+    ) {
+        if (channelIds.isEmpty()) return
+
+        subscriptionsDataStore.edit { preferences ->
+            channelIds.forEach { channelId ->
+                val subscription = preferences[channelKey(channelId)]?.let { deserializeChannel(it) }
+                if (subscription != null) {
+                    preferences[channelKey(channelId)] =
+                        serializeChannel(subscription.copy(lastFeedFetchAt = fetchedAt))
+                }
+            }
+        }
+    }
+
+    /**
+     * Update the last seen video for a channel
+     */
+    suspend fun updateChannelLatestVideo(
+        channelId: String,
+        videoId: String,
+    ) {
+        subscriptionsDataStore.edit { preferences ->
+            val channelData = preferences[channelKey(channelId)]
+            if (channelData != null) {
+                val subscription = deserializeChannel(channelData)
+                if (subscription != null) {
+                    val updated =
+                        subscription.copy(
+                            lastVideoId = videoId,
+                            lastCheckTime = Clock.System.now().toEpochMilliseconds(),
+                        )
+                    preferences[channelKey(channelId)] = serializeChannel(updated)
+                }
+            }
+        }
+    }
+}
+
+data class ChannelSubscription(
+    val channelId: String,
+    val channelName: String,
+    val channelThumbnail: String,
+    val subscribedAt: Long = Clock.System.now().toEpochMilliseconds(),
+    val lastVideoId: String? = null,
+    /** When the background new-upload check last saw a *new* video for this channel. */
+    val lastCheckTime: Long = 0L,
+    val isNotificationEnabled: Boolean = false,
+    val isMusic: Boolean = false,
+    /** When the subscription feed last fetched this channel; 0 means never. */
+    val lastFeedFetchAt: Long = 0L,
+)
+
+internal fun notifyingIds(subscriptions: List<ChannelSubscription>): Set<String> =
+    subscriptions.filter { it.isNotificationEnabled }.mapTo(HashSet()) { it.channelId }

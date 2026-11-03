@@ -1,6 +1,7 @@
 package io.github.aedev.flow.data.model
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import kotlin.time.Clock
 
 @Serializable
@@ -11,6 +12,7 @@ data class VideoCollaborator(
     val subscriberCountText: String = "",
 )
 
+@Serializable
 data class Video(
     val id: String,
     val title: String,
@@ -45,12 +47,14 @@ data class Video(
     val badges: List<String> = emptyList(),
     // The sentence from the description or transcript that matched the query, on search results only.
     val snippet: String = "",
+    @Transient
     val snippetHighlights: List<IntRange> = emptyList(),
     // Transient: when this video was added to the playlist currently being viewed. Not persisted
     // on the video row — populated only by playlist-scoped queries.
     val addedAtInPlaylist: Long? = null,
 )
 
+@Serializable
 data class Channel(
     val id: String,
     val name: String,
@@ -66,6 +70,7 @@ data class Channel(
     val url: String = "",
 )
 
+@Serializable
 data class Playlist(
     val id: String,
     val name: String,

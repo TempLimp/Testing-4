@@ -3,6 +3,14 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
+}
+
+// Upstream's exported schemas 24-32 are copied in, since Room's auto-migrations read them; Room writes 33 here,
+// and AppDatabaseSchemaTest checks every file against upstream's.
+room {
+    schemaDirectory("$projectDir/schemas")
 }
 
 // Upstream's JSON fixtures, read in place so the ported tests see exactly what upstream's do. The iOS
@@ -14,15 +22,19 @@ val generateFixturePath = tasks.register("generateFixturePath") {
     val out = layout.buildDirectory.dir("generated/fixturePath/kotlin")
     val path = upstreamTestResources.absolutePath.replace('\\', '/')
     val sabrPath = sabrFixture.absolutePath.replace('\\', '/')
+    val repoRoot = rootProject.projectDir.absolutePath.replace('\\', '/')
     inputs.property("path", path)
     inputs.property("sabrPath", sabrPath)
+    inputs.property("repoRoot", repoRoot)
     outputs.dir(out)
     doLast {
         val file = out.get().file("io/github/aedev/flow/testing/FixturePath.kt").asFile
         file.parentFile.mkdirs()
         file.writeText(
             "package io.github.aedev.flow.testing\n\ninternal const val UPSTREAM_TEST_RESOURCES = \"$path\"\n\n" +
-                "internal const val SABR_FIXTURE_DIR = \"$sabrPath\"\n",
+                "internal const val SABR_FIXTURE_DIR = \"$sabrPath\"\n\n" +
+                // The checkout itself, for tests that read the port's own sources and schemas beside upstream's.
+                "internal const val REPO_ROOT = \"$repoRoot\"\n",
         )
     }
 }
@@ -53,6 +65,35 @@ val generatePoTokenHtml = tasks.register("generatePoTokenHtml") {
     }
 }
 
+// Upstream's BuildConfig.APP_LANGUAGE_TAGS: English plus every translated `values-*` folder, by upstream's own rule.
+val upstreamRes = rootProject.file("upstream/app/src/main/res")
+val generateAppLanguageTags = tasks.register("generateAppLanguageTags") {
+    val out = layout.buildDirectory.dir("generated/appLanguageTags/kotlin")
+    val tags =
+        upstreamRes
+            .listFiles()
+            .orEmpty()
+            .filter { it.isDirectory && it.resolve("strings.xml").exists() }
+            .mapNotNull { dir ->
+                val qualifier = dir.name.removePrefix("values-")
+                when {
+                    qualifier == dir.name -> null
+                    qualifier.startsWith("b+") -> qualifier.removePrefix("b+").replace('+', '-')
+                    Regex("[a-z]{2,3}(-r[A-Z]{2})?").matches(qualifier) -> qualifier.replace("-r", "-")
+                    else -> null
+                }
+            }.map { if (it == "in" || it.startsWith("in-")) "id" + it.removePrefix("in") else it }
+            .sorted()
+            .let { (listOf("en") + it).joinToString(",") }
+    inputs.property("tags", tags)
+    outputs.dir(out)
+    doLast {
+        val file = out.get().file("io/github/aedev/flow/utils/AppLanguageTags.kt").asFile
+        file.parentFile.mkdirs()
+        file.writeText("package io.github.aedev.flow.utils\n\ninternal const val APP_LANGUAGE_TAGS = \"$tags\"\n")
+    }
+}
+
 kotlin {
     compilerOptions {
         // Kotlin's common atomics (AtomicReference, AtomicInt) stand in for java.util.concurrent's.
@@ -73,6 +114,7 @@ kotlin {
     sourceSets {
         commonMain {
             kotlin.srcDir(generatePoTokenHtml)
+            kotlin.srcDir(generateAppLanguageTags)
         }
         commonMain.dependencies {
             implementation(libs.ktor.server.core)
@@ -89,6 +131,9 @@ kotlin {
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
+            implementation(libs.room.runtime)
+            implementation(libs.sqlite.bundled)
+            implementation(libs.datastore.preferences.core)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
@@ -106,9 +151,14 @@ kotlin {
             dependencies {
                 implementation(libs.kotlin.test)
                 implementation(libs.kotlinx.coroutines.test)
+                implementation(libs.room.testing)
             }
         }
     }
+}
+
+dependencies {
+    listOf("kspJvm", "kspIosArm64", "kspIosSimulatorArm64").forEach { add(it, libs.room.compiler) }
 }
 
 compose.resources {

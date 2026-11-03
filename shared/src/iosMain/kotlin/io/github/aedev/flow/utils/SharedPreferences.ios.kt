@@ -27,6 +27,11 @@ private class UserDefaultsPreferences(
         defValue: Int,
     ): Int = (defaults.objectForKey(key) as? NSNumber)?.intValue ?: defValue
 
+    override fun getBoolean(
+        key: String,
+        defValue: Boolean,
+    ): Boolean = (defaults.objectForKey(key) as? NSNumber)?.boolValue ?: defValue
+
     override fun contains(key: String): Boolean = defaults.objectForKey(key) != null
 
     override fun edit(): SharedPreferences.Editor =
@@ -38,6 +43,7 @@ private class UserDefaultsPreferences(
                     is String -> defaults.setObject(value, key)
                     is Long -> defaults.setObject(NSNumber(longLong = value), key)
                     is Int -> defaults.setObject(NSNumber(int = value), key)
+                    is Boolean -> defaults.setBool(value, key)
                 }
             }
         }
