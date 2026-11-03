@@ -56,7 +56,7 @@ fetched less than a minute of media.
 | H.264 in AVPlayer (720p window; held at 1080p for 30 s) | Both readyToPlay with video and audio tracks, empty error logs, no -12318 |
 | VP9 and AV1, 2160p60 and 1440p60 | 1208-1210 frames shown per 20 s, 0 dropped, none late, 0 underruns; highest sustained 2160p for both codecs. CPU: VP9 102 % / 50 %, AV1 202 % / 134 % |
 | 10-bit AV1 HDR (`tO01J-M3g0U`), 2160p60 and 1440p60 | P010 tagged BT.2020 and PQ, EDR headroom up to 6.76 and 8.0 of 8.0, 0 dropped; 377 % CPU at 2160p; thermal fair |
-| Ten minutes of VP9 2160p60 (`longRun`) | **Switched off** for this run (`SKIPPED` in the file): it passed in S04b's verification pass (`../s04b-verify/`) and took the battery under 5 %. `SWITCHED_OFF` in `PlaybackGate.kt` turns it back on |
+| Ten minutes of VP9 2160p60 (`longRun`) | **Switched off** for this run (`SKIPPED` in the file): it passed in S04b's verification pass (`../s04b-verify/`) and took the battery under 5 %. It is back on for later runs (`SWITCHED_OFF` in `PlaybackGate.kt`) |
 
 ## Second run, same build
 

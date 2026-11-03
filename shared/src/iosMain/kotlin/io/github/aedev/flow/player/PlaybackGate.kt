@@ -170,12 +170,8 @@ private const val REQUIRED_ADVANCE_SECONDS = 5.0
 // [SWITCHED_OFF] for a run, which record why instead.
 private val ITEMS = listOf("cipher", "poToken", "fonts", "sabrH264", "sabrVp9", "pip", "music", "video", "h264At1080p", "vp9", "av1", "hdrAv1", "longRun")
 
-// S05's run (2026-11-02) leaves out the ten minutes of VP9: they passed in S04b's verification pass, and took the battery under 5 %.
-private val SWITCHED_OFF =
-    mapOf(
-        "longRun" to "switched off for S05's run: VP9 2160p60 for ten minutes passed in S04b's verification pass " +
-            "(docs/evidence/s04b-verify), and took the battery under 5 %",
-    )
+// Items left out of a run, each with why. S05's run left out longRun (ten minutes of VP9, which take the battery under 5 %).
+private val SWITCHED_OFF = emptyMap<String, String>()
 
 // "The World in HDR in 4K (ULTRA HD)" (Jacob + Katie Schwarz): offered as 10-bit AV1 HDR (BT.2020, PQ) from 144p to
 // 2160p60 through VISIONOS, the client upstream's ladder asks first; no VP9 profile 2 on any client asked (probed
