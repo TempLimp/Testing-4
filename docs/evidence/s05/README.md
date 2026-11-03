@@ -58,4 +58,22 @@ fetched less than a minute of media.
 | 10-bit AV1 HDR (`tO01J-M3g0U`), 2160p60 and 1440p60 | P010 tagged BT.2020 and PQ, EDR headroom up to 6.76 and 8.0 of 8.0, 0 dropped; 377 % CPU at 2160p; thermal fair |
 | Ten minutes of VP9 2160p60 (`longRun`) | **Switched off** for this run (`SKIPPED` in the file): it passed in S04b's verification pass (`../s04b-verify/`) and took the battery under 5 %. `SWITCHED_OFF` in `PlaybackGate.kt` turns it back on |
 
+## Second run, same build
+
+`iphone-playback-gate-2.json` and `.webp`: the same IPA (`0099714`) on the same phone, 2026-11-03, verdict **PASS**.
+The user: "audio confirmed for all".
+
+- **`sabrH264` passed again** (20.04 s, 1920x1080). The cut came at 62.2 s of media, as on jvm. This time recovery
+  ended the other way: two reloads, neither bringing media back, then "SABR reload budget spent (2/2)". That path sends the proxy no
+  event, so AVPlayer's next requests got no answer and timed out (three `-12889 No response for media file`) instead of
+  404s. It is the 60 s stall S10 must end by closing the session when the orchestrator reports the error. The first
+  run's "SABR wedged ... (reload loop)" after its reload matches the re-sent-segment bug fixed in `8b41f9d`, which this
+  build predates; the phone's log alone does not prove it.
+- **`sabrVp9` passed again**: started in 3.84 s, 20.11 s at real time, 1207 frames, 0 dropped, 0 underruns, 117 % CPU.
+- **Not S05's: two direct items held less than in the first run.** VP9 2160p60 dropped 377 of 1198 frames at 75 % CPU,
+  so the highest VP9 held was 1440p. HDR AV1 held only 1080p (2160p dropped 161 at 319 % CPU, 1440p dropped 46). The
+  first run, same build, held 2160p for both with 0 dropped. Those two 2160p rungs started 3 to 6 times slower this
+  time (VP9 4.6 s against 0.7 s, HDR AV1 3.4 s against 1.0 s) and used less CPU, not more, which points to the network rather than the decoder; that is not
+  established. Each item still passes: every rung played in sync, and one held without drops.
+
 Big Buck Bunny is (c) Blender Foundation, www.bigbuckbunny.org, CC BY 3.0.
