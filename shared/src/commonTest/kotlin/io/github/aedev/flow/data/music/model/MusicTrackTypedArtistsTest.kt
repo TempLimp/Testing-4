@@ -1,0 +1,73 @@
+/*
+ * Copyright (C) 2025-2026 Flow | A-EDev
+ *
+ * This file is part of Flow (https://github.com/Flow-Tube/Flow).
+ */
+
+package io.github.aedev.flow.data.music.model
+
+import io.github.aedev.flow.testing.assertThat
+import kotlin.test.Test
+
+/**
+ * Issue #996: release builds that lose MusicTrack.artists' generic signature make Gson
+ * deserialize the artist entries as LinkedTreeMaps inside a List<MusicArtist>-typed field.
+ * The first element access then throws ClassCastException and kills the music feed.
+ * [withTypedArtists] must repair such a list without touching healthy ones.
+ *
+ * Upstream reaches the artists through `primaryArtistKey` (data/recommendation/music, S09); until that is ported
+ * these cases read the list directly, which is the access the key's lookup makes.
+ */
+class MusicTrackTypedArtistsTest {
+    private fun track(artists: List<MusicArtist> = emptyList()) =
+        MusicTrack(
+            videoId = "v1",
+            title = "Song",
+            artist = "Fallback Name",
+            thumbnailUrl = "",
+            duration = 200,
+            channelId = "UCfallback",
+            artists = artists,
+        )
+
+    @Suppress("UNCHECKED_CAST")
+    private fun poisonedTrack(): MusicTrack {
+        // Exactly what Gson produces when the generic signature is gone: untyped maps
+        // smuggled into the typed list through erasure.
+        val poison = listOf(mapOf("name" to "Gremlin", "id" to "UCgremlin")) as List<MusicArtist>
+        return track(artists = poison)
+    }
+
+    @Test
+    fun poisonedArtistsCrashOnElementAccessWithoutTheRepair() {
+        val poisoned = poisonedTrack()
+        var thrown = false
+        try {
+            poisoned.artists.first().name
+        } catch (e: ClassCastException) {
+            thrown = true
+        }
+        assertThat(thrown).isTrue()
+    }
+
+    @Test
+    fun withTypedArtistsDropsPoisonedEntriesAndRestoresTheStringFallbacks() {
+        val repaired = poisonedTrack().withTypedArtists()
+        assertThat(repaired.artists).isEmpty()
+    }
+
+    @Test
+    fun withTypedArtistsKeepsAHealthyListUntouchedWithoutCopying() {
+        val healthy = track(artists = listOf(MusicArtist(name = "Real", id = "UCreal")))
+        assertThat(healthy.withTypedArtists()).isSameInstanceAs(healthy)
+        assertThat(track().withTypedArtists().artists).isEmpty()
+    }
+
+    @Test
+    fun withTypedArtistsKeepsTypedEntriesWhenOnlySomeArePoisoned() {
+        @Suppress("UNCHECKED_CAST")
+        val mixed = (listOf(MusicArtist(name = "Real", id = "UCreal"), mapOf("name" to "Fake")) as List<MusicArtist>)
+        val repaired = track(artists = mixed).withTypedArtists()
+        assertThat(repaired.artists).containsExactly(MusicArtist(name = "Real", id = "UCreal"))
+    }
+}

@@ -1,0 +1,30 @@
+package io.github.aedev.flow.data.local
+
+import io.github.aedev.flow.testing.assertThat
+import io.github.aedev.flow.data.model.Video
+import kotlin.test.Test
+
+class WatchLaterCleanupTest {
+    private fun video(id: String) =
+        Video(id = id, title = id, channelName = "", channelId = "", thumbnailUrl = "", duration = 600, viewCount = 0, uploadDate = "")
+
+    private fun entry(
+        id: String,
+        positionMs: Long,
+        durationMs: Long = 600_000L,
+    ) = VideoHistoryEntry(videoId = id, position = positionMs, duration = durationMs, timestamp = 0L, title = id, thumbnailUrl = "")
+
+    @Test
+    fun onlyVideosPastTheWatchedThresholdArePicked() {
+        val watchLater = listOf(video("finished"), video("halfway"), video("never"), video("almost"))
+        val history = listOf(entry("finished", 600_000L), entry("halfway", 300_000L), entry("almost", 590_000L))
+
+        assertThat(watchedIds(watchLater, history, WatchedThreshold.ALMOST_FINISHED)).containsExactly("finished", "almost").inOrder()
+        assertThat(watchedIds(watchLater, history, WatchedThreshold.PERCENT_99)).containsExactly("finished")
+    }
+
+    @Test
+    fun historyOfVideosNotInWatchLaterIsIgnored() {
+        assertThat(watchedIds(listOf(video("a")), listOf(entry("b", 600_000L)), WatchedThreshold.PERCENT_90)).isEmpty()
+    }
+}

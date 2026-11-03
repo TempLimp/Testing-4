@@ -160,6 +160,13 @@ class MapSubject<K, V>(
         key: K,
         value: V,
     ) = assertEquals(value, nonNull()[key], "${describe()} at <$key>")
+
+    /** Truth's `containsExactly(k1, v1, k2, v2, ...)`: these entries and no others. */
+    fun containsExactly(vararg keysAndValues: Any?) {
+        require(keysAndValues.size % 2 == 0) { "keys and values must come in pairs" }
+        val expected = keysAndValues.toList().chunked(2).associate { (key, value) -> key to value }
+        assertEquals<Map<*, *>>(expected, nonNull(), describe())
+    }
 }
 
 class IterableSubject<T>(
