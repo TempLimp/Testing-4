@@ -134,6 +134,9 @@ kotlin {
             implementation(libs.room.runtime)
             implementation(libs.sqlite.bundled)
             implementation(libs.datastore.preferences.core)
+            implementation(libs.paging.common)
+            implementation(libs.okio)
+            implementation(libs.xmlutil.core)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
@@ -152,7 +155,11 @@ kotlin {
                 implementation(libs.kotlin.test)
                 implementation(libs.kotlinx.coroutines.test)
                 implementation(libs.room.testing)
+                implementation(libs.ktor.client.mock)
             }
+        }
+        jvmTest.dependencies {
+            implementation(libs.mockk)
         }
     }
 }

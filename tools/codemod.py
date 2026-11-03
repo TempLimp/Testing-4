@@ -42,7 +42,8 @@ IMPORT_REWRITES = {
     "java.util.Locale": "io.github.aedev.flow.utils.Locale",
     "android.net.Uri": "io.github.aedev.flow.utils.Uri",
 }
-IMPORT_REMOVALS = {"io.github.aedev.flow.R", "dagger.hilt.android.lifecycle.HiltViewModel"} | {
+IMPORT_REMOVALS = {"io.github.aedev.flow.R", "dagger.hilt.android.lifecycle.HiltViewModel", "javax.inject.Singleton",
+                   "java.util.concurrent.ConcurrentHashMap"} | {
     "androidx.annotation." + a for a in ANNOTATION_TYPES}
 # (pattern, advice) for lines left as they are.
 REPORTS = [
@@ -95,6 +96,17 @@ def rewrite(source):
     text = re.sub(r"^[ \t]*@HiltViewModel[ \t]*\n", "", text, flags=re.M)
     text = re.sub(r"^[ \t]*@Inject[ \t]*\n([ \t]*constructor\b)", r"\1", text, flags=re.M)
     text = re.sub(r"@Inject\s+constructor\b", "constructor", text)
+    # Hilt's scope goes; S13 registers the class as a Koin `single {}`.
+    text = re.sub(r"^[ \t]*@Singleton[ \t]*\n", "", text, flags=re.M)
+    text = re.sub(r"@Singleton\s+", "", text)
+    text = re.sub(r"(?<!import )(?<![\w.])(?:java\.util\.concurrent\.)?ConcurrentHashMap\b", "ConcurrentMap", text)
+    if re.search(r"(?<![\w.])ConcurrentMap\b", text) and "import io.ktor.util.collections.ConcurrentMap" not in text:
+        imports_added.add("io.ktor.util.collections.ConcurrentMap")
+    # On Kotlin/Native both live outside the default imports.
+    if re.search(r"\bDispatchers\.IO\b", text):
+        imports_added.add("kotlinx.coroutines.IO")
+    if re.search(r"@Volatile\b", text):
+        imports_added.add("kotlin.concurrent.Volatile")
 
     if accessors:
         imports_added.add(RES_PACKAGE + ".Res")
@@ -186,7 +198,14 @@ fun Row(vm: ThemeViewModel = hiltViewModel()) {
 }
 
 fun stamp(tag: String) = Log.d("Stamp", "${tag.uppercase(Locale.US)} ${System.currentTimeMillis()}")
+
+@Singleton
+class Store {
+    @Volatile private var seen = ConcurrentHashMap<String, Int>()
+    suspend fun load() = withContext(Dispatchers.IO) { seen }
+}
 '''
+    before = before.replace("import javax.inject.Inject\n", "import java.util.concurrent.ConcurrentHashMap\nimport javax.inject.Inject\nimport javax.inject.Singleton\n")
     before = before.replace("import androidx.annotation.DrawableRes\n", "import android.util.Log\nimport androidx.annotation.DrawableRes\n")
     before = before.replace("import javax.inject.Inject\n", "import java.util.Locale\nimport javax.inject.Inject\n")
     before = before.replace("import android.util.Log\n", "import android.net.Uri\nimport android.util.Log\n")
@@ -203,10 +222,13 @@ import io.github.aedev.flow.ui.utils.stringResource
 import io.github.aedev.flow.utils.Locale
 import io.github.aedev.flow.utils.Log
 import io.github.aedev.flow.utils.Uri
+import io.ktor.util.collections.ConcurrentMap
+import kotlinx.coroutines.IO
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.vectorResource
 import org.koin.compose.viewmodel.koinViewModel
+import kotlin.concurrent.Volatile
 import kotlin.time.Clock
 
 data class Entry(
@@ -233,6 +255,11 @@ fun Row(vm: ThemeViewModel = koinViewModel()) {
 }
 
 fun stamp(tag: String) = Log.d("Stamp", "${tag.uppercase()} ${Clock.System.now().toEpochMilliseconds()}")
+
+class Store {
+    @Volatile private var seen = ConcurrentMap<String, Int>()
+    suspend fun load() = withContext(Dispatchers.IO) { seen }
+}
 '''
     actual, notes = rewrite(before)
     assert actual == expected, "rewrite mismatch:\n" + actual
