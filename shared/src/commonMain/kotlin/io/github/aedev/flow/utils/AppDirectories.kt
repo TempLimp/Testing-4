@@ -12,6 +12,12 @@ expect fun appFilesDir(): Path
 /** Android's `context.cacheDir`: Caches on iOS (the system may purge it), a temp folder on the jvm test target. */
 expect fun appCacheDir(): Path
 
+/**
+ * Android's `context.noBackupFilesDir`: a `no_backup` folder in Application Support that iOS leaves out of iCloud and
+ * computer backups; a temp folder on the jvm test target.
+ */
+expect fun appNoBackupDir(): Path
+
 internal fun Path.readText(): String = SystemFileSystem.source(this).buffered().use { it.readString() }
 
 internal fun Path.writeText(text: String) {

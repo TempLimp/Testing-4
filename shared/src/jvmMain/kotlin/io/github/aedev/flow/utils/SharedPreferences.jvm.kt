@@ -5,6 +5,10 @@ import java.util.concurrent.ConcurrentHashMap
 // The jvm target only runs tests, which want a clean store per process rather than one on disk.
 private val stores = ConcurrentHashMap<String, ConcurrentHashMap<String, Any>>()
 
+actual fun deleteSharedPreferences(name: String): Boolean = stores.remove(name) != null
+
+actual fun sharedPreferencesNames(): Set<String> = stores.keys.toSet()
+
 actual fun sharedPreferences(name: String): SharedPreferences {
     val values = stores.getOrPut(name) { ConcurrentHashMap() }
     return object : SharedPreferences {

@@ -15,8 +15,8 @@ import kotlin.test.Test
 
 /**
  * Every profile opens its own file of the same AppDatabase class, so no profile ever needs a schema change or a
- * migration of its own. Upstream puts another profile's file under its library folder; until S08 ports profiles
- * the port runs as Default, so the other file is any path, here a temporary one.
+ * migration of its own. Another profile's file sits in its library folder (ProfileFilesTest); here it is any path,
+ * a temporary one, since the test process runs as Default.
  */
 class ProfileDatabaseTest {
     private val root = newTempDir("profile-database-test")

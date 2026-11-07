@@ -60,6 +60,12 @@ interface SharedPreferences {
 /** `context.getSharedPreferences(name, MODE_PRIVATE)`. */
 expect fun sharedPreferences(name: String): SharedPreferences
 
+/** `context.deleteSharedPreferences(name)`, but true only when there was something to delete. */
+expect fun deleteSharedPreferences(name: String): Boolean
+
+/** The names of the SharedPreferences files on disk, as the `shared_prefs` folder lists them on Android. */
+expect fun sharedPreferencesNames(): Set<String>
+
 /** A pending edit applied in one go, as Android's editor does. */
 internal class MapEditor(
     private val commit: (puts: Map<String, Any?>, removes: Set<String>) -> Unit,

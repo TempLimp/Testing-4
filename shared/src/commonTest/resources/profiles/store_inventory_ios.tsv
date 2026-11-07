@@ -1,0 +1,4 @@
+kind	name	source	scope	class	reason
+files_dir	databases/	main:data/local/AppDatabase.kt	PROFILE	library	Default's flow_database, where Android's Room keeps a bare name; another profile's opens through ProfileFiles.database.
+webview	WKWebsiteDataStore(forIdentifier:)	main:data/profile/ProfileWebView.kt	PROFILE	identity	A profile's own WebKit data store, Android's app_webview_<id>; Default keeps WebKit's default store.
+files_dir	no_backup/	main:utils/AppDirectories.kt	DEVICE	-	The no_backup root itself, Android's noBackupFilesDir, left out of backups; ProfileFiles places what goes in it.

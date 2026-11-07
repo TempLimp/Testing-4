@@ -28,6 +28,7 @@ import platform.WebKit.WKUserScript
 import platform.WebKit.WKUserScriptInjectionTime
 import platform.WebKit.WKWebView
 import platform.WebKit.WKWebViewConfiguration
+import io.github.aedev.flow.data.profile.profileWebsiteDataStore
 import platform.WebKit.WKWebsiteDataStore
 import platform.darwin.NSObject
 import kotlin.concurrent.Volatile
@@ -83,6 +84,7 @@ actual class PoTokenWebView private constructor(
 
     init {
         val configuration = WKWebViewConfiguration()
+        configuration.websiteDataStore = profileWebsiteDataStore()
         configuration.userContentController.addScriptMessageHandler(bridge, HANDLER)
         configuration.userContentController.addUserScript(
             WKUserScript(
@@ -338,7 +340,7 @@ internal actual val webViewDispatcher: CoroutineDispatcher = Dispatchers.Main
 internal actual suspend fun clearWebViewState() {
     withContext(Dispatchers.Main) {
         suspendCancellableCoroutine { cont ->
-            WKWebsiteDataStore.defaultDataStore().removeDataOfTypes(
+            profileWebsiteDataStore().removeDataOfTypes(
                 WKWebsiteDataStore.allWebsiteDataTypes(),
                 modifiedSince = NSDate(timeIntervalSinceReferenceDate = -978_307_200.0),
             ) { cont.resume(Unit) }

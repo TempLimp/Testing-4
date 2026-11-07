@@ -1,16 +1,15 @@
 package io.github.aedev.flow.data.profile
 
 import io.github.aedev.flow.utils.appFilesDir
+import io.github.aedev.flow.utils.appNoBackupDir
 import kotlinx.io.files.Path
+import kotlinx.io.files.SystemFileSystem
 
 /**
  * Where a store keeps its file for the profile this process runs as. Default and [StoreScope.DEVICE] stores keep
  * the exact paths they had before profiles existed, so upgrading moves nothing and an older build still finds them.
- *
- * Pulled forward from upstream's ProfileFiles.kt for the stores in data/local (S06), with the paths Default gets.
+ * Android's `filesDir` is Application Support here and its `noBackupFilesDir` is [appNoBackupDir].
  */
-// shortcut: every process runs as the Default profile, so a scope never moves a store; S08 ports ActiveProfile,
-// ProfileRegistry and the other profiles' folders in this file.
 object ProfileFiles {
     fun preferences(
         scope: StoreScope,
@@ -24,15 +23,85 @@ object ProfileFiles {
     ): Path = file(scope, "datastore/$fileName")
 
     /** A file Default keeps directly under `files/`. */
-    @Suppress("UNUSED_PARAMETER")
     fun file(
         scope: StoreScope,
         path: String,
-    ): Path = Path(appFilesDir(), path)
+    ): Path = Path(root(appFilesDir(), appNoBackupDir(), ActiveProfile.get(), scope), path)
 
     /**
      * What Room opens for the database [name]: the bare name for Default, which Room keeps in `databases/`, or an
      * absolute path in another profile's library folder.
      */
-    fun database(name: String): String = name
+    fun database(name: String): String =
+        database(appFilesDir(), appNoBackupDir(), ActiveProfile.get(), name)
+            ?.also { path -> path.parent?.let { SystemFileSystem.createDirectories(it) } }
+            ?.toString()
+            ?: name
+
+    /** Null for Default, whose database stays where Room has always put it. */
+    internal fun database(
+        filesDir: Path,
+        noBackupFilesDir: Path,
+        profile: RunningProfile,
+        name: String,
+    ): Path? = if (profile.isDefault) null else Path(root(filesDir, noBackupFilesDir, profile, StoreScope.PROFILE_LIBRARY), "databases/$name")
+
+    /** A SharedPreferences file for the running profile: Default keeps [name], another profile gets `name_<id>`. */
+    fun sharedPreferencesName(name: String): String = sharedPreferencesName(ActiveProfile.get(), name)
+
+    internal fun sharedPreferencesName(
+        profile: RunningProfile,
+        name: String,
+    ): String {
+        if (profile.isDefault) return name
+        require(isSafeProfileId(profile.id)) { "Unsafe profile id" }
+        return "${name}_${profile.id}"
+    }
+
+    /** Where the running profile keeps what Default keeps directly under `no_backup/`: private, never backed up. */
+    fun noBackupRoot(): Path = noBackupRoot(appNoBackupDir(), ActiveProfile.get())
+
+    internal fun preferences(
+        filesDir: Path,
+        noBackupFilesDir: Path,
+        profile: RunningProfile,
+        scope: StoreScope,
+        name: String,
+    ): Path = Path(root(filesDir, noBackupFilesDir, profile, scope), "datastore/$name.preferences_pb")
+
+    internal fun noBackupRoot(
+        noBackupFilesDir: Path,
+        profile: RunningProfile,
+    ): Path = if (profile.isDefault) noBackupFilesDir else privateRoot(noBackupFilesDir, profile)
+
+    // DEFAULT_ONLY resolves to the private folder rather than Default's file, so a sync path that runs in another
+    // profile by mistake writes to a file nobody reads instead of into Default's sync state.
+    internal fun root(
+        filesDir: Path,
+        noBackupFilesDir: Path,
+        profile: RunningProfile,
+        scope: StoreScope,
+    ): Path {
+        if (profile.isDefault || scope == StoreScope.DEVICE) return filesDir
+        require(isSafeProfileId(profile.id)) { "Unsafe profile id" }
+        return when (scope) {
+            StoreScope.PROFILE_SETTINGS -> Path(filesDir, "profile_settings/${profile.id}")
+            StoreScope.PROFILE_LIBRARY -> Path(filesDir, "profile_library/${profile.id}")
+            StoreScope.PROFILE_PRIVATE, StoreScope.DEFAULT_ONLY -> privateRoot(noBackupFilesDir, profile)
+            StoreScope.DEVICE -> filesDir
+        }
+    }
+
+    private fun privateRoot(
+        noBackupFilesDir: Path,
+        profile: RunningProfile,
+    ): Path {
+        require(isSafeProfileId(profile.id)) { "Unsafe profile id" }
+        return Path(noBackupFilesDir, "profiles/${profile.id}")
+    }
 }
+
+private val SafeProfileId = Regex("[A-Za-z0-9-]{1,64}")
+
+/** Profile ids become folder names, so anything that could step outside its folder is refused. */
+internal fun isSafeProfileId(id: String?): Boolean = id != null && SafeProfileId.matches(id)

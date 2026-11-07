@@ -1,5 +1,6 @@
 package io.github.aedev.flow.utils.potoken
 
+import io.github.aedev.flow.data.profile.ProfileFiles
 import io.github.aedev.flow.network.currentNetwork
 import io.github.aedev.flow.utils.SharedPreferences
 import io.github.aedev.flow.utils.sharedPreferences
@@ -16,8 +17,7 @@ import kotlin.time.Clock
  * lives in its own preferences file so the backup rules can leave it out.
  */
 class VisitorIdentityStore {
-        // shortcut: the default profile's file; ProfileFiles.sharedPreferencesName (data/profile, S08) adds the per-profile name.
-        private val prefs: SharedPreferences by lazy { sharedPreferences(PREFS_NAME) }
+        private val prefs: SharedPreferences by lazy { sharedPreferences(ProfileFiles.sharedPreferencesName(PREFS_NAME)) }
         private val lock = SynchronizedObject()
 
         /** The stored visitor while it is fresh enough to reuse; null means fetch a new one. */
