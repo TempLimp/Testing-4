@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.compose)
@@ -94,6 +96,45 @@ val generateAppLanguageTags = tasks.register("generateAppLanguageTags") {
     }
 }
 
+// Upstream's BuildConfig fields the ported code reads: its versionName at the pin, and the Last.fm key and secret
+// taken as upstream takes them (Gradle property, local.properties, environment), empty when none is given.
+val generateBuildConfig = tasks.register("generateBuildConfig") {
+    val out = layout.buildDirectory.dir("generated/buildConfig/kotlin")
+    val versionName =
+        Regex("""versionName = "([^"]+)"""").find(rootProject.file("upstream/app/build.gradle.kts").readText())!!.groupValues[1]
+    val localProperties =
+        Properties().apply {
+            rootProject.file("local.properties").takeIf { it.isFile }?.reader()?.use { load(it) }
+        }
+
+    fun secretValue(
+        property: String,
+        localKey: String,
+        environment: String,
+    ): String =
+        (project.findProperty(property) as String?)
+            ?: localProperties.getProperty(localKey)
+            ?: System.getenv(environment)
+            ?: ""
+    val fields =
+        mapOf(
+            "VERSION_NAME" to versionName,
+            "LASTFM_API_KEY" to secretValue("lastfmApiKey", "lastfm.apiKey", "LASTFM_API_KEY"),
+            "LASTFM_API_SECRET" to secretValue("lastfmApiSecret", "lastfm.apiSecret", "LASTFM_API_SECRET"),
+        )
+    inputs.property("fields", fields)
+    outputs.dir(out)
+    doLast {
+        val file = out.get().file("io/github/aedev/flow/BuildConfig.kt").asFile
+        file.parentFile.mkdirs()
+        file.writeText(
+            "package io.github.aedev.flow\n\nobject BuildConfig {\n" +
+                fields.entries.joinToString("") { (name, value) -> "    const val $name = \"$value\"\n" } +
+                "}\n",
+        )
+    }
+}
+
 kotlin {
     compilerOptions {
         // Kotlin's common atomics (AtomicReference, AtomicInt) stand in for java.util.concurrent's.
@@ -115,6 +156,7 @@ kotlin {
         commonMain {
             kotlin.srcDir(generatePoTokenHtml)
             kotlin.srcDir(generateAppLanguageTags)
+            kotlin.srcDir(generateBuildConfig)
         }
         commonMain.dependencies {
             implementation(libs.ktor.server.core)
