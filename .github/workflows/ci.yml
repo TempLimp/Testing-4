@@ -29,6 +29,7 @@ jobs:
         run: |
           python3 tools/codemod.py --self-test
           python3 tools/import_resources.py --self-test
+          python3 tools/snowball_to_kotlin.py --check
       - name: Resources match upstream
         run: |
           python3 tools/import_resources.py

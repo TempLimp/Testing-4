@@ -59,3 +59,6 @@ expect fun collator(
 
 /** Unicode canonical decomposition (NFD), as `java.text.Normalizer` with `Form.NFD`. */
 expect fun String.normalizeNfd(): String
+
+/** Unicode compatibility composition (NFKC), as `java.text.Normalizer` with `Form.NFKC`. */
+expect fun String.normalizeNfkc(): String

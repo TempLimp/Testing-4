@@ -19,6 +19,7 @@ import platform.Foundation.localeIdentifier
 import platform.Foundation.localizedStringForCountryCode
 import platform.Foundation.localizedStringForLanguageCode
 import platform.Foundation.localizedStringForScriptCode
+import platform.Foundation.precomposedStringWithCompatibilityMapping
 import platform.Foundation.preferredLanguages
 import platform.Foundation.uppercaseStringWithLocale
 
@@ -95,3 +96,5 @@ actual fun collator(
 }
 
 actual fun String.normalizeNfd(): String = (this as NSString).decomposedStringWithCanonicalMapping
+
+actual fun String.normalizeNfkc(): String = (this as NSString).precomposedStringWithCompatibilityMapping

@@ -56,6 +56,8 @@ targets:
         script: |
           rm -rf "$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/ThirdPartyLicenses"
           cp -R "$SRCROOT/../build/ffmpeg/licenses" "$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/ThirdPartyLicenses"
+          # Snowball's stemmers, converted to Kotlin into the shared framework (S09).
+          cp "$SRCROOT/licenses/Snowball.txt" "$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/ThirdPartyLicenses/"
   # The bundled engine's tests (S04b), hosted in the app so its renderers have a window, on clips from
   # tools/make_engine_clips.py: YouTube walls CI's runners off.
   iosAppTests:

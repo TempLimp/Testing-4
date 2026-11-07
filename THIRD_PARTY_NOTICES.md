@@ -7,6 +7,7 @@ The iOS app links these libraries into its binary. Their licence texts ship insi
 |---|---|---|---|---|
 | [FFmpeg](https://ffmpeg.org) | 8.1.3 | LGPL-2.1-or-later | the bundled engine's demuxers (matroska, mov) and decoders (vp9, opus, aac), swresample and swscale | https://ffmpeg.org/releases/ffmpeg-8.1.3.tar.xz, SHA-256 `7138d28c96d9d3e3af4ee3d8cad72741f8ffb40da90c1112235dea3ecd3178a3` |
 | [dav1d](https://code.videolan.org/videolan/dav1d) | 1.5.4 | BSD-2-Clause | AV1 decoding in the bundled engine | https://downloads.videolan.org/pub/videolan/dav1d/1.5.4/dav1d-1.5.4.tar.xz, SHA-256 `686616b7c69eb88d44459391ab25cac13b6647a3b288835c5784e71c1514a5c5` |
+| [Snowball](https://snowballstem.org) stemmers (english, spanish, portuguese, french, german, italian, russian) | 3.1.1 (`cd195b51e948a902a4312f023f4a14392516a543`) | BSD-3-Clause | FlowNeuro's word keys (`NeuroStemmer`) | the Java upstream vendors at `app/src/main/java/org/tartarus/snowball` (its `scripts/neuro/gen_snowball.sh`), converted to Kotlin by `tools/snowball_to_kotlin.py`; text in `iosApp/licenses/Snowball.txt` |
 
 `tools/build_ffmpeg_xcframework.sh` builds both from those tarballs, unmodified, and fails unless FFmpeg's configure
 reports "LGPL version 2.1 or later" with GPL, nonfree and version3 off. No GPL-only or nonfree FFmpeg component is

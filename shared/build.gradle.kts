@@ -135,6 +135,89 @@ val generateBuildConfig = tasks.register("generateBuildConfig") {
     }
 }
 
+// Upstream's FlowNeuro word lists (app/src/main/resources/neuro: stop words, word frequencies, the Hant-Hans fold,
+// run breaks, topical words, unstemmed keys), compiled in as strings so they follow the pin and read synchronously
+// where upstream reads its classpath. Each file is split into string constants under the JVM's 64 KB limit.
+val neuroResources = rootProject.file("upstream/app/src/main/resources/neuro")
+val generateNeuroResources = tasks.register("generateNeuroResources") {
+    val out = layout.buildDirectory.dir("generated/neuroResources/kotlin")
+    inputs.dir(neuroResources)
+    outputs.dir(out)
+    doLast {
+        fun literal(text: String): String =
+            buildString {
+                append('"')
+                text.forEach { c ->
+                    when {
+                        c == '\\' -> append("\\\\")
+                        c == '"' -> append("\\\"")
+                        c == '$' -> append("\\$")
+                        c == '\n' -> append("\\n")
+                        c == '\r' -> append("\\r")
+                        c == '\t' -> append("\\t")
+                        c < ' ' -> append("\\u%04x".format(c.code))
+                        else -> append(c)
+                    }
+                }
+                append('"')
+            }
+
+        // Modified UTF-8 size, as the class file counts it; a surrogate pair is never split.
+        fun chunks(text: String): List<String> {
+            val parts = ArrayList<String>()
+            var start = 0
+            var bytes = 0
+            var i = 0
+            while (i < text.length) {
+                val c = text[i]
+                val width = if (Character.isHighSurrogate(c) && i + 1 < text.length) 2 else 1
+                val size = if (width == 2) 6 else if (c.code == 0) 2 else if (c.code < 0x80) 1 else if (c.code < 0x800) 2 else 3
+                if (bytes + size > 60_000) {
+                    parts += text.substring(start, i)
+                    start = i
+                    bytes = 0
+                }
+                bytes += size
+                i += width
+            }
+            parts += text.substring(start)
+            return parts
+        }
+        val files =
+            neuroResources
+                .walkTopDown()
+                .filter { it.isFile }
+                .map { it.relativeTo(neuroResources).invariantSeparatorsPath to it.readText(Charsets.UTF_8) }
+                .sortedBy { it.first }
+                .toList()
+        val file = out.get().file("io/github/aedev/flow/data/recommendation/NeuroResources.kt").asFile
+        file.parentFile.mkdirs()
+        file.writeText(
+            buildString {
+                appendLine("package io.github.aedev.flow.data.recommendation")
+                appendLine()
+                appendLine("/** Upstream's `resources/neuro` files by path (\"stop/en.txt\"); null for a file upstream does not have. */")
+                appendLine("internal object NeuroResources {")
+                appendLine("    fun text(path: String): String? =")
+                appendLine("        when (path) {")
+                files.forEach { (path, _) -> appendLine("            ${literal(path)} -> ${functionName(path)}()") }
+                appendLine("            else -> null")
+                appendLine("        }")
+                files.forEach { (path, text) ->
+                    appendLine()
+                    appendLine("    private fun ${functionName(path)}(): String =")
+                    appendLine("        listOf(")
+                    chunks(text).forEach { appendLine("            ${literal(it)},") }
+                    appendLine("        ).joinToString(\"\")")
+                }
+                appendLine("}")
+            },
+        )
+    }
+}
+
+fun functionName(path: String): String = "file_" + path.replace(Regex("[^A-Za-z0-9]"), "_")
+
 kotlin {
     compilerOptions {
         // Kotlin's common atomics (AtomicReference, AtomicInt) stand in for java.util.concurrent's.
@@ -157,6 +240,7 @@ kotlin {
             kotlin.srcDir(generatePoTokenHtml)
             kotlin.srcDir(generateAppLanguageTags)
             kotlin.srcDir(generateBuildConfig)
+            kotlin.srcDir(generateNeuroResources)
         }
         commonMain.dependencies {
             implementation(libs.ktor.server.core)
@@ -212,6 +296,17 @@ dependencies {
 
 compose.resources {
     packageOfResClass = "io.github.aedev.flow.resources"
+}
+
+// FlowNeuro's stores save under java.io.tmpdir on jvm (appFilesDir). Each jvm test run starts from an empty one, so a
+// store never loads what an earlier run saved: upstream's tests never persist (their Context is a relaxed mock).
+tasks.named<Test>("jvmTest") {
+    val runTmp = layout.buildDirectory.dir("tmp/jvmTestRun").get().asFile
+    systemProperty("java.io.tmpdir", runTmp.absolutePath)
+    doFirst {
+        runTmp.deleteRecursively()
+        runTmp.mkdirs()
+    }
 }
 
 // CI passes the UDID of a simulator that exists on the runner's Xcode, booted beforehand; locally the

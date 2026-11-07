@@ -45,3 +45,5 @@ actual fun collator(
 }
 
 actual fun String.normalizeNfd(): String = Normalizer.normalize(this, Normalizer.Form.NFD)
+
+actual fun String.normalizeNfkc(): String = Normalizer.normalize(this, Normalizer.Form.NFKC)
