@@ -116,12 +116,19 @@ class DoubleSubject(
 ) : ComparableSubject<Double>(actual, message) {
     fun isWithin(tolerance: Double): TolerantDouble = TolerantDouble(nonNull(), tolerance, describe())
 
+    fun isNotWithin(tolerance: Double): TolerantDouble = TolerantDouble(nonNull(), tolerance, describe(), within = false)
+
     class TolerantDouble(
         private val actual: Double,
         private val tolerance: Double,
         private val description: String,
+        private val within: Boolean = true,
     ) {
-        fun of(expected: Double) = assertTrue(abs(actual - expected) <= tolerance, "$description is not within $tolerance of $expected")
+        fun of(expected: Double) =
+            assertTrue(
+                (abs(actual - expected) <= tolerance) == within,
+                "$description is ${if (within) "not " else ""}within $tolerance of $expected",
+            )
     }
 }
 
