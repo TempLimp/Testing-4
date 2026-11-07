@@ -5,13 +5,37 @@ import io.github.aedev.flow.data.local.PlaylistRepository
 import io.github.aedev.flow.data.model.ShortVideo
 import io.github.aedev.flow.data.model.toShortVideo
 import io.github.aedev.flow.data.recommendation.FeedExclusions
+import io.github.aedev.flow.data.shorts.ShortsFeedRepository
 import io.github.aedev.flow.data.shorts.spreadChannels
 import io.github.aedev.flow.data.subscriptions.SubscriptionFeedRepository
 import io.github.aedev.flow.data.subscriptions.SubscriptionWatchedVideos
 import kotlinx.coroutines.flow.first
 
-// Upstream's AlgorithmicFeedLoader, first in this file, pages ShortsFeedRepository, which is built on FlowNeuroEngine:
-// S09 adds both. The other loaders here need nothing from the engine.
+/**
+ * The algorithmic reel feed, optionally opened on one short.
+ *
+ * The pager behind [ShortsFeedRepository] never reports an end — its explore chain has none — so
+ * a page can come back empty (every candidate filtered) without the queue giving up on it.
+ */
+class AlgorithmicFeedLoader(
+    private val repository: ShortsFeedRepository,
+    private val seedVideoId: String? = null,
+) : ShortsQueueLoader {
+    override suspend fun initial(): ShortsQueuePage = page(repository.openFeed(seedVideoId))
+
+    override suspend fun more(cursor: String?): ShortsQueuePage = page(repository.nextPage())
+
+    private fun page(items: List<ShortVideo>): ShortsQueuePage =
+        ShortsQueuePage(
+            items = items,
+            cursor = MORE.takeUnless { repository.isExhausted },
+            exhausted = repository.isExhausted,
+        )
+
+    private companion object {
+        const val MORE = "more"
+    }
+}
 
 /**
  * The user's saved Shorts, in saved order.

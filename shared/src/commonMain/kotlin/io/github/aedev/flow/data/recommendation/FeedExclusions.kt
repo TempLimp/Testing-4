@@ -2,9 +2,6 @@ package io.github.aedev.flow.data.recommendation
 
 import io.github.aedev.flow.data.model.Video
 
-// Pulled forward from upstream's FeedExclusions.kt for HomeFeedCacheRepository (S06). S09 ports the rest of the file
-// (suppressVideo, keepingHiddenContent, which need FlowNeuroEngine and UserBrain) around this class, unchanged.
-
 /**
  * What the viewer asked not to see, read from the brain in one snapshot for the surfaces that never
  * pass through [FlowNeuroEngine.rank]: Subscriptions, the subscription Shorts queue, search, the
@@ -47,3 +44,26 @@ class FeedExclusions(
     }
 }
 
+/** Records a "not interested" mark. Marks never expire; past [max] the oldest are dropped. */
+internal fun suppressVideo(
+    suppressed: Map<String, Long>,
+    videoId: String,
+    now: Long,
+    max: Int = FlowNeuroEngine.MAX_SUPPRESSED_VIDEOS,
+): Map<String, Long> {
+    val updated = suppressed + (videoId to now)
+    if (updated.size <= max) return updated
+    return updated.entries
+        .sortedByDescending { it.value }
+        .take(max)
+        .associate { it.key to it.value }
+}
+
+/** A fresh brain that still carries every block and "not interested" mark of this one. */
+internal fun UserBrain.keepingHiddenContent(): UserBrain =
+    UserBrain(
+        blockedChannels = blockedChannels,
+        blockedTopics = blockedTopics,
+        suppressedVideoIds = suppressedVideoIds,
+        suppressedChannels = suppressedChannels,
+    )

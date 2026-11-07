@@ -454,7 +454,20 @@ class YouTubeRepository
                 }
             }
 
-        // learnChannelTags feeds FlowNeuroEngine.onChannelTagsLearned; S09 ports it with the engine.
+        /**
+         * Fetches a channel's creator-declared keyword tags (+ description) and
+         * feeds them to the recommendation engine — authored channel identity,
+         * used for topic profiles and interest clustering. Best-effort.
+         */
+        suspend fun learnChannelTags(
+            channelId: String,
+        ) {
+            val info = getChannelInfo(channelId) ?: return
+            val tags = info.tags.orEmpty()
+            if (tags.isEmpty() && info.description.isNullOrBlank()) return
+            io.github.aedev.flow.data.recommendation.FlowNeuroEngine
+                .onChannelTagsLearned(channelId, tags, info.description)
+        }
 
         /**
          * The web watch response for [videoId], fetched once and shared.
