@@ -26,3 +26,6 @@ fun skipped(reason: String): Nothing? {
     println("SKIPPED: $reason")
     return null
 }
+
+/** `BufferedReader.readLines()` over [this]: lines split at \n, \r\n or \r, with no empty line after a final break. */
+fun String.readerLines(): List<String> = if (isEmpty()) emptyList() else lines().let { if (endsWith('\n') || endsWith('\r')) it.dropLast(1) else it }

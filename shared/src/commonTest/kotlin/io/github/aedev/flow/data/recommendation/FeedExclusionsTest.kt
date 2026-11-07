@@ -6,13 +6,60 @@
 
 package io.github.aedev.flow.data.recommendation
 
-import io.github.aedev.flow.data.model.Video
 import io.github.aedev.flow.testing.assertThat
+import io.github.aedev.flow.data.model.Video
 import kotlin.test.Test
 
-// The FeedExclusions case of upstream's FeedExclusionsTest (S06 pulled the class forward). S09 adds the other four,
-// which test suppressVideo and keepingHiddenContent, with those functions.
 class FeedExclusionsTest {
+    private val day = 86_400_000L
+
+    @Test
+    fun aNotInterestedMarkNeverExpiresByAge() {
+        val marked = suppressVideo(mapOf("old" to 0L), "new", now = 400 * day)
+
+        assertThat(marked.keys).containsExactly("old", "new")
+    }
+
+    @Test
+    fun pastTheCapTheOldestMarksAreDroppedFirst() {
+        val existing = mapOf("a" to 1L, "b" to 2L, "c" to 3L)
+
+        val marked = suppressVideo(existing, "d", now = 4L, max = 3)
+
+        assertThat(marked.keys).containsExactly("b", "c", "d")
+    }
+
+    @Test
+    fun markingAVideoAgainRefreshesItInsteadOfAddingADuplicate() {
+        val marked = suppressVideo(mapOf("a" to 1L, "b" to 2L), "a", now = 5L, max = 2)
+
+        assertThat(marked).containsExactly("a", 5L, "b", 2L)
+    }
+
+    @Test
+    fun aResetKeepsWhatTheViewerHidAndForgetsWhatWasLearned() {
+        val brain =
+            UserBrain(
+                globalVector = ContentVector(topics = mapOf("guitar" to 0.6)),
+                preferredTopics = setOf("music"),
+                totalInteractions = 120,
+                blockedChannels = setOf("UCblocked"),
+                blockedTopics = setOf("phonk"),
+                suppressedVideoIds = mapOf("v1" to 10L),
+                suppressedChannels = mapOf("UCsuppressed" to 20L),
+            )
+
+        val reset = brain.keepingHiddenContent()
+
+        assertThat(reset.blockedChannels).containsExactly("UCblocked")
+        assertThat(reset.blockedTopics).containsExactly("phonk")
+        assertThat(reset.suppressedVideoIds).containsExactly("v1", 10L)
+        assertThat(reset.suppressedChannels).containsExactly("UCsuppressed", 20L)
+        assertThat(reset.globalVector.topics).isEmpty()
+        assertThat(reset.preferredTopics).isEmpty()
+        assertThat(reset.totalInteractions).isEqualTo(0)
+    }
+
     @Test
     fun hidingChannelsAddsToTheExclusionsWithoutDroppingAny() {
         val base =

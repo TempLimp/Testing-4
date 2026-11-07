@@ -230,6 +230,8 @@ class IterableSubject<T>(
         assertTrue(present.isEmpty(), "${describe()} contains $present")
     }
 
+    fun containsNoneIn(excluded: Iterable<*>) = containsNoneOf(*excluded.toList().toTypedArray())
+
     fun containsAnyOf(vararg candidates: Any?) =
         assertTrue(candidates.any { it in list }, "${describe()} contains none of ${candidates.toList()}")
 

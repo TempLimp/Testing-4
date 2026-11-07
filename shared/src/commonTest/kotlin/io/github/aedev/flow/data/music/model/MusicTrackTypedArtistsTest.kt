@@ -6,6 +6,7 @@
 
 package io.github.aedev.flow.data.music.model
 
+import io.github.aedev.flow.data.recommendation.music.primaryArtistKey
 import io.github.aedev.flow.testing.assertThat
 import kotlin.test.Test
 
@@ -14,9 +15,6 @@ import kotlin.test.Test
  * deserialize the artist entries as LinkedTreeMaps inside a List<MusicArtist>-typed field.
  * The first element access then throws ClassCastException and kills the music feed.
  * [withTypedArtists] must repair such a list without touching healthy ones.
- *
- * Upstream reaches the artists through `primaryArtistKey` (data/recommendation/music, S09); until that is ported
- * these cases read the list directly, which is the access the key's lookup makes.
  */
 class MusicTrackTypedArtistsTest {
     private fun track(artists: List<MusicArtist> = emptyList()) =
@@ -43,7 +41,7 @@ class MusicTrackTypedArtistsTest {
         val poisoned = poisonedTrack()
         var thrown = false
         try {
-            poisoned.artists.first().name
+            poisoned.primaryArtistKey()
         } catch (e: ClassCastException) {
             thrown = true
         }
@@ -54,6 +52,7 @@ class MusicTrackTypedArtistsTest {
     fun withTypedArtistsDropsPoisonedEntriesAndRestoresTheStringFallbacks() {
         val repaired = poisonedTrack().withTypedArtists()
         assertThat(repaired.artists).isEmpty()
+        assertThat(repaired.primaryArtistKey()).isEqualTo("UCfallback")
     }
 
     @Test
