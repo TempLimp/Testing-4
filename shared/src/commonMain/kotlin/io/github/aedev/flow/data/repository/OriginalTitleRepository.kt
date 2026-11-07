@@ -1,7 +1,7 @@
 package io.github.aedev.flow.data.repository
 
 import io.github.aedev.flow.utils.LruCache
-import io.github.aedev.flow.utils.putIfAbsent
+import io.github.aedev.flow.utils.atomicPutIfAbsent
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
@@ -57,7 +57,7 @@ class OriginalTitleRepository
         suspend fun originalTitle(videoId: String): String? {
             answers[videoId]?.let { return it.ifEmpty { null } }
             val mine = CompletableDeferred<String?>()
-            inFlight.putIfAbsent(videoId, mine)?.let { return it.await() }
+            inFlight.atomicPutIfAbsent(videoId, mine)?.let { return it.await() }
             try {
                 val title = permits.withPermit { fetch(videoId) }
                 mine.complete(title)

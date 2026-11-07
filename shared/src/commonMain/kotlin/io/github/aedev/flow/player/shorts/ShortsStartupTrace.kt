@@ -2,7 +2,7 @@ package io.github.aedev.flow.player.shorts
 
 import io.github.aedev.flow.player.error.PlayerDiagnostics
 import io.github.aedev.flow.utils.Log
-import io.github.aedev.flow.utils.putIfAbsent
+import io.github.aedev.flow.utils.atomicPutIfAbsent
 import io.ktor.util.collections.ConcurrentMap
 import kotlin.time.Clock
 
@@ -24,7 +24,7 @@ object ShortsStartupTrace {
 
     /** The moment the screen decided it needs this short playable. */
     fun onRequested(videoId: String) {
-        openedAt.putIfAbsent(videoId, now())
+        openedAt.atomicPutIfAbsent(videoId, now())
     }
 
     fun onStreamsResolved(

@@ -3,7 +3,7 @@ package io.github.aedev.flow.data.repository
 import io.github.aedev.flow.data.local.dao.HomeFeedCacheDao
 import io.github.aedev.flow.data.local.dao.VideoDao
 import io.github.aedev.flow.innertube.YouTube
-import io.github.aedev.flow.utils.putIfAbsent
+import io.github.aedev.flow.utils.atomicPutIfAbsent
 import io.ktor.util.collections.ConcurrentMap
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
@@ -32,7 +32,7 @@ class ChannelAvatarRepository
             val missing = channelIds.filterNot(known::containsKey)
             if (missing.isNotEmpty()) {
                 (homeFeedCacheDao.channelAvatars(missing) + videoDao.channelAvatars(missing))
-                    .forEach { known.putIfAbsent(it.channelId, it.channelThumbnailUrl) }
+                    .forEach { known.atomicPutIfAbsent(it.channelId, it.channelThumbnailUrl) }
             }
             return channelIds.mapNotNull { id -> known[id]?.takeIf(String::isNotBlank)?.let { id to it } }.toMap()
         }

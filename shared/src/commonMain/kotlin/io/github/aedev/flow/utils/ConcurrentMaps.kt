@@ -3,10 +3,12 @@ package io.github.aedev.flow.utils
 import io.ktor.util.collections.ConcurrentMap
 
 /**
- * `ConcurrentHashMap.putIfAbsent`, which Ktor's common ConcurrentMap lacks: atomic through its
- * `computeIfAbsent`. Returns the value already there, or null when [value] went in.
+ * `ConcurrentHashMap.putIfAbsent`: atomic through Ktor's `computeIfAbsent`. Returns the value already there, or null
+ * when [value] went in. Not named `putIfAbsent`: on jvm Ktor's ConcurrentMap inherits java.util.Map's default
+ * `putIfAbsent` (a get, then a put), which as a member would win over this extension, so two callers could both see
+ * the key absent and one deferred end up in the map with no owner to complete it.
  */
-fun <K : Any, V : Any> ConcurrentMap<K, V>.putIfAbsent(
+fun <K : Any, V : Any> ConcurrentMap<K, V>.atomicPutIfAbsent(
     key: K,
     value: V,
 ): V? {

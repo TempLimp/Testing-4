@@ -2,7 +2,7 @@ package io.github.aedev.flow.data.repository
 
 import io.github.aedev.flow.data.model.DeArrowContent
 import io.github.aedev.flow.utils.LruCache
-import io.github.aedev.flow.utils.putIfAbsent
+import io.github.aedev.flow.utils.atomicPutIfAbsent
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
@@ -58,7 +58,7 @@ class DeArrowRepository internal constructor(
     suspend fun branding(videoId: String): DeArrowContent? {
         fresh(videoId)?.let { return it.content }
         val mine = CompletableDeferred<DeArrowContent?>()
-        inFlight.putIfAbsent(videoId, mine)?.let { return it.await() }
+        inFlight.atomicPutIfAbsent(videoId, mine)?.let { return it.await() }
         try {
             val content = permits.withPermit { fetch(videoId) }
             mine.complete(content)
