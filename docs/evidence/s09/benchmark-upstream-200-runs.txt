@@ -1,0 +1,1000 @@
+run0 serving ndcg=0.9767770448962713 ild=0.9734993345887675 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.26428571428571435 unique=0.76875 conc=0.174921875
+run0 ungated ndcg=0.9761602627291082 ild=0.9721567458118947 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.2642857142857143 unique=0.76875 conc=0.17624986483564015
+run0 seed7 ndcg=0.9863414267747497 ild=0.9722825241246246 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.27142857142857146 unique=0.7625 conc=0.17571614583333334
+run0 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run0 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run1 serving ndcg=0.9850521863649967 ild=0.9723419850461287 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2714285714285714 unique=0.7625 conc=0.17538481293252597
+run1 ungated ndcg=0.982332804596154 ild=0.9746580117450468 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2571428571428572 unique=0.775 conc=0.17412760416666667
+run1 seed7 ndcg=0.9914509646368683 ild=0.9722522027341004 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.021428571428571432 servedRep=0.25 unique=0.78125 conc=0.17571614583333334
+run1 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run1 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run2 serving ndcg=0.9800327415111633 ild=0.9721617998012343 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2571428571428572 unique=0.775 conc=0.17624986483564015
+run2 ungated ndcg=0.9759100014416283 ild=0.9734625322573288 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857144 servedRep=0.2642857142857143 unique=0.76875 conc=0.174921875
+run2 seed7 ndcg=0.9913982358904272 ild=0.9734953449979161 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.21428571428571427 unique=0.8125 conc=0.174921875
+run2 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run2 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run3 serving ndcg=0.9745811861396209 ild=0.9735635531242396 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2785714285714286 unique=0.75625 conc=0.174921875
+run3 ungated ndcg=0.9811439559544296 ild=0.9736242898224717 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.24285714285714285 unique=0.7875 conc=0.174921875
+run3 seed7 ndcg=0.9886522889232916 ild=0.9735114066468229 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.021428571428571432 servedRep=0.2642857142857143 unique=0.76875 conc=0.174921875
+run3 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run3 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run4 serving ndcg=0.9689121599792507 ild=0.9722538374284677 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.08571428571428572 servedRep=0.29285714285714287 unique=0.74375 conc=0.17571614583333334
+run4 ungated ndcg=0.9828935058344892 ild=0.9709591981629627 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.24285714285714288 unique=0.7875 conc=0.17704413566897348
+run4 seed7 ndcg=0.9793442619604543 ild=0.9733585703043882 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.24285714285714285 unique=0.7875 conc=0.174921875
+run4 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run4 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run5 serving ndcg=0.9757199155625883 ild=0.9722335134051384 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2642857142857143 unique=0.76875 conc=0.17624986483564015
+run5 ungated ndcg=0.9784602587679996 ild=0.9724118971851353 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.25 unique=0.78125 conc=0.17538481293252597
+run5 seed7 ndcg=0.9849827825610956 ild=0.9745464804149675 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.042857142857142864 servedRep=0.2714285714285714 unique=0.7625 conc=0.17412760416666667
+run5 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run5 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run6 serving ndcg=0.9821626437523193 ild=0.9711009814906316 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.24999999999999997 unique=0.78125 conc=0.17704413566897348
+run6 ungated ndcg=0.9782067369840973 ild=0.9732414488971881 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2785714285714286 unique=0.75625 conc=0.17545559400230681
+run6 seed7 ndcg=0.9775906260277366 ild=0.9722340473671569 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.04285714285714286 servedRep=0.24285714285714285 unique=0.7875 conc=0.17571614583333334
+run6 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run6 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run7 serving ndcg=0.9744262335495772 ild=0.9731781087646493 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.25 unique=0.78125 conc=0.17545559400230681
+run7 ungated ndcg=0.9791645000661484 ild=0.97211078537115 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2571428571428572 unique=0.775 conc=0.17624986483564015
+run7 seed7 ndcg=0.9835997541228806 ild=0.9745475397655715 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.04285714285714286 servedRep=0.24999999999999997 unique=0.78125 conc=0.1741276041666667
+run7 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run7 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run8 serving ndcg=0.974653492241472 ild=0.9709449718414594 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.24285714285714283 unique=0.7875 conc=0.17704413566897348
+run8 ungated ndcg=0.9847919888419872 ild=0.9724774732864481 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2857142857142857 unique=0.75 conc=0.17571614583333334
+run8 seed7 ndcg=0.9855522528705305 ild=0.9734661933494002 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.04285714285714286 servedRep=0.24285714285714285 unique=0.7875 conc=0.174921875
+run8 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run8 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run9 serving ndcg=0.9827405740886805 ild=0.9712268089208124 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05 servedRep=0.2857142857142857 unique=0.75 conc=0.17617908376585928
+run9 ungated ndcg=0.9867149900835639 ild=0.9745712884953983 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2642857142857143 unique=0.76875 conc=0.17412760416666667
+run9 seed7 ndcg=0.9753421084664556 ild=0.972227260917725 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.2714285714285714 unique=0.7625 conc=0.17571614583333334
+run9 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run9 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run10 serving ndcg=0.9867019231123034 ild=0.9735263593453304 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2928571428571428 unique=0.74375 conc=0.174921875
+run10 ungated ndcg=0.9799726657110259 ild=0.9721043312216318 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.27142857142857146 unique=0.7625 conc=0.17624986483564015
+run10 seed7 ndcg=0.9855071195703411 ild=0.975720263374052 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.2714285714285714 unique=0.7625 conc=0.17333333333333337
+run10 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run10 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run11 serving ndcg=0.9779902034891896 ild=0.9723181816013476 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2642857142857143 unique=0.76875 conc=0.17538481293252597
+run11 ungated ndcg=0.9718262328609183 ild=0.9698504990245234 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2714285714285714 unique=0.7625 conc=0.1778384065023068
+run11 seed7 ndcg=0.9862028357010072 ild=0.9734437420510521 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.021428571428571432 servedRep=0.25 unique=0.78125 conc=0.174921875
+run11 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run11 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run12 serving ndcg=0.9733136150403967 ild=0.9722466182179336 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.24285714285714285 unique=0.7875 conc=0.17571614583333334
+run12 ungated ndcg=0.9800092256559648 ild=0.9723458967123545 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2571428571428572 unique=0.775 conc=0.17571614583333334
+run12 seed7 ndcg=0.9850607449015333 ild=0.9722391352251085 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.2642857142857143 unique=0.76875 conc=0.17571614583333334
+run12 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run12 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run13 serving ndcg=0.9761810024849582 ild=0.9708342600082249 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2857142857142857 unique=0.75 conc=0.17704413566897348
+run13 ungated ndcg=0.9834883523575834 ild=0.9731941485669287 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2785714285714286 unique=0.75625 conc=0.17545559400230681
+run13 seed7 ndcg=0.9887125705031917 ild=0.9733484285582577 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.2571428571428572 unique=0.775 conc=0.174921875
+run13 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run13 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run14 serving ndcg=0.9742739911403285 ild=0.9735048654462582 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2714285714285714 unique=0.7625 conc=0.174921875
+run14 ungated ndcg=0.987516054439425 ild=0.9732730506151286 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.27142857142857146 unique=0.7625 conc=0.17545559400230681
+run14 seed7 ndcg=0.9850595275007135 ild=0.9744619094614451 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.2571428571428572 unique=0.775 conc=0.17412760416666667
+run14 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run14 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run15 serving ndcg=0.966972359572751 ild=0.9708596039713034 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.25 unique=0.78125 conc=0.17704413566897348
+run15 ungated ndcg=0.9823466066350681 ild=0.9709091836625194 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.23571428571428574 unique=0.79375 conc=0.17704413566897348
+run15 seed7 ndcg=0.991870437488765 ild=0.9735153481472081 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.021428571428571432 servedRep=0.2785714285714286 unique=0.75625 conc=0.174921875
+run15 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run15 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run16 serving ndcg=0.9765999837541653 ild=0.9735153610136857 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142856 servedRep=0.27142857142857146 unique=0.7625 conc=0.174921875
+run16 ungated ndcg=0.9840689393971217 ild=0.9732151898232528 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2857142857142857 unique=0.75 conc=0.17545559400230681
+run16 seed7 ndcg=0.9907072450491775 ild=0.9745888250527817 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.21428571428571427 unique=0.8125 conc=0.1741276041666667
+run16 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run16 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run17 serving ndcg=0.9793126421355794 ild=0.9721655901629597 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.3 unique=0.7375 conc=0.17624986483564015
+run17 ungated ndcg=0.9777382688881667 ild=0.9720335123645444 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2571428571428572 unique=0.775 conc=0.17624986483564015
+run17 seed7 ndcg=0.975905778868677 ild=0.9734402731072889 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2571428571428572 unique=0.775 conc=0.174921875
+run17 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run17 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run18 serving ndcg=0.9793551183691199 ild=0.9720608386166751 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2571428571428571 unique=0.775 conc=0.17624986483564015
+run18 ungated ndcg=0.9816858135591982 ild=0.9735789459044516 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.25 unique=0.78125 conc=0.174921875
+run18 seed7 ndcg=0.9941780512707042 ild=0.9745761533903627 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.028571428571428574 servedRep=0.2928571428571428 unique=0.74375 conc=0.1741276041666667
+run18 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run18 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run19 serving ndcg=0.9766033214335709 ild=0.9720923648551181 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2642857142857143 unique=0.76875 conc=0.17624986483564015
+run19 ungated ndcg=0.9847460555642871 ild=0.9721198353868983 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2642857142857143 unique=0.76875 conc=0.17624986483564015
+run19 seed7 ndcg=0.9958153748846814 ild=0.974570914026188 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.028571428571428574 servedRep=0.24285714285714285 unique=0.7875 conc=0.1741276041666667
+run19 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run19 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run20 serving ndcg=0.9850143040471137 ild=0.9733680210441937 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2928571428571428 unique=0.74375 conc=0.17459054209919264
+run20 ungated ndcg=0.9745283325865557 ild=0.973280420881907 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2642857142857143 unique=0.76875 conc=0.17545559400230681
+run20 seed7 ndcg=0.987436153290719 ild=0.9723381640602148 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.2571428571428572 unique=0.775 conc=0.17571614583333334
+run20 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run20 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run21 serving ndcg=0.9739560419919598 ild=0.9723117550755551 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2857142857142857 unique=0.75 conc=0.17538481293252595
+run21 ungated ndcg=0.9860285339402901 ild=0.9746464773532297 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2857142857142857 unique=0.75 conc=0.17412760416666667
+run21 seed7 ndcg=0.9834403134579107 ild=0.972324549977507 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.028571428571428574 servedRep=0.2357142857142857 unique=0.79375 conc=0.17571614583333334
+run21 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run21 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run22 serving ndcg=0.969964000916475 ild=0.9735640312848931 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2785714285714286 unique=0.75625 conc=0.174921875
+run22 ungated ndcg=0.9760316039400865 ild=0.9734719200866354 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2642857142857143 unique=0.76875 conc=0.17459054209919264
+run22 seed7 ndcg=0.9872039595042492 ild=0.9735322501145779 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.028571428571428574 servedRep=0.2357142857142857 unique=0.79375 conc=0.174921875
+run22 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run22 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run23 serving ndcg=0.9777578750325692 ild=0.9735008331455526 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.2857142857142857 unique=0.75 conc=0.174921875
+run23 ungated ndcg=0.9771255441191897 ild=0.9708945897959669 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.3 unique=0.7375 conc=0.17704413566897348
+run23 seed7 ndcg=0.9883266850031809 ild=0.9745316946473173 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.04285714285714286 servedRep=0.27142857142857146 unique=0.7625 conc=0.17412760416666667
+run23 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run23 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run24 serving ndcg=0.9851105960840607 ild=0.9723556398899685 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2785714285714286 unique=0.75625 conc=0.17538481293252595
+run24 ungated ndcg=0.9695947598135308 ild=0.9709460205572343 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.24285714285714288 unique=0.7875 conc=0.17704413566897348
+run24 seed7 ndcg=0.9845484023321197 ild=0.9723144550447682 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.24999999999999997 unique=0.78125 conc=0.17571614583333334
+run24 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run24 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run25 serving ndcg=0.9751962482965788 ild=0.9720725828934058 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.24285714285714285 unique=0.7875 conc=0.17624986483564015
+run25 ungated ndcg=0.981870026076229 ild=0.9723815606756298 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2785714285714286 unique=0.75625 conc=0.17571614583333334
+run25 seed7 ndcg=0.9829607487808496 ild=0.9734916905140414 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.2571428571428572 unique=0.775 conc=0.174921875
+run25 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run25 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run26 serving ndcg=0.9846210567510311 ild=0.973508662275467 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.3 unique=0.7375 conc=0.174921875
+run26 ungated ndcg=0.9867908390846645 ild=0.9734950362261381 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.24999999999999997 unique=0.78125 conc=0.174921875
+run26 seed7 ndcg=0.9856280049177376 ild=0.9746345452879042 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.04285714285714286 servedRep=0.24285714285714283 unique=0.7875 conc=0.1741276041666667
+run26 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run26 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run27 serving ndcg=0.9852052547913172 ild=0.9733090263232571 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.24285714285714285 unique=0.7875 conc=0.17545559400230681
+run27 ungated ndcg=0.9856271182968488 ild=0.9723260142670637 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.29999999999999993 unique=0.7375 conc=0.17571614583333334
+run27 seed7 ndcg=0.9850958944624908 ild=0.9710474057947006 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.24999999999999997 unique=0.78125 conc=0.17651041666666667
+run27 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run27 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run28 serving ndcg=0.9828020274991522 ild=0.9720503752207841 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2571428571428571 unique=0.775 conc=0.17624986483564015
+run28 ungated ndcg=0.9770992831126526 ild=0.9721178998866917 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.08571428571428573 servedRep=0.2714285714285714 unique=0.7625 conc=0.17624986483564015
+run28 seed7 ndcg=0.9839122096966783 ild=0.9734126471216459 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.04285714285714286 servedRep=0.25 unique=0.78125 conc=0.174921875
+run28 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run28 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run29 serving ndcg=0.9764016466086557 ild=0.971132107194589 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.08571428571428572 servedRep=0.2571428571428571 unique=0.775 conc=0.17617908376585928
+run29 ungated ndcg=0.9728774711528823 ild=0.9697122481093191 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.2714285714285714 unique=0.7625 conc=0.1778384065023068
+run29 seed7 ndcg=0.9888073268461076 ild=0.9735214515269389 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.028571428571428574 servedRep=0.21428571428571425 unique=0.8125 conc=0.17492187500000003
+run29 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run29 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run30 serving ndcg=0.975723489210037 ild=0.9721084640717972 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2571428571428572 unique=0.775 conc=0.17624986483564015
+run30 ungated ndcg=0.9799929215263035 ild=0.9723255370765954 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2571428571428572 unique=0.775 conc=0.17571614583333334
+run30 seed7 ndcg=0.9858582563512114 ild=0.974623563172477 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.2571428571428571 unique=0.775 conc=0.1741276041666667
+run30 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run30 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run31 serving ndcg=0.9787903925387313 ild=0.9720933685827344 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142856 servedRep=0.2642857142857143 unique=0.76875 conc=0.17624986483564015
+run31 ungated ndcg=0.9823416513121226 ild=0.973613074777059 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05 servedRep=0.29285714285714287 unique=0.74375 conc=0.174921875
+run31 seed7 ndcg=0.988527141957854 ild=0.9734714184957326 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.24285714285714285 unique=0.7875 conc=0.174921875
+run31 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run31 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run32 serving ndcg=0.9733924182816551 ild=0.9697370665675985 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2714285714285714 unique=0.7625 conc=0.1778384065023068
+run32 ungated ndcg=0.9771959667443533 ild=0.974671131568573 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.27142857142857146 unique=0.7625 conc=0.17412760416666667
+run32 seed7 ndcg=0.9896394399042651 ild=0.9745855414078372 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.2928571428571428 unique=0.74375 conc=0.1741276041666667
+run32 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run32 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run33 serving ndcg=0.9838561554718558 ild=0.9735360722053898 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2642857142857143 unique=0.76875 conc=0.174921875
+run33 ungated ndcg=0.9781754522212281 ild=0.9709586519308189 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857144 servedRep=0.2785714285714286 unique=0.75625 conc=0.17704413566897348
+run33 seed7 ndcg=0.9821127896911156 ild=0.9734215104251323 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05 servedRep=0.2714285714285714 unique=0.7625 conc=0.174921875
+run33 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run33 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run34 serving ndcg=0.9768519427848841 ild=0.9698591502048329 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.25 unique=0.78125 conc=0.1778384065023068
+run34 ungated ndcg=0.9805499714167432 ild=0.9709590847599538 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.2714285714285714 unique=0.7625 conc=0.17704413566897348
+run34 seed7 ndcg=0.9910725878232572 ild=0.9744758613355522 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.2714285714285714 unique=0.7625 conc=0.17412760416666667
+run34 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run34 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run35 serving ndcg=0.9728912795740308 ild=0.972061006513979 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.24999999999999997 unique=0.78125 conc=0.17624986483564015
+run35 ungated ndcg=0.9819790505210773 ild=0.9735063739791866 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.2571428571428572 unique=0.775 conc=0.17459054209919264
+run35 seed7 ndcg=0.9882466138717061 ild=0.9745841371684101 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.22142857142857145 unique=0.80625 conc=0.17412760416666667
+run35 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run35 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run36 serving ndcg=0.9751613256306506 ild=0.9721008153414867 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2571428571428572 unique=0.775 conc=0.17624986483564015
+run36 ungated ndcg=0.9833183606765573 ild=0.9746225109182631 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.27142857142857146 unique=0.7625 conc=0.17412760416666667
+run36 seed7 ndcg=0.9818351733728041 ild=0.9722967009559098 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.04285714285714286 servedRep=0.18571428571428572 unique=0.8375 conc=0.17571614583333334
+run36 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run36 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run37 serving ndcg=0.9785832976201067 ild=0.9734110686678601 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2642857142857143 unique=0.76875 conc=0.17545559400230681
+run37 ungated ndcg=0.9841548002051037 ild=0.9736183157370254 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.24999999999999997 unique=0.78125 conc=0.174921875
+run37 seed7 ndcg=0.9943798770060744 ild=0.9744588199520465 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.028571428571428574 servedRep=0.2357142857142857 unique=0.79375 conc=0.17412760416666667
+run37 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run37 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run38 serving ndcg=0.9792586273557495 ild=0.9710197147560545 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.2785714285714286 unique=0.75625 conc=0.17704413566897348
+run38 ungated ndcg=0.9669859002190458 ild=0.9723810603338406 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2785714285714286 unique=0.75625 conc=0.17571614583333334
+run38 seed7 ndcg=0.986160057634834 ild=0.9721716848602302 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.2571428571428572 unique=0.775 conc=0.17571614583333334
+run38 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run38 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run39 serving ndcg=0.9825397251123141 ild=0.9733191318047469 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2857142857142857 unique=0.75 conc=0.17545559400230681
+run39 ungated ndcg=0.9769525105044391 ild=0.9709553434135494 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05 servedRep=0.2785714285714286 unique=0.75625 conc=0.17704413566897348
+run39 seed7 ndcg=0.986850333148235 ild=0.9722256988037007 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.014285714285714287 servedRep=0.25 unique=0.78125 conc=0.17571614583333334
+run39 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run39 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run40 serving ndcg=0.9775444052280905 ild=0.973216880847865 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.25000000000000006 unique=0.78125 conc=0.17545559400230681
+run40 ungated ndcg=0.9780996727180045 ild=0.971990378577348 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.27142857142857146 unique=0.7625 conc=0.17624986483564015
+run40 seed7 ndcg=0.9828290287168744 ild=0.9710268976730102 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.028571428571428574 servedRep=0.24999999999999997 unique=0.78125 conc=0.17651041666666667
+run40 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run40 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run41 serving ndcg=0.9782602842293705 ild=0.9720333903113391 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2571428571428571 unique=0.775 conc=0.17624986483564015
+run41 ungated ndcg=0.972824118794941 ild=0.9720590389405142 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.08571428571428573 servedRep=0.2714285714285714 unique=0.7625 conc=0.17624986483564015
+run41 seed7 ndcg=0.9837665402819907 ild=0.9722328663908633 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.2357142857142857 unique=0.79375 conc=0.17571614583333334
+run41 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run41 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run42 serving ndcg=0.9801894710933874 ild=0.973531780498533 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2857142857142857 unique=0.75 conc=0.174921875
+run42 ungated ndcg=0.9729279871861279 ild=0.9721670863622432 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2571428571428572 unique=0.775 conc=0.17624986483564015
+run42 seed7 ndcg=0.9795215623198162 ild=0.9734051381188226 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2571428571428571 unique=0.775 conc=0.174921875
+run42 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run42 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run43 serving ndcg=0.9714544257002448 ild=0.9735105178068884 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.08571428571428573 servedRep=0.2785714285714285 unique=0.75625 conc=0.174921875
+run43 ungated ndcg=0.9718412166704904 ild=0.9697054634882101 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2714285714285714 unique=0.7625 conc=0.1778384065023068
+run43 seed7 ndcg=0.9916180423417598 ild=0.9732843215206998 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.042857142857142864 servedRep=0.2928571428571428 unique=0.74375 conc=0.174921875
+run43 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run43 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run44 serving ndcg=0.968667297504437 ild=0.9732297011589577 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142856 servedRep=0.2642857142857143 unique=0.76875 conc=0.17545559400230681
+run44 ungated ndcg=0.981951942531814 ild=0.9710700352571985 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2642857142857143 unique=0.76875 conc=0.17704413566897348
+run44 seed7 ndcg=0.98781721440041 ild=0.9757392916880189 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05 servedRep=0.2642857142857143 unique=0.76875 conc=0.17333333333333337
+run44 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run44 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run45 serving ndcg=0.9795630477501239 ild=0.9700785104104401 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05 servedRep=0.2642857142857143 unique=0.76875 conc=0.1769733545991926
+run45 ungated ndcg=0.9791809978201113 ild=0.9709121163917511 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2571428571428572 unique=0.775 conc=0.17704413566897348
+run45 seed7 ndcg=0.9831385705758907 ild=0.9733868663132653 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.2785714285714286 unique=0.75625 conc=0.174921875
+run45 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run45 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run46 serving ndcg=0.9850141919666119 ild=0.972003189491982 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.24285714285714288 unique=0.7875 conc=0.17624986483564015
+run46 ungated ndcg=0.9712886130613739 ild=0.9723462275354264 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.22857142857142856 unique=0.8 conc=0.17538481293252595
+run46 seed7 ndcg=0.9777101332544846 ild=0.9722968754764135 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.24285714285714285 unique=0.7875 conc=0.17571614583333334
+run46 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run46 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run47 serving ndcg=0.9707805153870233 ild=0.9723036390301439 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.09285714285714286 servedRep=0.2785714285714285 unique=0.75625 conc=0.17538481293252595
+run47 ungated ndcg=0.9761648236335221 ild=0.9721433791725285 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05 servedRep=0.2571428571428572 unique=0.775 conc=0.17624986483564015
+run47 seed7 ndcg=0.9869838978853746 ild=0.9722914978186358 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.028571428571428574 servedRep=0.2785714285714286 unique=0.75625 conc=0.17571614583333334
+run47 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run47 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run48 serving ndcg=0.9819763876059768 ild=0.9745777354546218 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2642857142857143 unique=0.76875 conc=0.17412760416666667
+run48 ungated ndcg=0.9797769103904369 ild=0.9734946776844767 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.23571428571428574 unique=0.79375 conc=0.17459054209919264
+run48 seed7 ndcg=0.9861423596084906 ild=0.9733649048784656 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.028571428571428574 servedRep=0.21428571428571425 unique=0.8125 conc=0.174921875
+run48 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run48 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run49 serving ndcg=0.9804171735834921 ild=0.973490430966082 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.2571428571428572 unique=0.775 conc=0.174921875
+run49 ungated ndcg=0.9781697646481389 ild=0.9732288635542696 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.2642857142857143 unique=0.76875 conc=0.17545559400230681
+run49 seed7 ndcg=0.9896794536387413 ild=0.9757363199506419 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.042857142857142864 servedRep=0.2571428571428571 unique=0.775 conc=0.17333333333333337
+run49 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run49 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run50 serving ndcg=0.980139651922784 ild=0.9746894540106448 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2357142857142857 unique=0.79375 conc=0.17412760416666667
+run50 ungated ndcg=0.9875814423872941 ild=0.9722191467003926 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.2857142857142857 unique=0.75 conc=0.17624986483564015
+run50 seed7 ndcg=0.9899884215342765 ild=0.9734293943306989 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.2571428571428572 unique=0.775 conc=0.174921875
+run50 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run50 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run51 serving ndcg=0.9816460369880361 ild=0.9710199746686359 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2642857142857143 unique=0.76875 conc=0.17704413566897348
+run51 ungated ndcg=0.9747591234346195 ild=0.971010622229013 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.08571428571428573 servedRep=0.2714285714285714 unique=0.7625 conc=0.17704413566897348
+run51 seed7 ndcg=0.9839039204172452 ild=0.9746002959225151 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.2357142857142857 unique=0.79375 conc=0.17412760416666667
+run51 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run51 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run52 serving ndcg=0.9824605191527316 ild=0.9732588774615153 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.2642857142857143 unique=0.76875 conc=0.17545559400230681
+run52 ungated ndcg=0.9778437777324742 ild=0.9698893486823018 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.24285714285714285 unique=0.7875 conc=0.1778384065023068
+run52 seed7 ndcg=0.9877734113458718 ild=0.9733346015356698 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.04285714285714286 servedRep=0.24285714285714285 unique=0.7875 conc=0.174921875
+run52 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run52 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run53 serving ndcg=0.9643413030266643 ild=0.9697238509769791 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857144 servedRep=0.2571428571428571 unique=0.775 conc=0.1778384065023068
+run53 ungated ndcg=0.9794061899723828 ild=0.9721125682219195 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.25000000000000006 unique=0.78125 conc=0.17624986483564015
+run53 seed7 ndcg=0.9883957243054938 ild=0.9734222593620285 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.2785714285714285 unique=0.75625 conc=0.174921875
+run53 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run53 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run54 serving ndcg=0.9749034748074237 ild=0.9723721864082177 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.2642857142857143 unique=0.76875 conc=0.17571614583333334
+run54 ungated ndcg=0.9804440835993696 ild=0.9698958092036548 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.25000000000000006 unique=0.78125 conc=0.1778384065023068
+run54 seed7 ndcg=0.989895638960983 ild=0.9745850660737947 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.2285714285714285 unique=0.8 conc=0.1741276041666667
+run54 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run54 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run55 serving ndcg=0.9702405184951822 ild=0.9734703495552358 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2642857142857143 unique=0.76875 conc=0.174921875
+run55 ungated ndcg=0.9739971623649131 ild=0.9724611724272803 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.25 unique=0.78125 conc=0.17571614583333334
+run55 seed7 ndcg=0.9810447723089118 ild=0.9710368500045047 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.042857142857142864 servedRep=0.2714285714285714 unique=0.7625 conc=0.17651041666666667
+run55 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run55 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run56 serving ndcg=0.9837029757636891 ild=0.9746194969799293 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2642857142857143 unique=0.76875 conc=0.17412760416666667
+run56 ungated ndcg=0.9814488371270405 ild=0.9731435665156276 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.3 unique=0.7375 conc=0.17545559400230681
+run56 seed7 ndcg=0.9896941287433046 ild=0.9735182452024315 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.014285714285714287 servedRep=0.25 unique=0.78125 conc=0.174921875
+run56 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run56 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run57 serving ndcg=0.9839091255705048 ild=0.9721874540800427 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2571428571428571 unique=0.775 conc=0.17624986483564015
+run57 ungated ndcg=0.9736758933224731 ild=0.9746212857578175 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.27142857142857146 unique=0.7625 conc=0.17412760416666667
+run57 seed7 ndcg=0.9797791865985161 ild=0.9733553261884667 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.24285714285714285 unique=0.7875 conc=0.174921875
+run57 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run57 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run58 serving ndcg=0.9882067970535927 ild=0.973237786132154 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2857142857142857 unique=0.75 conc=0.17545559400230681
+run58 ungated ndcg=0.9815300577625109 ild=0.9733536483285293 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.27142857142857146 unique=0.7625 conc=0.17545559400230681
+run58 seed7 ndcg=0.9786967952072854 ild=0.972164358282787 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.24285714285714283 unique=0.7875 conc=0.17571614583333334
+run58 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run58 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run59 serving ndcg=0.9842072520432679 ild=0.9732298370873863 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2714285714285714 unique=0.7625 conc=0.17545559400230681
+run59 ungated ndcg=0.9821484437628929 ild=0.9746497660225961 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.26428571428571423 unique=0.76875 conc=0.17412760416666667
+run59 seed7 ndcg=0.9887244108118394 ild=0.9745262928424789 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.2571428571428571 unique=0.775 conc=0.17412760416666667
+run59 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run59 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run60 serving ndcg=0.9821132355545632 ild=0.9735830377626696 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.2642857142857143 unique=0.76875 conc=0.17459054209919264
+run60 ungated ndcg=0.9833127446509455 ild=0.9720929423596484 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.25 unique=0.78125 conc=0.17624986483564015
+run60 seed7 ndcg=0.9896275464550568 ild=0.9745962922664528 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.29285714285714287 unique=0.74375 conc=0.1741276041666667
+run60 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run60 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run61 serving ndcg=0.9781511876943795 ild=0.9709386318810278 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.2785714285714286 unique=0.75625 conc=0.17704413566897348
+run61 ungated ndcg=0.98243634948583 ild=0.9733322171831413 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.24285714285714288 unique=0.7875 conc=0.17545559400230681
+run61 seed7 ndcg=0.9867567982175884 ild=0.973517912474827 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.028571428571428574 servedRep=0.2642857142857143 unique=0.76875 conc=0.174921875
+run61 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run61 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run62 serving ndcg=0.9733323450068886 ild=0.973486685498114 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.25000000000000006 unique=0.78125 conc=0.174921875
+run62 ungated ndcg=0.9721195264285876 ild=0.9710610406849262 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.24285714285714285 unique=0.7875 conc=0.17617908376585928
+run62 seed7 ndcg=0.9850620716954274 ild=0.9733944211128055 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.042857142857142864 servedRep=0.2714285714285714 unique=0.7625 conc=0.174921875
+run62 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run62 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run63 serving ndcg=0.9776885482788154 ild=0.9732861815077885 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2642857142857143 unique=0.76875 conc=0.17545559400230681
+run63 ungated ndcg=0.988027371545984 ild=0.9721638193576323 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.25000000000000006 unique=0.78125 conc=0.17624986483564015
+run63 seed7 ndcg=0.9805571518407785 ild=0.9734349009399643 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.042857142857142864 servedRep=0.2785714285714286 unique=0.75625 conc=0.174921875
+run63 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run63 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run64 serving ndcg=0.9788024607574338 ild=0.9710235805132883 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2642857142857143 unique=0.76875 conc=0.17704413566897348
+run64 ungated ndcg=0.9846037278843085 ild=0.9746489493105097 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.25 unique=0.78125 conc=0.17412760416666667
+run64 seed7 ndcg=0.9815814751878918 ild=0.9733797362461551 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.04285714285714286 servedRep=0.24285714285714285 unique=0.7875 conc=0.174921875
+run64 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run64 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run65 serving ndcg=0.9812892587281392 ild=0.9709434591248656 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.25000000000000006 unique=0.78125 conc=0.17704413566897348
+run65 ungated ndcg=0.9761042369115567 ild=0.9709565911142215 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.2642857142857143 unique=0.76875 conc=0.17704413566897348
+run65 seed7 ndcg=0.984765086336632 ild=0.972285373707233 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.04285714285714286 servedRep=0.2214285714285714 unique=0.80625 conc=0.17571614583333334
+run65 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run65 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run66 serving ndcg=0.9777828497535033 ild=0.9720592823372654 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2857142857142857 unique=0.75 conc=0.17624986483564015
+run66 ungated ndcg=0.971098024494687 ild=0.9724049414512221 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.24285714285714288 unique=0.7875 conc=0.17538481293252597
+run66 seed7 ndcg=0.9794169193508301 ild=0.9723183131902738 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.042857142857142864 servedRep=0.2357142857142857 unique=0.79375 conc=0.17571614583333334
+run66 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run66 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run67 serving ndcg=0.9845459087446476 ild=0.9746601676127719 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.3 unique=0.7375 conc=0.17412760416666667
+run67 ungated ndcg=0.9799703108723901 ild=0.972108337466937 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.08571428571428573 servedRep=0.2857142857142857 unique=0.75 conc=0.17624986483564015
+run67 seed7 ndcg=0.9805101628881154 ild=0.9710773837642613 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.2785714285714286 unique=0.75625 conc=0.17651041666666667
+run67 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run67 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run68 serving ndcg=0.980874171157851 ild=0.9734360733400801 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2714285714285714 unique=0.7625 conc=0.174921875
+run68 ungated ndcg=0.9767335883079968 ild=0.973398867233803 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2571428571428572 unique=0.775 conc=0.174921875
+run68 seed7 ndcg=0.9951065488949403 ild=0.9745774621510677 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05 servedRep=0.2642857142857143 unique=0.76875 conc=0.1741276041666667
+run68 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run68 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run69 serving ndcg=0.9771828072664659 ild=0.9735655296020261 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2928571428571428 unique=0.74375 conc=0.174921875
+run69 ungated ndcg=0.9791622667282069 ild=0.9734590868627301 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2642857142857143 unique=0.76875 conc=0.174921875
+run69 seed7 ndcg=0.9887832604539976 ild=0.9734360603253648 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.2642857142857143 unique=0.76875 conc=0.174921875
+run69 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run69 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run70 serving ndcg=0.9758383826212929 ild=0.9732314525129141 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.27142857142857146 unique=0.7625 conc=0.17545559400230681
+run70 ungated ndcg=0.9787273010385673 ild=0.9713312297243112 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.27142857142857146 unique=0.7625 conc=0.1761790837658593
+run70 seed7 ndcg=0.9797659467271025 ild=0.9721943866621126 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.31428571428571433 unique=0.725 conc=0.17571614583333334
+run70 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run70 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run71 serving ndcg=0.9705235490614087 ild=0.9723535777570215 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.09285714285714287 servedRep=0.2642857142857143 unique=0.76875 conc=0.17538481293252597
+run71 ungated ndcg=0.9832553794629483 ild=0.9721723578791659 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05 servedRep=0.2857142857142857 unique=0.75 conc=0.17624986483564015
+run71 seed7 ndcg=0.982283163623918 ild=0.9734551713949172 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.26428571428571423 unique=0.76875 conc=0.174921875
+run71 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run71 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run72 serving ndcg=0.979165625936226 ild=0.9735732518946335 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.2714285714285714 unique=0.7625 conc=0.17459054209919264
+run72 ungated ndcg=0.9697816172373681 ild=0.9710086805562145 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2857142857142857 unique=0.75 conc=0.17704413566897348
+run72 seed7 ndcg=0.9884992200051037 ild=0.9722967177483566 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.028571428571428574 servedRep=0.2214285714285714 unique=0.80625 conc=0.17571614583333334
+run72 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run72 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run73 serving ndcg=0.9819571776691417 ild=0.9736047499243047 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.2785714285714285 unique=0.75625 conc=0.174921875
+run73 ungated ndcg=0.9892098699331451 ild=0.9732779433634465 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05 servedRep=0.2571428571428572 unique=0.775 conc=0.17545559400230681
+run73 seed7 ndcg=0.9860626570133607 ild=0.9722183315989289 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.028571428571428574 servedRep=0.2785714285714286 unique=0.75625 conc=0.17571614583333334
+run73 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run73 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run74 serving ndcg=0.9794090511514897 ild=0.9735351164772517 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.25 unique=0.78125 conc=0.174921875
+run74 ungated ndcg=0.9750506704672468 ild=0.9732055120085049 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2785714285714286 unique=0.75625 conc=0.17545559400230681
+run74 seed7 ndcg=0.980464833567788 ild=0.973440296468873 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.2714285714285714 unique=0.7625 conc=0.174921875
+run74 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run74 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run75 serving ndcg=0.9729368682729634 ild=0.9699057076942292 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2857142857142857 unique=0.75 conc=0.1778384065023068
+run75 ungated ndcg=0.9732753900414474 ild=0.9723524911779283 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2928571428571428 unique=0.74375 conc=0.17571614583333334
+run75 seed7 ndcg=0.987709574854976 ild=0.972234396605129 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.04285714285714286 servedRep=0.27142857142857146 unique=0.7625 conc=0.17571614583333334
+run75 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run75 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run76 serving ndcg=0.9732170786463767 ild=0.9712535985235329 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2785714285714286 unique=0.75625 conc=0.17651041666666667
+run76 ungated ndcg=0.980385175485802 ild=0.97324540551787 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.2857142857142857 unique=0.75 conc=0.17545559400230681
+run76 seed7 ndcg=0.9923093195580364 ild=0.9744708595003447 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.028571428571428574 servedRep=0.2642857142857143 unique=0.76875 conc=0.17412760416666667
+run76 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run76 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run77 serving ndcg=0.9789258092354509 ild=0.974677581930455 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2642857142857143 unique=0.76875 conc=0.17412760416666667
+run77 ungated ndcg=0.9755438786085563 ild=0.970949035568175 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2571428571428572 unique=0.775 conc=0.17704413566897348
+run77 seed7 ndcg=0.9874211037913438 ild=0.9734445242998807 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.29285714285714287 unique=0.74375 conc=0.174921875
+run77 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run77 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run78 serving ndcg=0.9823449306039364 ild=0.9722836249559315 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.2571428571428572 unique=0.775 conc=0.17624986483564015
+run78 ungated ndcg=0.9795199284354581 ild=0.9734712021016223 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2785714285714286 unique=0.75625 conc=0.174921875
+run78 seed7 ndcg=0.981593021608669 ild=0.9722557672358259 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.27142857142857146 unique=0.7625 conc=0.17571614583333334
+run78 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run78 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run79 serving ndcg=0.9798777711802189 ild=0.972147162221426 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2571428571428572 unique=0.775 conc=0.17624986483564015
+run79 ungated ndcg=0.9791216207761786 ild=0.9721060649946401 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.26428571428571435 unique=0.76875 conc=0.17624986483564015
+run79 seed7 ndcg=0.983107921718509 ild=0.973481021698556 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.028571428571428574 servedRep=0.2571428571428572 unique=0.775 conc=0.174921875
+run79 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run79 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run80 serving ndcg=0.981383941993844 ild=0.9732075366996851 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2785714285714286 unique=0.75625 conc=0.17545559400230681
+run80 ungated ndcg=0.9728422095554189 ild=0.9709099433814646 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2642857142857143 unique=0.76875 conc=0.17704413566897348
+run80 seed7 ndcg=0.9870151929284634 ild=0.9734060887164993 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.2785714285714286 unique=0.75625 conc=0.174921875
+run80 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run80 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run81 serving ndcg=0.9877089998892667 ild=0.9724142387074858 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.2571428571428571 unique=0.775 conc=0.17571614583333334
+run81 ungated ndcg=0.9780320733353101 ild=0.9724065087569431 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.25 unique=0.78125 conc=0.17571614583333334
+run81 seed7 ndcg=0.9836141930918905 ild=0.9722737383510133 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.2571428571428572 unique=0.775 conc=0.17571614583333334
+run81 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run81 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run82 serving ndcg=0.9789037166617424 ild=0.9723557395654308 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.2785714285714285 unique=0.75625 conc=0.17538481293252595
+run82 ungated ndcg=0.9756717494911966 ild=0.972355148783688 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.24285714285714288 unique=0.7875 conc=0.17538481293252597
+run82 seed7 ndcg=0.9846829108639866 ild=0.9746453910846244 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.25 unique=0.78125 conc=0.1741276041666667
+run82 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run82 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run83 serving ndcg=0.984235101576646 ild=0.9735040404109996 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2857142857142857 unique=0.75 conc=0.174921875
+run83 ungated ndcg=0.9822602396237605 ild=0.9746115525367209 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.2928571428571428 unique=0.74375 conc=0.17412760416666667
+run83 seed7 ndcg=0.9906434183139974 ild=0.9733704443326472 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.028571428571428574 servedRep=0.2642857142857143 unique=0.76875 conc=0.174921875
+run83 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run83 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run84 serving ndcg=0.9784246006481403 ild=0.9708954615631135 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2857142857142857 unique=0.75 conc=0.17704413566897348
+run84 ungated ndcg=0.9770038748422111 ild=0.9734251064179881 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2714285714285714 unique=0.7625 conc=0.174921875
+run84 seed7 ndcg=0.9889821119844402 ild=0.9745848493911451 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.028571428571428574 servedRep=0.2571428571428572 unique=0.775 conc=0.17412760416666667
+run84 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run84 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run85 serving ndcg=0.9778932683450297 ild=0.9722884045987167 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.09285714285714286 servedRep=0.29285714285714287 unique=0.74375 conc=0.17538481293252595
+run85 ungated ndcg=0.9758953552176776 ild=0.9732607023937885 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.3071428571428571 unique=0.73125 conc=0.17545559400230681
+run85 seed7 ndcg=0.9910540377844195 ild=0.9757522087300159 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.3 unique=0.7375 conc=0.17333333333333337
+run85 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run85 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run86 serving ndcg=0.9864345748226041 ild=0.9723072540580592 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05 servedRep=0.2714285714285714 unique=0.7625 conc=0.17571614583333334
+run86 ungated ndcg=0.9774217705105028 ild=0.9723649904993249 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.26428571428571423 unique=0.76875 conc=0.17571614583333334
+run86 seed7 ndcg=0.9868476260820566 ild=0.9733843549713203 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2642857142857143 unique=0.76875 conc=0.174921875
+run86 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run86 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run87 serving ndcg=0.9858233262439264 ild=0.9735305197728216 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.25 unique=0.78125 conc=0.174921875
+run87 ungated ndcg=0.9782876945836065 ild=0.9709326897147017 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.23571428571428568 unique=0.79375 conc=0.17704413566897348
+run87 seed7 ndcg=0.9903211197839753 ild=0.9745481174777326 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.25 unique=0.78125 conc=0.1741276041666667
+run87 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run87 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run88 serving ndcg=0.9891714997861747 ild=0.9747071392559609 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2785714285714285 unique=0.75625 conc=0.17412760416666667
+run88 ungated ndcg=0.9818629408904024 ild=0.9733026331454894 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.27142857142857146 unique=0.7625 conc=0.17545559400230681
+run88 seed7 ndcg=0.9940249832484533 ild=0.9745459968224962 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.2857142857142857 unique=0.75 conc=0.17412760416666667
+run88 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run88 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run89 serving ndcg=0.9830369242295663 ild=0.9735453197352202 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.24285714285714285 unique=0.7875 conc=0.17459054209919264
+run89 ungated ndcg=0.9671402199688627 ild=0.9720968559383321 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2357142857142857 unique=0.79375 conc=0.17624986483564015
+run89 seed7 ndcg=0.9868560836358753 ild=0.9734572483386441 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.2357142857142857 unique=0.79375 conc=0.174921875
+run89 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run89 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run90 serving ndcg=0.983218788289475 ild=0.9700409788179216 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.25 unique=0.78125 conc=0.1769733545991926
+run90 ungated ndcg=0.9778833579649822 ild=0.9709907021339852 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2214285714285714 unique=0.80625 conc=0.17704413566897348
+run90 seed7 ndcg=0.9883165480822149 ild=0.9723156548817654 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.042857142857142864 servedRep=0.2857142857142857 unique=0.75 conc=0.17571614583333334
+run90 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run90 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run91 serving ndcg=0.985218987343845 ild=0.972125669177679 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2642857142857143 unique=0.76875 conc=0.17624986483564015
+run91 ungated ndcg=0.9753030221805806 ild=0.9720755133955181 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2571428571428571 unique=0.775 conc=0.17624986483564015
+run91 seed7 ndcg=0.988069650727591 ild=0.9734032591766979 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.25 unique=0.78125 conc=0.174921875
+run91 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run91 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run92 serving ndcg=0.9760699982213775 ild=0.9730996948573706 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2785714285714286 unique=0.75625 conc=0.17545559400230681
+run92 ungated ndcg=0.981121011353412 ild=0.9735262156130586 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.09285714285714286 servedRep=0.2785714285714286 unique=0.75625 conc=0.174921875
+run92 seed7 ndcg=0.9818790318526311 ild=0.9734959522480523 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05 servedRep=0.25 unique=0.78125 conc=0.174921875
+run92 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run92 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run93 serving ndcg=0.9868353531850268 ild=0.9735058416288658 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.2857142857142857 unique=0.75 conc=0.174921875
+run93 ungated ndcg=0.9745856295307652 ild=0.9711784102059824 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2571428571428572 unique=0.775 conc=0.17617908376585928
+run93 seed7 ndcg=0.9824872748721467 ild=0.9733968596586161 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2357142857142857 unique=0.79375 conc=0.174921875
+run93 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run93 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run94 serving ndcg=0.9766631841984628 ild=0.971081529118278 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.27142857142857146 unique=0.7625 conc=0.17704413566897348
+run94 ungated ndcg=0.9837313798631155 ild=0.9720943787646883 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2642857142857143 unique=0.76875 conc=0.17624986483564015
+run94 seed7 ndcg=0.9891903887533327 ild=0.9735123087805999 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.042857142857142864 servedRep=0.3 unique=0.7375 conc=0.174921875
+run94 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run94 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run95 serving ndcg=0.9733696815690789 ild=0.9711949542905667 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.2571428571428572 unique=0.775 conc=0.17617908376585928
+run95 ungated ndcg=0.9812138505001533 ild=0.9746802011719468 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.24285714285714288 unique=0.7875 conc=0.17412760416666667
+run95 seed7 ndcg=0.9863061055942649 ild=0.9722818571215033 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.2857142857142857 unique=0.75 conc=0.17571614583333334
+run95 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run95 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run96 serving ndcg=0.9868816033493503 ild=0.9732581631620546 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05 servedRep=0.2571428571428572 unique=0.775 conc=0.17545559400230681
+run96 ungated ndcg=0.9718742988924475 ild=0.9733111706970409 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2857142857142857 unique=0.75 conc=0.17545559400230681
+run96 seed7 ndcg=0.9830197541566458 ild=0.9734393362207676 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.04285714285714286 servedRep=0.2357142857142857 unique=0.79375 conc=0.174921875
+run96 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run96 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run97 serving ndcg=0.9834223365548016 ild=0.9732209894263038 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05 servedRep=0.2642857142857143 unique=0.76875 conc=0.17545559400230681
+run97 ungated ndcg=0.976666466581267 ild=0.9707675332704383 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2642857142857143 unique=0.76875 conc=0.17704413566897348
+run97 seed7 ndcg=0.9910512006162476 ild=0.9746025502251169 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.028571428571428574 servedRep=0.24999999999999997 unique=0.78125 conc=0.17412760416666667
+run97 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run97 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run98 serving ndcg=0.9851762367014577 ild=0.9732308760492897 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.2642857142857143 unique=0.76875 conc=0.17545559400230681
+run98 ungated ndcg=0.9739187699454378 ild=0.9720397784859074 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.3071428571428571 unique=0.73125 conc=0.17624986483564015
+run98 seed7 ndcg=0.9849557362514728 ild=0.9721555445255898 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.04285714285714286 servedRep=0.25 unique=0.78125 conc=0.17571614583333334
+run98 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run98 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run99 serving ndcg=0.9860190360502995 ild=0.9745705781212979 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2785714285714286 unique=0.75625 conc=0.17412760416666667
+run99 ungated ndcg=0.9733064510235139 ild=0.9723741076436021 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.2857142857142857 unique=0.75 conc=0.17538481293252597
+run99 seed7 ndcg=0.9921146026623715 ild=0.9734309849545375 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.25 unique=0.78125 conc=0.174921875
+run99 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run99 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run100 serving ndcg=0.9787733677361733 ild=0.9745564141503368 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.2642857142857143 unique=0.76875 conc=0.17412760416666667
+run100 ungated ndcg=0.9738000346737322 ild=0.9721868899941701 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.2785714285714286 unique=0.75625 conc=0.17624986483564015
+run100 seed7 ndcg=0.9882451545732788 ild=0.9734463813140887 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.22857142857142856 unique=0.8 conc=0.174921875
+run100 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run100 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run101 serving ndcg=0.9833669511792749 ild=0.9710807815676716 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.22857142857142856 unique=0.8 conc=0.17704413566897348
+run101 ungated ndcg=0.9833941559690388 ild=0.973617477881556 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.27142857142857146 unique=0.7625 conc=0.174921875
+run101 seed7 ndcg=0.9881210616920472 ild=0.9756651921134363 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.20714285714285713 unique=0.81875 conc=0.17333333333333337
+run101 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run101 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run102 serving ndcg=0.969839896308205 ild=0.9709577445787323 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2928571428571428 unique=0.74375 conc=0.17704413566897348
+run102 ungated ndcg=0.9734357458550369 ild=0.9709163835828709 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.25 unique=0.78125 conc=0.17704413566897348
+run102 seed7 ndcg=0.9876416830806745 ild=0.9757490157809057 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.2571428571428571 unique=0.775 conc=0.17333333333333337
+run102 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run102 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run103 serving ndcg=0.9769058606852955 ild=0.973406371884278 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2714285714285714 unique=0.7625 conc=0.174921875
+run103 ungated ndcg=0.9782661356346662 ild=0.9722713769430543 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2571428571428571 unique=0.775 conc=0.17571614583333334
+run103 seed7 ndcg=0.9811284842637793 ild=0.9734608054744757 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.042857142857142864 servedRep=0.2857142857142857 unique=0.75 conc=0.174921875
+run103 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run103 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run104 serving ndcg=0.9767373818672896 ild=0.9720731941677719 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2785714285714286 unique=0.75625 conc=0.17624986483564015
+run104 ungated ndcg=0.9775699890492634 ild=0.9712367075207538 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2571428571428572 unique=0.775 conc=0.1761790837658593
+run104 seed7 ndcg=0.9864228221670501 ild=0.9745706431339752 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.04285714285714286 servedRep=0.25 unique=0.78125 conc=0.17412760416666667
+run104 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run104 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run105 serving ndcg=0.9802392247710809 ild=0.9735178045052306 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.25 unique=0.78125 conc=0.174921875
+run105 ungated ndcg=0.9800994643909589 ild=0.972130593593103 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.24999999999999997 unique=0.78125 conc=0.17624986483564015
+run105 seed7 ndcg=0.9818275162334322 ild=0.973447048530772 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.04285714285714286 servedRep=0.2357142857142857 unique=0.79375 conc=0.174921875
+run105 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run105 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run106 serving ndcg=0.9836043192327683 ild=0.9746360325345467 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.08571428571428572 servedRep=0.29285714285714287 unique=0.74375 conc=0.17412760416666667
+run106 ungated ndcg=0.9742102572259833 ild=0.9711736383599113 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.08571428571428573 servedRep=0.2928571428571428 unique=0.74375 conc=0.17651041666666667
+run106 seed7 ndcg=0.9884861426611963 ild=0.9744608975503537 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.2785714285714286 unique=0.75625 conc=0.17412760416666667
+run106 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run106 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run107 serving ndcg=0.9856916339473085 ild=0.9746042454897803 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.2714285714285714 unique=0.7625 conc=0.17412760416666667
+run107 ungated ndcg=0.9789675490035592 ild=0.9732774577185025 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.08571428571428572 servedRep=0.27142857142857146 unique=0.7625 conc=0.17545559400230681
+run107 seed7 ndcg=0.986180701039683 ild=0.9734260504504528 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.021428571428571432 servedRep=0.2571428571428572 unique=0.775 conc=0.174921875
+run107 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run107 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run108 serving ndcg=0.972462401863026 ild=0.9723329504206147 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2928571428571428 unique=0.74375 conc=0.17571614583333334
+run108 ungated ndcg=0.9866367594831467 ild=0.9734645561569938 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.24999999999999997 unique=0.78125 conc=0.174921875
+run108 seed7 ndcg=0.9859130889255924 ild=0.9722679229874989 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.25 unique=0.78125 conc=0.17571614583333334
+run108 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run108 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run109 serving ndcg=0.9844319851589693 ild=0.9731754086574491 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.3071428571428571 unique=0.73125 conc=0.17545559400230681
+run109 ungated ndcg=0.9798577672506684 ild=0.9731796296846243 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2642857142857143 unique=0.76875 conc=0.17545559400230681
+run109 seed7 ndcg=0.98462441162832 ild=0.9734771069003387 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.27142857142857146 unique=0.7625 conc=0.174921875
+run109 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run109 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run110 serving ndcg=0.9770538435702747 ild=0.9732348546066879 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.2571428571428572 unique=0.775 conc=0.17545559400230681
+run110 ungated ndcg=0.9800845168257295 ild=0.9734829654503896 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.25 unique=0.78125 conc=0.174921875
+run110 seed7 ndcg=0.9917304134594572 ild=0.9745958696655757 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.028571428571428574 servedRep=0.2785714285714285 unique=0.75625 conc=0.17412760416666667
+run110 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run110 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run111 serving ndcg=0.985327902059629 ild=0.9732188949944747 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.24285714285714288 unique=0.7875 conc=0.17545559400230681
+run111 ungated ndcg=0.9881007586573058 ild=0.9721129546255355 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2357142857142857 unique=0.79375 conc=0.17624986483564015
+run111 seed7 ndcg=0.9876444140874767 ild=0.9723358026790168 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.021428571428571432 servedRep=0.2571428571428571 unique=0.775 conc=0.17571614583333334
+run111 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run111 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run112 serving ndcg=0.9774781104040325 ild=0.9735732789531556 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2571428571428572 unique=0.775 conc=0.174921875
+run112 ungated ndcg=0.9705373589594704 ild=0.9720650836347358 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.09285714285714286 servedRep=0.2857142857142857 unique=0.75 conc=0.17624986483564015
+run112 seed7 ndcg=0.9842686134437836 ild=0.9744756731660895 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.2857142857142857 unique=0.75 conc=0.17412760416666667
+run112 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run112 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run113 serving ndcg=0.9841513513168167 ild=0.9747253756936827 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.2714285714285714 unique=0.7625 conc=0.17412760416666667
+run113 ungated ndcg=0.9818267054936531 ild=0.973460863492453 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2642857142857143 unique=0.76875 conc=0.174921875
+run113 seed7 ndcg=0.9911047530405729 ild=0.9734464673654175 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.028571428571428574 servedRep=0.2642857142857143 unique=0.76875 conc=0.174921875
+run113 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run113 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run114 serving ndcg=0.977268311271777 ild=0.9720757593647654 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.08571428571428572 servedRep=0.27142857142857146 unique=0.7625 conc=0.17624986483564015
+run114 ungated ndcg=0.974627868185963 ild=0.9734995405365356 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.09285714285714286 servedRep=0.27142857142857146 unique=0.7625 conc=0.174921875
+run114 seed7 ndcg=0.9812220232322262 ild=0.9734719520446513 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.042857142857142864 servedRep=0.3 unique=0.7375 conc=0.174921875
+run114 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run114 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run115 serving ndcg=0.9778256649698494 ild=0.9709669938427238 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.08571428571428572 servedRep=0.2642857142857143 unique=0.76875 conc=0.17704413566897348
+run115 ungated ndcg=0.9851901336122825 ild=0.9734508961479057 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2642857142857143 unique=0.76875 conc=0.174921875
+run115 seed7 ndcg=0.990149888043832 ild=0.9746678080726918 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.20714285714285713 unique=0.81875 conc=0.1741276041666667
+run115 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run115 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run116 serving ndcg=0.9788395780941075 ild=0.9723456677737031 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857144 servedRep=0.2928571428571428 unique=0.74375 conc=0.17571614583333334
+run116 ungated ndcg=0.9838437519568355 ild=0.9735568218700169 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.25 unique=0.78125 conc=0.174921875
+run116 seed7 ndcg=0.9846181395441668 ild=0.9723521178668452 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.042857142857142864 servedRep=0.2714285714285714 unique=0.7625 conc=0.17571614583333334
+run116 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run116 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run117 serving ndcg=0.9877757367694473 ild=0.973276250321812 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.3 unique=0.7375 conc=0.17545559400230681
+run117 ungated ndcg=0.9814478542812644 ild=0.9724190287332013 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.25 unique=0.78125 conc=0.17538481293252597
+run117 seed7 ndcg=0.9829580699005112 ild=0.9733966603153124 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.24999999999999997 unique=0.78125 conc=0.174921875
+run117 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run117 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run118 serving ndcg=0.9846439887198989 ild=0.9732259141169742 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.24285714285714285 unique=0.7875 conc=0.17545559400230681
+run118 ungated ndcg=0.9792829747858625 ild=0.9746673967359174 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.2928571428571428 unique=0.74375 conc=0.17412760416666667
+run118 seed7 ndcg=0.9852822455160101 ild=0.9722189136858533 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.028571428571428574 servedRep=0.2571428571428572 unique=0.775 conc=0.17571614583333334
+run118 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run118 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run119 serving ndcg=0.9784944030374684 ild=0.9720470426024796 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857144 servedRep=0.24285714285714288 unique=0.7875 conc=0.17624986483564015
+run119 ungated ndcg=0.9799046626716013 ild=0.9734616674964347 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.29285714285714287 unique=0.74375 conc=0.174921875
+run119 seed7 ndcg=0.9836372172131648 ild=0.9723367595478194 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.021428571428571432 servedRep=0.2571428571428572 unique=0.775 conc=0.17571614583333334
+run119 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run119 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run120 serving ndcg=0.9795003339363562 ild=0.9734518338879599 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.08571428571428572 servedRep=0.29999999999999993 unique=0.7375 conc=0.17459054209919264
+run120 ungated ndcg=0.9771281579951705 ild=0.9722790639893489 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2571428571428572 unique=0.775 conc=0.17571614583333334
+run120 seed7 ndcg=0.9774410400112019 ild=0.9723509596538816 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.042857142857142864 servedRep=0.24285714285714283 unique=0.7875 conc=0.17571614583333334
+run120 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run120 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run121 serving ndcg=0.9866920760337725 ild=0.9731683724351821 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2785714285714286 unique=0.75625 conc=0.17545559400230681
+run121 ungated ndcg=0.9768337015296787 ild=0.973572038357535 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.2785714285714286 unique=0.75625 conc=0.17459054209919264
+run121 seed7 ndcg=0.9881281759494527 ild=0.9734166080466176 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.24285714285714285 unique=0.7875 conc=0.174921875
+run121 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run121 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run122 serving ndcg=0.9674483130405149 ild=0.9711067998655643 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.08571428571428572 servedRep=0.2857142857142857 unique=0.75 conc=0.17651041666666667
+run122 ungated ndcg=0.9769839560734661 ild=0.9731794913694142 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.2785714285714285 unique=0.75625 conc=0.17545559400230681
+run122 seed7 ndcg=0.9826763959481405 ild=0.9723368648032273 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2571428571428572 unique=0.775 conc=0.17571614583333334
+run122 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run122 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run123 serving ndcg=0.9837978017982558 ild=0.9723492755663088 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.25 unique=0.78125 conc=0.17571614583333334
+run123 ungated ndcg=0.9756902814395416 ild=0.9734713922720721 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.29285714285714287 unique=0.74375 conc=0.174921875
+run123 seed7 ndcg=0.993356546748171 ild=0.9745118221853537 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.2785714285714286 unique=0.75625 conc=0.17412760416666667
+run123 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run123 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run124 serving ndcg=0.9809129257998689 ild=0.9721260618099903 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05 servedRep=0.2857142857142857 unique=0.75 conc=0.17624986483564015
+run124 ungated ndcg=0.9692793211236205 ild=0.9709308630972934 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.24285714285714285 unique=0.7875 conc=0.17704413566897348
+run124 seed7 ndcg=0.9870125530542135 ild=0.9745758004907576 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.042857142857142864 servedRep=0.2857142857142857 unique=0.75 conc=0.17412760416666667
+run124 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run124 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run125 serving ndcg=0.98818043639918 ild=0.9723257502931261 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.2642857142857143 unique=0.76875 conc=0.17571614583333334
+run125 ungated ndcg=0.9861190386656331 ild=0.9746435599096837 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2642857142857143 unique=0.76875 conc=0.17412760416666667
+run125 seed7 ndcg=0.9855222034669056 ild=0.973389911795353 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.042857142857142864 servedRep=0.2857142857142857 unique=0.75 conc=0.174921875
+run125 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run125 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run126 serving ndcg=0.9853597178878575 ild=0.973243259143771 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2357142857142857 unique=0.79375 conc=0.17545559400230681
+run126 ungated ndcg=0.9795303174137245 ild=0.9709492005473327 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2571428571428572 unique=0.775 conc=0.17704413566897348
+run126 seed7 ndcg=0.994789328275973 ild=0.9745602991808276 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.028571428571428574 servedRep=0.24285714285714283 unique=0.7875 conc=0.1741276041666667
+run126 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run126 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run127 serving ndcg=0.98547091829951 ild=0.9732402847700012 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2285714285714286 unique=0.8 conc=0.17545559400230681
+run127 ungated ndcg=0.9800221456459345 ild=0.9720682341964193 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2642857142857143 unique=0.76875 conc=0.17624986483564015
+run127 seed7 ndcg=0.9786367061143411 ild=0.9734278706045115 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2785714285714285 unique=0.75625 conc=0.17492187500000003
+run127 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run127 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run128 serving ndcg=0.9738168911606789 ild=0.9745965208173017 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2714285714285714 unique=0.7625 conc=0.17412760416666667
+run128 ungated ndcg=0.9716390616839934 ild=0.9735443225985094 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.27142857142857146 unique=0.7625 conc=0.174921875
+run128 seed7 ndcg=0.9928502130508365 ild=0.9747171107678557 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.014285714285714287 servedRep=0.2857142857142857 unique=0.75 conc=0.1741276041666667
+run128 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run128 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run129 serving ndcg=0.9835071321352471 ild=0.9722696473060947 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2571428571428572 unique=0.775 conc=0.17538481293252597
+run129 ungated ndcg=0.9839533960637903 ild=0.9735801459153461 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.2642857142857143 unique=0.76875 conc=0.174921875
+run129 seed7 ndcg=0.9855950890355742 ild=0.9733813364524075 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.2642857142857143 unique=0.76875 conc=0.174921875
+run129 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run129 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run130 serving ndcg=0.986602940041847 ild=0.9747134904113406 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857144 servedRep=0.2785714285714286 unique=0.75625 conc=0.17412760416666667
+run130 ungated ndcg=0.9729277033218315 ild=0.9735369891001364 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.23571428571428574 unique=0.79375 conc=0.17459054209919264
+run130 seed7 ndcg=0.9867829477618716 ild=0.9723026048010286 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.028571428571428574 servedRep=0.2571428571428571 unique=0.775 conc=0.17571614583333334
+run130 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run130 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run131 serving ndcg=0.9889731027682467 ild=0.9746109555358369 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857144 servedRep=0.2571428571428572 unique=0.775 conc=0.17412760416666667
+run131 ungated ndcg=0.9828448926062866 ild=0.9735070644619318 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2714285714285714 unique=0.7625 conc=0.17459054209919264
+run131 seed7 ndcg=0.986558113477747 ild=0.9757656367052592 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.2571428571428572 unique=0.775 conc=0.17333333333333337
+run131 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run131 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run132 serving ndcg=0.9853617123487362 ild=0.9747208043428931 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2571428571428572 unique=0.775 conc=0.17412760416666667
+run132 ungated ndcg=0.981201248228893 ild=0.9723464767513655 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2571428571428571 unique=0.775 conc=0.17538481293252595
+run132 seed7 ndcg=0.9890750510769984 ild=0.9723644258082059 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.021428571428571432 servedRep=0.2285714285714286 unique=0.8 conc=0.17571614583333334
+run132 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run132 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run133 serving ndcg=0.9797031896373807 ild=0.9721731175023265 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.24285714285714288 unique=0.7875 conc=0.17624986483564015
+run133 ungated ndcg=0.979617800957076 ild=0.9720557619452826 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.2785714285714286 unique=0.75625 conc=0.17624986483564015
+run133 seed7 ndcg=0.9858396645303485 ild=0.9722900078952651 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.028571428571428574 servedRep=0.2357142857142857 unique=0.79375 conc=0.17571614583333334
+run133 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run133 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run134 serving ndcg=0.9831829394111488 ild=0.9746677205746579 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.2571428571428571 unique=0.775 conc=0.17412760416666667
+run134 ungated ndcg=0.9746147511979004 ild=0.9736330815355447 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.26428571428571423 unique=0.76875 conc=0.174921875
+run134 seed7 ndcg=0.9858814693290765 ild=0.9734383551666499 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.2857142857142857 unique=0.75 conc=0.174921875
+run134 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run134 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run135 serving ndcg=0.9747355492608104 ild=0.9724207634971775 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.31428571428571433 unique=0.725 conc=0.17538481293252597
+run135 ungated ndcg=0.9763867980895846 ild=0.9734476929523137 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2857142857142857 unique=0.75 conc=0.174921875
+run135 seed7 ndcg=0.9867601557553747 ild=0.9734838246881047 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2857142857142857 unique=0.75 conc=0.174921875
+run135 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run135 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run136 serving ndcg=0.983884806067375 ild=0.9722441238816617 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2714285714285714 unique=0.7625 conc=0.17624986483564015
+run136 ungated ndcg=0.9893368981763315 ild=0.9731793645736639 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.2785714285714285 unique=0.75625 conc=0.17545559400230681
+run136 seed7 ndcg=0.9816740902293483 ild=0.9745212198755819 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.2857142857142857 unique=0.75 conc=0.17412760416666667
+run136 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run136 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run137 serving ndcg=0.9844281110333977 ild=0.9735663039458913 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.24285714285714283 unique=0.7875 conc=0.174921875
+run137 ungated ndcg=0.9900001969597013 ild=0.97468430067975 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2642857142857143 unique=0.76875 conc=0.17412760416666667
+run137 seed7 ndcg=0.9859752920319468 ild=0.973369287495811 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.028571428571428574 servedRep=0.21428571428571427 unique=0.8125 conc=0.17492187500000003
+run137 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run137 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run138 serving ndcg=0.9899632017187694 ild=0.9747218061756476 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2785714285714286 unique=0.75625 conc=0.17412760416666667
+run138 ungated ndcg=0.9675453107912854 ild=0.9734859528416551 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2785714285714286 unique=0.75625 conc=0.174921875
+run138 seed7 ndcg=0.9887765357629377 ild=0.9733855196794527 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.042857142857142864 servedRep=0.2857142857142857 unique=0.75 conc=0.174921875
+run138 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run138 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run139 serving ndcg=0.9831844670605315 ild=0.972033287775678 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.22857142857142856 unique=0.8 conc=0.17624986483564015
+run139 ungated ndcg=0.9759832057792721 ild=0.9746776146768172 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2642857142857143 unique=0.76875 conc=0.17412760416666667
+run139 seed7 ndcg=0.9912399716010283 ild=0.9734315356437234 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.028571428571428574 servedRep=0.2714285714285714 unique=0.7625 conc=0.174921875
+run139 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run139 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run140 serving ndcg=0.9723197376544921 ild=0.9709481461258541 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.3071428571428571 unique=0.73125 conc=0.17704413566897348
+run140 ungated ndcg=0.9872464662939014 ild=0.9733347567755815 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2785714285714286 unique=0.75625 conc=0.17545559400230681
+run140 seed7 ndcg=0.9855631654680412 ild=0.9745837330916283 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05 servedRep=0.2714285714285714 unique=0.7625 conc=0.1741276041666667
+run140 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run140 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run141 serving ndcg=0.9783074179066535 ild=0.9712583692407231 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.2642857142857143 unique=0.76875 conc=0.17651041666666667
+run141 ungated ndcg=0.9787890418396393 ild=0.9721613754375925 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2571428571428572 unique=0.775 conc=0.17624986483564015
+run141 seed7 ndcg=0.9807549070590184 ild=0.9745868134556923 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05 servedRep=0.2357142857142857 unique=0.79375 conc=0.17412760416666667
+run141 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run141 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run142 serving ndcg=0.963109350347358 ild=0.9724182590718754 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2642857142857143 unique=0.76875 conc=0.17538481293252597
+run142 ungated ndcg=0.9751319663368363 ild=0.970997922207628 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.25 unique=0.78125 conc=0.17704413566897348
+run142 seed7 ndcg=0.9964488398664479 ild=0.9745539910766223 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.028571428571428574 servedRep=0.2714285714285714 unique=0.7625 conc=0.1741276041666667
+run142 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run142 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run143 serving ndcg=0.975592107984347 ild=0.9734594801249714 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.25 unique=0.78125 conc=0.174921875
+run143 ungated ndcg=0.9756331778252059 ild=0.9721906489016048 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2714285714285714 unique=0.7625 conc=0.17624986483564015
+run143 seed7 ndcg=0.9893060503089433 ild=0.9733992593343791 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.2714285714285714 unique=0.7625 conc=0.174921875
+run143 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run143 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run144 serving ndcg=0.9790166646205112 ild=0.9734646064511597 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.25 unique=0.78125 conc=0.17459054209919264
+run144 ungated ndcg=0.9779007240560343 ild=0.9709375603912979 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.24285714285714285 unique=0.7875 conc=0.17704413566897348
+run144 seed7 ndcg=0.9867118732088471 ild=0.9733952663036387 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.2571428571428571 unique=0.775 conc=0.174921875
+run144 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run144 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run145 serving ndcg=0.9786199497671855 ild=0.974673206487201 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.2785714285714286 unique=0.75625 conc=0.17412760416666667
+run145 ungated ndcg=0.9705142927448407 ild=0.973466618609954 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2642857142857143 unique=0.76875 conc=0.17459054209919264
+run145 seed7 ndcg=0.9840624310687994 ild=0.9734125643929203 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.2785714285714286 unique=0.75625 conc=0.174921875
+run145 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run145 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run146 serving ndcg=0.9802067736425799 ild=0.9731628163568599 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142856 servedRep=0.2714285714285714 unique=0.7625 conc=0.17545559400230681
+run146 ungated ndcg=0.9795469867604453 ild=0.972146491348191 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2571428571428572 unique=0.775 conc=0.17624986483564015
+run146 seed7 ndcg=0.9849830642479601 ild=0.9711656330062506 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05 servedRep=0.24285714285714285 unique=0.7875 conc=0.17651041666666667
+run146 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run146 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run147 serving ndcg=0.9826756202803417 ild=0.9709661973397348 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2642857142857143 unique=0.76875 conc=0.17704413566897348
+run147 ungated ndcg=0.9791321184282815 ild=0.972123075712435 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2857142857142857 unique=0.75 conc=0.17624986483564015
+run147 seed7 ndcg=0.9899757377138869 ild=0.9745054807507192 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.2785714285714286 unique=0.75625 conc=0.17412760416666667
+run147 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run147 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run148 serving ndcg=0.9817687009404188 ild=0.9709278526767351 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.22142857142857145 unique=0.80625 conc=0.17704413566897348
+run148 ungated ndcg=0.9809173942145064 ild=0.9735339300415382 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.32142857142857145 unique=0.71875 conc=0.17459054209919264
+run148 seed7 ndcg=0.9881830559571861 ild=0.973311217799201 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.04285714285714286 servedRep=0.24285714285714285 unique=0.7875 conc=0.174921875
+run148 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run148 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run149 serving ndcg=0.9760257541102108 ild=0.9735872375483712 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.25000000000000006 unique=0.78125 conc=0.17459054209919264
+run149 ungated ndcg=0.9776448411925238 ild=0.9747325425875204 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2857142857142857 unique=0.75 conc=0.17412760416666667
+run149 seed7 ndcg=0.9882019641959632 ild=0.973434137844672 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.04285714285714286 servedRep=0.22142857142857145 unique=0.80625 conc=0.174921875
+run149 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run149 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run150 serving ndcg=0.9734898472951135 ild=0.9723434474816601 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.25000000000000006 unique=0.78125 conc=0.17538481293252597
+run150 ungated ndcg=0.9707706219246224 ild=0.9734981949751356 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.08571428571428572 servedRep=0.3071428571428571 unique=0.73125 conc=0.174921875
+run150 seed7 ndcg=0.9880387958552515 ild=0.9745616026797035 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.22142857142857145 unique=0.80625 conc=0.17412760416666667
+run150 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run150 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run151 serving ndcg=0.9770550558867256 ild=0.9723527001847382 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.2857142857142857 unique=0.75 conc=0.17571614583333334
+run151 ungated ndcg=0.9800897361330038 ild=0.9734360034910726 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2571428571428572 unique=0.775 conc=0.174921875
+run151 seed7 ndcg=0.9903219835505089 ild=0.9734954810156617 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.2571428571428571 unique=0.775 conc=0.17492187500000003
+run151 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run151 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run152 serving ndcg=0.9815000829094213 ild=0.972134133901966 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2642857142857143 unique=0.76875 conc=0.17624986483564015
+run152 ungated ndcg=0.9818971997760714 ild=0.9721439302876281 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.2857142857142857 unique=0.75 conc=0.17624986483564015
+run152 seed7 ndcg=0.9909427845524587 ild=0.9746143222593323 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.2714285714285714 unique=0.7625 conc=0.1741276041666667
+run152 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run152 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run153 serving ndcg=0.9800391777711849 ild=0.972364065009762 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.24285714285714285 unique=0.7875 conc=0.17571614583333334
+run153 ungated ndcg=0.9810258922847647 ild=0.9722936790892248 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2642857142857143 unique=0.76875 conc=0.17571614583333334
+run153 seed7 ndcg=0.9902609718620385 ild=0.9744644505935542 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2857142857142857 unique=0.75 conc=0.17412760416666667
+run153 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run153 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run154 serving ndcg=0.9846380918982217 ild=0.9732449715912352 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2785714285714285 unique=0.75625 conc=0.17545559400230681
+run154 ungated ndcg=0.9759096808970029 ild=0.972289744495803 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2928571428571428 unique=0.74375 conc=0.17571614583333334
+run154 seed7 ndcg=0.993904800697398 ild=0.9734980743808429 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.021428571428571432 servedRep=0.2785714285714286 unique=0.75625 conc=0.17492187500000003
+run154 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run154 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run155 serving ndcg=0.9849811999250764 ild=0.9731226340271273 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2928571428571428 unique=0.74375 conc=0.17545559400230681
+run155 ungated ndcg=0.9859854779393027 ild=0.9746817993760986 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2785714285714286 unique=0.75625 conc=0.17412760416666667
+run155 seed7 ndcg=0.9812459320079072 ild=0.972215008764433 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05 servedRep=0.2285714285714286 unique=0.8 conc=0.17571614583333334
+run155 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run155 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run156 serving ndcg=0.983062120500347 ild=0.9734058552388127 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.29285714285714287 unique=0.74375 conc=0.174921875
+run156 ungated ndcg=0.9771718405118642 ild=0.9732701203736811 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2571428571428571 unique=0.775 conc=0.17545559400230681
+run156 seed7 ndcg=0.9860733099338503 ild=0.9734349405297725 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.042857142857142864 servedRep=0.2785714285714286 unique=0.75625 conc=0.174921875
+run156 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run156 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run157 serving ndcg=0.9723110014735143 ild=0.9712455985114803 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.23571428571428574 unique=0.79375 conc=0.1761790837658593
+run157 ungated ndcg=0.9782161799242003 ild=0.9732263678071779 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.2642857142857143 unique=0.76875 conc=0.17545559400230681
+run157 seed7 ndcg=0.986527996904983 ild=0.9734698269282721 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.25 unique=0.78125 conc=0.174921875
+run157 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run157 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run158 serving ndcg=0.9742147826500194 ild=0.9709079204624841 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.23571428571428574 unique=0.79375 conc=0.17704413566897348
+run158 ungated ndcg=0.9849895961457659 ild=0.9722265840125633 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2857142857142857 unique=0.75 conc=0.17624986483564015
+run158 seed7 ndcg=0.9891202727735927 ild=0.9734752537847714 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.042857142857142864 servedRep=0.2857142857142857 unique=0.75 conc=0.174921875
+run158 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run158 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run159 serving ndcg=0.9812076010172065 ild=0.9731809742293913 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2857142857142857 unique=0.75 conc=0.17545559400230681
+run159 ungated ndcg=0.9844359807822062 ild=0.9725221871560136 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.24285714285714285 unique=0.7875 conc=0.17571614583333334
+run159 seed7 ndcg=0.9830414631758064 ild=0.9744698842091516 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.04285714285714286 servedRep=0.2571428571428571 unique=0.775 conc=0.1741276041666667
+run159 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run159 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run160 serving ndcg=0.9787408527651312 ild=0.9723374859244677 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2785714285714286 unique=0.75625 conc=0.17571614583333334
+run160 ungated ndcg=0.9803895479369537 ild=0.974693459283479 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.27142857142857146 unique=0.7625 conc=0.17412760416666667
+run160 seed7 ndcg=0.9812839454545057 ild=0.9746073646637281 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2785714285714286 unique=0.75625 conc=0.1741276041666667
+run160 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run160 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run161 serving ndcg=0.9866359402913767 ild=0.973457968594998 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.3 unique=0.7375 conc=0.17459054209919264
+run161 ungated ndcg=0.9851276359601173 ild=0.9746737807763202 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2642857142857143 unique=0.76875 conc=0.17412760416666667
+run161 seed7 ndcg=0.9896014404157468 ild=0.9734203689751271 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.2571428571428572 unique=0.775 conc=0.174921875
+run161 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run161 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run162 serving ndcg=0.9781039585185899 ild=0.9709317333874496 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.2785714285714286 unique=0.75625 conc=0.17704413566897348
+run162 ungated ndcg=0.9847018560620462 ild=0.9720919718755461 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2785714285714286 unique=0.75625 conc=0.17624986483564015
+run162 seed7 ndcg=0.9975998612568021 ild=0.9757461274424858 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.021428571428571432 servedRep=0.2571428571428572 unique=0.775 conc=0.17333333333333337
+run162 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run162 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run163 serving ndcg=0.9853035352233656 ild=0.9709639800368768 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.2857142857142857 unique=0.75 conc=0.17704413566897348
+run163 ungated ndcg=0.9773091586770335 ild=0.9709651245921862 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857144 servedRep=0.2857142857142857 unique=0.75 conc=0.17704413566897348
+run163 seed7 ndcg=0.9910442200976106 ild=0.9734587423267356 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.2571428571428572 unique=0.775 conc=0.174921875
+run163 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run163 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run164 serving ndcg=0.9837222432118871 ild=0.9735418215200733 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.24999999999999997 unique=0.78125 conc=0.17459054209919264
+run164 ungated ndcg=0.9827597163650423 ild=0.9720487389722832 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.2714285714285714 unique=0.7625 conc=0.17624986483564015
+run164 seed7 ndcg=0.9883047054022555 ild=0.9734476628771519 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.2642857142857143 unique=0.76875 conc=0.174921875
+run164 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run164 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run165 serving ndcg=0.974584619663035 ild=0.9697942851848712 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.26428571428571423 unique=0.76875 conc=0.1778384065023068
+run165 ungated ndcg=0.9796586121499058 ild=0.972090129830196 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.23571428571428574 unique=0.79375 conc=0.17624986483564015
+run165 seed7 ndcg=0.9854389151570394 ild=0.9723016118920079 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.24285714285714285 unique=0.7875 conc=0.17571614583333334
+run165 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run165 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run166 serving ndcg=0.986915735985089 ild=0.9746290248574803 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2571428571428572 unique=0.775 conc=0.17412760416666667
+run166 ungated ndcg=0.9792867884280079 ild=0.9722895334669668 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.24285714285714288 unique=0.7875 conc=0.17624986483564015
+run166 seed7 ndcg=0.987920568612882 ild=0.9734457487209464 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.028571428571428574 servedRep=0.2857142857142857 unique=0.75 conc=0.174921875
+run166 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run166 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run167 serving ndcg=0.9847252574595793 ild=0.9732140096059065 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.2785714285714286 unique=0.75625 conc=0.17545559400230681
+run167 ungated ndcg=0.9816004005666201 ild=0.9734832155781648 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.24285714285714288 unique=0.7875 conc=0.17459054209919264
+run167 seed7 ndcg=0.9736119377501722 ild=0.9734512763616758 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2571428571428572 unique=0.775 conc=0.174921875
+run167 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run167 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run168 serving ndcg=0.9758611863849264 ild=0.9720744334944461 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2571428571428571 unique=0.775 conc=0.17624986483564015
+run168 ungated ndcg=0.9787795338845274 ild=0.9734079525721216 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2642857142857143 unique=0.76875 conc=0.17459054209919264
+run168 seed7 ndcg=0.9880079539260539 ild=0.9734981938557254 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.042857142857142864 servedRep=0.2857142857142857 unique=0.75 conc=0.17492187500000003
+run168 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run168 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run169 serving ndcg=0.9745697205754441 ild=0.9711185152584495 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.27142857142857146 unique=0.7625 conc=0.17617908376585928
+run169 ungated ndcg=0.9719748266126184 ild=0.9709066068325016 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.24285714285714288 unique=0.7875 conc=0.17704413566897348
+run169 seed7 ndcg=0.978230562514978 ild=0.9733478089866868 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.042857142857142864 servedRep=0.3 unique=0.7375 conc=0.174921875
+run169 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run169 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run170 serving ndcg=0.9740940991213427 ild=0.9722644344739699 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2357142857142857 unique=0.79375 conc=0.17571614583333334
+run170 ungated ndcg=0.9714393818907401 ild=0.9723696986577433 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2642857142857143 unique=0.76875 conc=0.17571614583333334
+run170 seed7 ndcg=0.9945419153898142 ild=0.9746105368258609 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.2642857142857143 unique=0.76875 conc=0.17412760416666667
+run170 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run170 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run171 serving ndcg=0.9821966092705382 ild=0.972478080615994 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2785714285714286 unique=0.75625 conc=0.17538481293252597
+run171 ungated ndcg=0.9795294812154166 ild=0.9721300762008871 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.25 unique=0.78125 conc=0.17624986483564015
+run171 seed7 ndcg=0.9871118275411139 ild=0.9734760003591415 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05 servedRep=0.25 unique=0.78125 conc=0.174921875
+run171 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run171 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run172 serving ndcg=0.9785381443486603 ild=0.9710672938674406 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.24285714285714283 unique=0.7875 conc=0.17704413566897348
+run172 ungated ndcg=0.9765132169038006 ild=0.9719583830687474 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.2714285714285714 unique=0.7625 conc=0.17624986483564015
+run172 seed7 ndcg=0.9911047530405729 ild=0.9734667866897537 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.028571428571428574 servedRep=0.27142857142857146 unique=0.7625 conc=0.174921875
+run172 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run172 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run173 serving ndcg=0.9700194799903993 ild=0.9698055485252743 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.2571428571428572 unique=0.775 conc=0.1778384065023068
+run173 ungated ndcg=0.9891636587292676 ild=0.9735340429411649 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.27142857142857146 unique=0.7625 conc=0.174921875
+run173 seed7 ndcg=0.9879509753988637 ild=0.9735116819525144 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.04285714285714286 servedRep=0.24999999999999997 unique=0.78125 conc=0.17492187500000003
+run173 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run173 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run174 serving ndcg=0.9859095865874054 ild=0.9721897110036889 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2785714285714285 unique=0.75625 conc=0.17624986483564015
+run174 ungated ndcg=0.984808459568562 ild=0.9732453958712025 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2857142857142857 unique=0.75 conc=0.17545559400230681
+run174 seed7 ndcg=0.9855371932756559 ild=0.9724355259540929 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.028571428571428574 servedRep=0.21428571428571425 unique=0.8125 conc=0.17571614583333334
+run174 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run174 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run175 serving ndcg=0.9804357426661442 ild=0.9733264169985427 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2642857142857143 unique=0.76875 conc=0.17545559400230681
+run175 ungated ndcg=0.9855732217947532 ild=0.9721439899916113 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2571428571428572 unique=0.775 conc=0.17624986483564015
+run175 seed7 ndcg=0.9880260740246397 ild=0.9758137485010683 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.24999999999999997 unique=0.78125 conc=0.17333333333333337
+run175 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run175 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run176 serving ndcg=0.9834505041686025 ild=0.9734486515381121 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.25 unique=0.78125 conc=0.174921875
+run176 ungated ndcg=0.9769653946398498 ild=0.9709109455592363 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.2928571428571428 unique=0.74375 conc=0.17704413566897348
+run176 seed7 ndcg=0.9851327331755568 ild=0.9722327132410572 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.25 unique=0.78125 conc=0.17571614583333334
+run176 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run176 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run177 serving ndcg=0.9817660123842752 ild=0.9723869060686594 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2571428571428572 unique=0.775 conc=0.17538481293252597
+run177 ungated ndcg=0.983355614562296 ild=0.972402186141765 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.26428571428571423 unique=0.76875 conc=0.17571614583333334
+run177 seed7 ndcg=0.9850061325627409 ild=0.9745883639329563 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.2571428571428572 unique=0.775 conc=0.17412760416666667
+run177 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run177 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run178 serving ndcg=0.9806372406892274 ild=0.9745979564404937 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.26428571428571435 unique=0.76875 conc=0.17412760416666667
+run178 ungated ndcg=0.9814322519509386 ild=0.9720943457118093 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.25 unique=0.78125 conc=0.17624986483564015
+run178 seed7 ndcg=0.9850862154637743 ild=0.9744947020462157 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.04285714285714286 servedRep=0.24999999999999997 unique=0.78125 conc=0.17412760416666667
+run178 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run178 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run179 serving ndcg=0.9708905002531026 ild=0.9723830276064427 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2571428571428571 unique=0.775 conc=0.17538481293252595
+run179 ungated ndcg=0.9796045414753093 ild=0.9722557941097922 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2571428571428572 unique=0.775 conc=0.17538481293252597
+run179 seed7 ndcg=0.9887125705031918 ild=0.9735128042830005 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.22857142857142856 unique=0.8 conc=0.174921875
+run179 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run179 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run180 serving ndcg=0.9655055873422842 ild=0.970890841516167 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.08571428571428573 servedRep=0.2571428571428572 unique=0.775 conc=0.17704413566897348
+run180 ungated ndcg=0.9898132843998235 ild=0.9747128317239693 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.2571428571428572 unique=0.775 conc=0.17412760416666667
+run180 seed7 ndcg=0.984913423345688 ild=0.974550973143545 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.04285714285714286 servedRep=0.29285714285714287 unique=0.74375 conc=0.17412760416666667
+run180 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run180 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run181 serving ndcg=0.9840095169179779 ild=0.9720503390944334 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2714285714285714 unique=0.7625 conc=0.17624986483564015
+run181 ungated ndcg=0.976015321020529 ild=0.9745853002203066 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.2642857142857143 unique=0.76875 conc=0.17412760416666667
+run181 seed7 ndcg=0.9920540606794109 ild=0.974504201478638 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.2714285714285714 unique=0.7625 conc=0.17412760416666667
+run181 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run181 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run182 serving ndcg=0.9873575566023547 ild=0.9733203966783297 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2714285714285714 unique=0.7625 conc=0.17545559400230681
+run182 ungated ndcg=0.9788793518232133 ild=0.9734126060328786 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.24285714285714283 unique=0.7875 conc=0.174921875
+run182 seed7 ndcg=0.9877179160178138 ild=0.9734135585440666 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.2785714285714286 unique=0.75625 conc=0.174921875
+run182 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run182 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run183 serving ndcg=0.9796236914689518 ild=0.9724667186358258 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.24285714285714285 unique=0.7875 conc=0.17538481293252597
+run183 ungated ndcg=0.9747306963235048 ild=0.971023691450453 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2571428571428571 unique=0.775 conc=0.17704413566897348
+run183 seed7 ndcg=0.9845447886960874 ild=0.9721762522230157 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.04285714285714286 servedRep=0.22857142857142856 unique=0.8 conc=0.17571614583333334
+run183 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run183 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run184 serving ndcg=0.9843523879927929 ild=0.9724650985084683 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05 servedRep=0.2571428571428572 unique=0.775 conc=0.17571614583333334
+run184 ungated ndcg=0.9683030068017098 ild=0.9712519691417207 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.25 unique=0.78125 conc=0.1761790837658593
+run184 seed7 ndcg=0.9808194032377529 ild=0.973336019074902 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.028571428571428574 servedRep=0.2857142857142857 unique=0.75 conc=0.174921875
+run184 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run184 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run185 serving ndcg=0.974899616094508 ild=0.9723565224442624 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.08571428571428573 servedRep=0.27142857142857146 unique=0.7625 conc=0.17538481293252595
+run185 ungated ndcg=0.9824212702971423 ild=0.9732139913441081 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857144 servedRep=0.2642857142857143 unique=0.76875 conc=0.17545559400230681
+run185 seed7 ndcg=0.9874418973372283 ild=0.9722204474721647 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.2642857142857143 unique=0.76875 conc=0.17571614583333334
+run185 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run185 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run186 serving ndcg=0.9780801465347888 ild=0.9699156741408824 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2642857142857143 unique=0.76875 conc=0.1778384065023068
+run186 ungated ndcg=0.9834144655432048 ild=0.9720750191570763 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.2571428571428572 unique=0.775 conc=0.17624986483564015
+run186 seed7 ndcg=0.9823639305525732 ild=0.9746593424920952 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.042857142857142864 servedRep=0.2785714285714286 unique=0.75625 conc=0.17412760416666667
+run186 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run186 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run187 serving ndcg=0.9771701795071527 ild=0.9724009795846957 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857144 servedRep=0.25 unique=0.78125 conc=0.17571614583333334
+run187 ungated ndcg=0.9850034681392652 ild=0.9734673855570225 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.25 unique=0.78125 conc=0.17459054209919264
+run187 seed7 ndcg=0.9848847052460962 ild=0.9734620304629109 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.021428571428571432 servedRep=0.2642857142857143 unique=0.76875 conc=0.17492187500000003
+run187 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run187 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run188 serving ndcg=0.9743875748175865 ild=0.9732678305075282 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.25 unique=0.78125 conc=0.17545559400230681
+run188 ungated ndcg=0.974987193423244 ild=0.9723112796493263 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.25 unique=0.78125 conc=0.17571614583333334
+run188 seed7 ndcg=0.9887592063295775 ild=0.9735086444487974 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.2857142857142857 unique=0.75 conc=0.174921875
+run188 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run188 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run189 serving ndcg=0.9809188550654032 ild=0.9735623151045769 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.25 unique=0.78125 conc=0.17459054209919264
+run189 ungated ndcg=0.9873781216789155 ild=0.9735591685234949 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.27142857142857146 unique=0.7625 conc=0.17459054209919264
+run189 seed7 ndcg=0.9881546327057655 ild=0.9722459401433174 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.2642857142857143 unique=0.76875 conc=0.17571614583333334
+run189 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run189 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run190 serving ndcg=0.9679882671633546 ild=0.9720377586432374 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142856 servedRep=0.24999999999999997 unique=0.78125 conc=0.17624986483564015
+run190 ungated ndcg=0.9777343008246325 ild=0.9733769481201603 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2785714285714286 unique=0.75625 conc=0.174921875
+run190 seed7 ndcg=0.989342307387711 ild=0.9745407163483671 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05 servedRep=0.25 unique=0.78125 conc=0.17412760416666667
+run190 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run190 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run191 serving ndcg=0.9807506860815823 ild=0.9732050182644509 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.29285714285714287 unique=0.74375 conc=0.17545559400230681
+run191 ungated ndcg=0.9823833199908548 ild=0.9721136451283355 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2571428571428572 unique=0.775 conc=0.17624986483564015
+run191 seed7 ndcg=0.9848949145268343 ild=0.9721943891422355 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.042857142857142864 servedRep=0.2285714285714286 unique=0.8 conc=0.17571614583333334
+run191 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run191 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run192 serving ndcg=0.9895921022951384 ild=0.9746670926436195 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.2714285714285714 unique=0.7625 conc=0.17412760416666667
+run192 ungated ndcg=0.9865324280705322 ild=0.973242679291164 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.24285714285714285 unique=0.7875 conc=0.17545559400230681
+run192 seed7 ndcg=0.9919436037027405 ild=0.9745500512025499 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.27142857142857146 unique=0.7625 conc=0.1741276041666667
+run192 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run192 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run193 serving ndcg=0.9898450410899557 ild=0.9746818083909244 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.2785714285714286 unique=0.75625 conc=0.17412760416666667
+run193 ungated ndcg=0.9721035138042388 ild=0.9720360076872878 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.29285714285714287 unique=0.74375 conc=0.17624986483564015
+run193 seed7 ndcg=0.9932171956013868 ild=0.9758017490593739 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.014285714285714287 servedRep=0.24285714285714288 unique=0.7875 conc=0.17333333333333337
+run193 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run193 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run194 serving ndcg=0.9736635811709111 ild=0.9710299554762204 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05 servedRep=0.23571428571428574 unique=0.79375 conc=0.17704413566897348
+run194 ungated ndcg=0.9840616466527159 ild=0.9722798526243978 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.2714285714285714 unique=0.7625 conc=0.17624986483564015
+run194 seed7 ndcg=0.975180585639345 ild=0.9710622076734099 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.2357142857142857 unique=0.79375 conc=0.17651041666666667
+run194 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run194 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run195 serving ndcg=0.9830358171424414 ild=0.9734958550333379 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.0642857142857143 servedRep=0.24999999999999997 unique=0.78125 conc=0.174921875
+run195 ungated ndcg=0.9763787821581813 ild=0.9710063308278638 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.2357142857142857 unique=0.79375 conc=0.17704413566897348
+run195 seed7 ndcg=0.9819494103827903 ild=0.973451781186299 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.049999999999999996 servedRep=0.2571428571428571 unique=0.775 conc=0.174921875
+run195 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run195 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run196 serving ndcg=0.9808551837648045 ild=0.9710718803174527 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2714285714285714 unique=0.7625 conc=0.17704413566897348
+run196 ungated ndcg=0.9749287505961006 ild=0.9723767821591969 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285715 servedRep=0.26428571428571435 unique=0.76875 conc=0.17571614583333334
+run196 seed7 ndcg=0.9780674510746288 ild=0.9722627505482686 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.2571428571428571 unique=0.775 conc=0.17571614583333334
+run196 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run196 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run197 serving ndcg=0.9747711591350248 ild=0.9722885123735054 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2857142857142857 unique=0.75 conc=0.17571614583333334
+run197 ungated ndcg=0.9814515482411218 ild=0.9709352432888345 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.06428571428571428 servedRep=0.2571428571428572 unique=0.775 conc=0.17704413566897348
+run197 seed7 ndcg=0.9834804200058618 ild=0.9722696604881588 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.03571428571428571 servedRep=0.2642857142857143 unique=0.76875 conc=0.17571614583333334
+run197 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run197 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run198 serving ndcg=0.9810828479759616 ild=0.9732722910107794 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.2571428571428571 unique=0.775 conc=0.17545559400230681
+run198 ungated ndcg=0.9799491885978182 ild=0.972348425257978 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07142857142857142 servedRep=0.24285714285714288 unique=0.7875 conc=0.17571614583333334
+run198 seed7 ndcg=0.9832886748018506 ild=0.9722784723684408 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.028571428571428574 servedRep=0.2857142857142857 unique=0.75 conc=0.17571614583333334
+run198 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run198 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0
+run199 serving ndcg=0.9757584482199684 ild=0.9720805345869306 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.05714285714285714 servedRep=0.24285714285714285 unique=0.7875 conc=0.17624986483564015
+run199 ungated ndcg=0.9748879423696722 ild=0.9711653606178996 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.07857142857142858 servedRep=0.2642857142857143 unique=0.76875 conc=0.17651041666666667
+run199 seed7 ndcg=0.9842591320767898 ild=0.9734382600323466 groupCov=1.0 cumCov=1.0 weak=1.0 seenRep=0.042857142857142864 servedRep=0.2357142857142857 unique=0.79375 conc=0.174921875
+run199 discovery sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+run199 music SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0

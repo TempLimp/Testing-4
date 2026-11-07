@@ -1,0 +1,8 @@
+english: 37529 words, 0 differ
+spanish: 37529 words, 0 differ
+portuguese: 37529 words, 0 differ
+french: 37529 words, 0 differ
+german: 37529 words, 0 differ
+italian: 37529 words, 0 differ
+russian: 37529 words, 0 differ
+TOTAL 262703 stems, 0 differ

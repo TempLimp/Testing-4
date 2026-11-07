@@ -1,0 +1,30 @@
+metric             upstream mean (min..max)   port mean (min..max)         KS D perm p
+seed7.conc         0.1749 (0.173..0.177)     0.1750 (0.173..0.177)     0.075  0.250
+seed7.cumCov       1.0000 (constant)          1.0000 (constant)               -      -
+seed7.groupCov     1.0000 (constant)          1.0000 (constant)               -      -
+seed7.ild          0.9735 (0.971..0.976)     0.9734 (0.971..0.976)     0.075  0.236
+seed7.ndcg         0.9864 (0.974..0.998)     0.9864 (0.974..0.996)     0.070  0.866
+seed7.seenRep      0.0400 (0.014..0.064)     0.0387 (0.014..0.064)     0.115  0.230
+seed7.servedRep    0.2586 (0.186..0.314)     0.2567 (0.193..0.307)     0.060  0.401
+seed7.unique       0.7738 (0.725..0.838)     0.7754 (0.731..0.831)     0.060  0.429
+seed7.weak         1.0000 (constant)          1.0000 (constant)               -      -
+serving.conc       0.1756 (0.174..0.178)     0.1757 (0.174..0.178)     0.110  0.486
+serving.cumCov     1.0000 (constant)          1.0000 (constant)               -      -
+serving.groupCov   1.0000 (constant)          1.0000 (constant)               -      -
+serving.ild        0.9726 (0.970..0.975)     0.9726 (0.970..0.975)     0.125  0.685
+serving.ndcg       0.9795 (0.963..0.990)     0.9787 (0.962..0.989)     0.125  0.100
+serving.seenRep    0.0661 (0.050..0.093)     0.0680 (0.050..0.100)     0.130  0.053
+serving.servedRep  0.2664 (0.221..0.314)     0.2671 (0.229..0.307)     0.065  0.673
+serving.unique     0.7669 (0.725..0.806)     0.7662 (0.731..0.800)     0.060  0.666
+serving.weak       1.0000 (constant)          1.0000 (constant)               -      -
+ungated.conc       0.1757 (0.174..0.178)     0.1758 (0.174..0.178)     0.100  0.388
+ungated.cumCov     1.0000 (constant)          1.0000 (constant)               -      -
+ungated.groupCov   1.0000 (constant)          1.0000 (constant)               -      -
+ungated.ild        0.9726 (0.970..0.975)     0.9725 (0.970..0.975)     0.095  0.503
+ungated.ndcg       0.9790 (0.967..0.990)     0.9790 (0.964..0.990)     0.035  0.960
+ungated.seenRep    0.0664 (0.050..0.093)     0.0675 (0.050..0.093)     0.095  0.226
+ungated.servedRep  0.2653 (0.221..0.321)     0.2656 (0.221..0.314)     0.060  0.901
+ungated.unique     0.7678 (0.719..0.806)     0.7676 (0.725..0.806)     0.045  0.896
+ungated.weak       1.0000 (constant)          1.0000 (constant)               -      -
+discovery upstream=['sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]'] port=['sessions=6 nonEmpty=true cumCov=1.0 overlap=0.0 perSession=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]'] same=True
+music upstream=['SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0'] port=['SurfaceMetrics(hitRate=1.0, discoveryRate=0.1, maxArtistRun=2) SurfaceMetrics(hitRate=1.0, discoveryRate=0.8, maxArtistRun=2) cold=true leaks=0'] same=True
