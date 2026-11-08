@@ -103,6 +103,32 @@ final class BundledEngineTests: XCTestCase {
         engine.close()
     }
 
+    // S10: the player's speed (0.25-2x, pitch kept) and Media3's states, which EnginePlayer reads on its tick.
+    func testPlaysAtTheSpeedAskedAndReportsItsStates() throws {
+        let engine = try start(video: "vp9.webm", audio: "opus.webm")
+        XCTAssertEqual(engine.playbackState(), 2, "buffering while it opens")
+        engine.setPlaybackRate(rate: 2)
+        let (clock, _) = clockRate(engine, from: 600, to: 3_000)
+        XCTAssertNil(engine.error())
+        XCTAssertEqual(clock, 2, accuracy: 0.3, "clock ran at \(clock)x real time at 2x")
+        XCTAssertEqual(engine.playbackState(), 3, "ready while playing")
+        XCTAssertTrue(engine.hasRenderedFirstFrame())
+        XCTAssertGreaterThan(engine.videoWidth(), 0)
+        XCTAssertGreaterThanOrEqual(engine.bufferedPositionMs(), engine.currentPositionMs())
+        let deadline = Date().addingTimeInterval(10)
+        while engine.playbackState() != 4 && Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.05))
+        }
+        XCTAssertEqual(engine.playbackState(), 4, "ended at the clip's end")
+        engine.seekTo(positionMs: 1_000)
+        XCTAssertNotEqual(engine.playbackState(), 4, "a seek back leaves the end")
+        engine.setPlaybackRate(rate: 0.5)
+        let (slow, _) = clockRate(engine, from: 1_300, to: 2_300)
+        XCTAssertEqual(slow, 0.5, accuracy: 0.1, "clock ran at \(slow)x real time at 0.5x")
+        record("speed", ["at2x": clock, "at05x": slow, "width": engine.videoWidth()])
+        engine.close()
+    }
+
     func testASeekLandsOnItsTargetAndPlaysOn() throws {
         let engine = try start(video: "vp9.webm", audio: "opus.webm")
         waitUntil(engine, reaches: 1_000)

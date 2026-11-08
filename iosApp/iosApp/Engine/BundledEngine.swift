@@ -43,6 +43,13 @@ final class BundledEngine: NSObject, PlaybackEngine {
     private var audioQueuedUntil = CMTime.invalid
     private var audioStarving = false
     private var failure: String?
+    private var failureCode: Int32 = 1000
+    private var prepared = false
+    private var didFinish = false
+    private var rate: Float = 1
+    private var videoQueuedUntil = CMTime.invalid
+    private var pictureWidth = 0
+    private var pictureHeight = 0
     private var duration: Int64 = 0
     private var framesDecoded = 0
     private var framesRendered = 0
@@ -63,6 +70,8 @@ final class BundledEngine: NSObject, PlaybackEngine {
     override init() {
         super.init()
         displayLayer.videoGravity = .resizeAspect
+        // Speed keeps the pitch, as Media3's PlaybackParameters do.
+        audioRenderer.audioTimePitchAlgorithm = .spectral
     }
 
     deinit {
@@ -88,8 +97,9 @@ final class BundledEngine: NSObject, PlaybackEngine {
         lock.lock()
         wantsToPlay = true
         let ready = opened && !closed && !clockParked
+        let rate = self.rate
         lock.unlock()
-        if ready { control.async { self.synchronizer.rate = 1 } }
+        if ready { control.async { self.synchronizer.rate = rate } }
         invalidatePictureInPicture()
     }
 
@@ -107,6 +117,7 @@ final class BundledEngine: NSObject, PlaybackEngine {
         // The feeds running now stop here, so none of their frames is taken for where the seek landed. Before the
         // files are open, playback will start there instead.
         seekLandedMs = -1
+        didFinish = false
         guard opened else {
             startAt = CMTime(value: positionMs, timescale: 1000)
             lock.unlock()
@@ -130,6 +141,65 @@ final class BundledEngine: NSObject, PlaybackEngine {
 
     func isPlaying() -> Bool {
         synchronizer.rate > 0
+    }
+
+    func bufferedPositionMs() -> Int64 {
+        lock.lock()
+        let ends = [audioQueuedUntil, videoQueuedUntil].filter { $0.isValid }
+        lock.unlock()
+        guard let furthest = ends.max(by: { CMTimeCompare($0, $1) < 0 }) else { return currentPositionMs() }
+        let seconds = CMTimeGetSeconds(furthest)
+        return seconds.isFinite ? Int64(seconds * 1000) : 0
+    }
+
+    /// Media3's Player.STATE_* values: 1 idle, 2 buffering, 3 ready, 4 ended.
+    func playbackState() -> Int32 {
+        lock.lock()
+        defer { lock.unlock() }
+        if failure != nil || closed || !prepared { return 1 }
+        if didFinish { return 4 }
+        if !opened || clockParked { return 2 }
+        if wantsToPlay && audioStarving { return 2 }
+        return 3
+    }
+
+    func errorCode() -> Int32 {
+        lock.lock()
+        defer { lock.unlock() }
+        return failureCode
+    }
+
+    func setPlaybackRate(rate: Float) {
+        lock.lock()
+        self.rate = rate
+        let playing = wantsToPlay && opened && !closed && !clockParked && !didFinish
+        lock.unlock()
+        if playing { control.async { self.synchronizer.rate = rate } }
+    }
+
+    func setVolume(volume: Float) {
+        audioRenderer.volume = volume
+    }
+
+    /// Always exact: a seek decodes from the keyframe before the target and shows nothing before it.
+    func setSeekExact(exact: Bool) {}
+
+    func hasRenderedFirstFrame() -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return framesRendered > 0
+    }
+
+    func videoWidth() -> Int32 {
+        lock.lock()
+        defer { lock.unlock() }
+        return Int32(pictureWidth)
+    }
+
+    func videoHeight() -> Int32 {
+        lock.lock()
+        defer { lock.unlock() }
+        return Int32(pictureHeight)
     }
 
     func error() -> String? {
@@ -200,6 +270,8 @@ final class BundledEngine: NSObject, PlaybackEngine {
     func open(video videoURL: URL?, audio audioURL: URL?, durationMs: Int64, streamed: Bool = false) {
         lock.lock()
         let generation = self.generation
+        prepared = true
+        didFinish = false
         lock.unlock()
         control.async { [self] in
             do {
@@ -230,7 +302,7 @@ final class BundledEngine: NSObject, PlaybackEngine {
                 startFeeding(generation)
                 startWatchdog()
             } catch {
-                fail("\(error)")
+                fail("\(error)", code: Self.media3Code(opening: "\(error)"))
             }
         }
     }
@@ -265,7 +337,7 @@ final class BundledEngine: NSObject, PlaybackEngine {
                 next = try decoder.next()
             } catch {
                 renderer.stopRequestingMediaData()
-                fail("\(error)", generation)
+                fail("\(error)", generation, code: Self.media3Code(feeding: "\(error)"))
                 return
             }
             let skipped = decoder.takeSkippedFrames()
@@ -283,7 +355,12 @@ final class BundledEngine: NSObject, PlaybackEngine {
             let late = synchronizer.rate > 0 ? CMTimeSubtract(clock, time) : .zero
             var show = false
             var startsClock = false
+            let decodedPixels = CMSampleBufferGetImageBuffer(sample)
             update(generation) {
+                if let decodedPixels {
+                    pictureWidth = CVPixelBufferGetWidth(decodedPixels)
+                    pictureHeight = CVPixelBufferGetHeight(decodedPixels)
+                }
                 framesDecoded += 1
                 framesDropped += skipped
                 pictureSize = decoder.pictureSize
@@ -298,6 +375,7 @@ final class BundledEngine: NSObject, PlaybackEngine {
                 }
                 show = true
                 framesRendered += 1
+                videoQueuedUntil = end
                 maxLateMs = max(maxLateMs, CMTimeGetSeconds(late) * 1000)
                 if seekLandedMs < 0 { seekLandedMs = Int64(CMTimeGetSeconds(time) * 1000) }
                 startsClock = clockParked
@@ -318,7 +396,7 @@ final class BundledEngine: NSObject, PlaybackEngine {
                 next = try decoder.next()
             } catch {
                 audioRenderer.stopRequestingMediaData()
-                fail("\(error)", generation)
+                fail("\(error)", generation, code: Self.media3Code(feeding: "\(error)"))
                 return
             }
             guard let sample = next else {
@@ -356,7 +434,7 @@ final class BundledEngine: NSObject, PlaybackEngine {
             return
         }
         clockParked = false
-        let rate: Float = wantsToPlay ? 1 : 0
+        let rate: Float = wantsToPlay ? self.rate : 0
         let at = seekTarget
         lock.unlock()
         synchronizer.setRate(rate, time: at)
@@ -404,7 +482,9 @@ final class BundledEngine: NSObject, PlaybackEngine {
         videoEnded = false
         audioEnded = false
         audioQueuedUntil = .invalid
+        videoQueuedUntil = .invalid
         audioStarving = false
+        didFinish = false
         lock.unlock()
         synchronizer.setRate(0, time: target)
         startFeeding(next)
@@ -429,9 +509,11 @@ final class BundledEngine: NSObject, PlaybackEngine {
             seek(to: clock)
             return
         }
-        if audioRenderer.status == .failed { fail("audio renderer: \(audioRenderer.error?.localizedDescription ?? "failed")") }
+        if audioRenderer.status == .failed {
+            fail("audio renderer: \(audioRenderer.error?.localizedDescription ?? "failed")", code: 5001)
+        }
         if displayLayer.sampleBufferRenderer.status == .failed {
-            fail("video renderer: \(displayLayer.sampleBufferRenderer.error?.localizedDescription ?? "failed")")
+            fail("video renderer: \(displayLayer.sampleBufferRenderer.error?.localizedDescription ?? "failed")", code: 4003)
         }
         lock.lock()
         let hasAudio = audio != nil, hasVideo = video != nil
@@ -443,6 +525,7 @@ final class BundledEngine: NSObject, PlaybackEngine {
         }
         // At the end the clock stops; the wish to play stays, so a seek back plays on, as in ExoPlayer.
         let finished = ended && playing && (!hasAudio || !audioQueuedUntil.isValid || CMTimeCompare(clock, audioQueuedUntil) >= 0)
+        if finished { didFinish = true }
         lock.unlock()
         if finished { synchronizer.rate = 0 }
     }
@@ -468,12 +551,34 @@ final class BundledEngine: NSObject, PlaybackEngine {
         change()
     }
 
-    private func fail(_ message: String, _ generation: Int? = nil) {
+    /// [code] is the Media3 error code (PlaybackException) the failure stands for.
+    private func fail(_ message: String, _ generation: Int? = nil, code: Int32 = 1000) {
         lock.lock()
         let current = generation == nil || generation == self.generation
-        if current && !closed && failure == nil { failure = message }
+        if current && !closed && failure == nil {
+            failure = message
+            failureCode = code
+        }
         lock.unlock()
         if current { control.async { self.synchronizer.rate = 0 } }
+    }
+
+    /// Opening a track: the file (IO), its container (no stream of the kind), or its decoder.
+    static func media3Code(opening message: String) -> Int32 {
+        if message.hasPrefix("no decoder built") { return 4005 } // DECODING_FORMAT_UNSUPPORTED
+        if message.hasPrefix("no video stream") || message.hasPrefix("no audio stream") { return 3003 } // PARSING_CONTAINER_UNSUPPORTED
+        if message.hasPrefix("codec parameters") { return 4001 } // DECODER_INIT_FAILED
+        // "open 0.webm: ..." is the file, "open vp9: ..." the decoder.
+        if message.hasPrefix("open ") {
+            let name = message.dropFirst(5).prefix { $0 != ":" && $0 != " " }
+            return name.contains(".") ? 2000 : 4001 // IO_UNSPECIFIED : DECODER_INIT_FAILED
+        }
+        return 1000 // UNSPECIFIED
+    }
+
+    /// Playing: reading the file (IO) or decoding it.
+    static func media3Code(feeding message: String) -> Int32 {
+        message.hasPrefix("read ") ? 2000 : 4003 // IO_UNSPECIFIED : DECODING_FAILED
     }
 
     private func invalidatePictureInPicture() {
