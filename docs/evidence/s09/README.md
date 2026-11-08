@@ -33,8 +33,7 @@ test allows 0.15 of drift), so the serving numbers vary run to run on both sides
 The floors upstream asserts (nDCG >= 0.55, ILD >= 0.20, coverage >= 0.85 / 0.95, weak service >= 0.80, seen repeat
 <= 0.10, served repeat <= 0.60) held on all 1,200 runs of each side.
 
-Not compared: the benchmarks on the iOS simulator against upstream (only the floors run there, in CI), and
-upstream on Android itself (no Android SDK here; the JVM is what upstream's own unit tests run on).
+On the iOS simulator (CI run 42422914572) both benchmark tests passed their floors, one run each: music identical (quick picks 1.000 / 0.100 / run 2, discover 1.000 / 0.800 / run 2, cold pass-through, 0 leaks); neuro nDCG 0.979, ILD 0.971, coverage 1.000 / 1.000, weak service 1.000, seen repeat 0.071, served repeat 0.250, each inside the range upstream's own runs span on the JVM. Not compared: upstream on Android itself (no Android SDK here; the JVM is what upstream's own unit tests run on).
 
 ## Snowball: upstream's Java against the port's Kotlin
 
