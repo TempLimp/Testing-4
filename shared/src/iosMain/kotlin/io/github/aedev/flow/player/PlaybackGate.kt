@@ -168,10 +168,23 @@ private const val REQUIRED_ADVANCE_SECONDS = 5.0
 
 // What the gate checks, in order. Every item after the cipher and the PoToken must pass for a PASS, but those
 // [SWITCHED_OFF] for a run, which record why instead.
-private val ITEMS = listOf("cipher", "poToken", "fonts", "sabrH264", "sabrVp9", "pip", "music", "video", "h264At1080p", "vp9", "av1", "hdrAv1", "longRun")
+private val ITEMS =
+    listOf(
+        "cipher", "poToken", "fonts", "sabrH264", "sabrVp9", "pip", "music", "video", "h264At1080p", "vp9", "av1", "hdrAv1", "longRun",
+        "keystore", "s10Play", "s10Quality", "s10Speed", "s10Seek", "s10Captions", "s10SponsorBlock", "s10Recovery", "s10SabrFallback",
+    )
 
 // Items left out of a run, each with why. S05's run left out longRun (ten minutes of VP9, which take the battery under 5 %).
-private val SWITCHED_OFF = emptyMap<String, String>()
+// S10's run keeps S04/S05's playback items as regression checks and leaves out what S04b's verification pass settled.
+private val SWITCHED_OFF =
+    mapOf(
+        "fonts" to "passed in S04b's verification pass; S10 changed no font code",
+        "pip" to "passed in S04b's verification pass (it needs a tap); S11 owns Picture in Picture",
+        "vp9" to "passed in S04b and its verification pass (2160p60 sustained); S10 changed no decoding",
+        "av1" to "passed in S04b and its verification pass; S10 changed no decoding",
+        "hdrAv1" to "passed in S04b's verification pass",
+        "longRun" to "passed in S04b's verification pass (ten minutes of VP9, which take the battery under 5 %)",
+    )
 
 // "The World in HDR in 4K (ULTRA HD)" (Jacob + Katie Schwarz): offered as 10-bit AV1 HDR (BT.2020, PQ) from 144p to
 // 2160p60 through VISIONOS, the client upstream's ladder asks first; no VP9 profile 2 on any client asked (probed
@@ -347,6 +360,17 @@ private object PlaybackGate {
         step("av1", 360.seconds) { codecLadder(videoId, "av1") }
         step("hdrAv1", 8.minutes) { codecLadder(HDR_VIDEO_ID, "av1", deep = true) }
         step("longRun", 13.minutes) { longRun(videoId) }
+        // S10: the ported player manager, as the player screen will drive it.
+        val playerGate = PlayerGate(::stage, ::showOnScreen, ::extraction, ::blockedOrFailed)
+        step("keystore", 10.seconds) { playerGate.keystore() }
+        step("s10Play", 90.seconds) { playerGate.play(videoId) }
+        step("s10Quality", 90.seconds) { playerGate.quality(videoId) }
+        step("s10Speed", 60.seconds) { playerGate.speed() }
+        step("s10Seek", 120.seconds) { playerGate.seek(videoId) }
+        step("s10Captions", 150.seconds) { playerGate.captions() }
+        step("s10SponsorBlock", 90.seconds) { playerGate.sponsorBlock() }
+        step("s10Recovery", 150.seconds) { playerGate.recovery(videoId) }
+        step("s10SabrFallback", 5.minutes) { playerGate.sabrFallback(videoId) }
         watchdog.cancel()
         finish(deadlineReached = false)
     }

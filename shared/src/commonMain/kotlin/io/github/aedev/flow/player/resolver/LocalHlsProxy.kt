@@ -3,6 +3,8 @@ package io.github.aedev.flow.player.resolver
 import io.github.aedev.flow.innertube.models.YouTubeClient
 import io.github.aedev.flow.network.ProxyAwareClient
 import io.github.aedev.flow.player.datasource.GoogleVideoRequestPolicy
+import io.github.aedev.flow.player.engine.InvalidResponseCodeException
+import io.github.aedev.flow.player.media.localFileEngineKind
 import io.github.aedev.flow.player.error.PlayerDiagnostics
 import io.github.aedev.flow.player.error.StreamDenialClassifier
 import io.github.aedev.flow.player.sabr.integration.SabrProxySession
@@ -36,6 +38,10 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlin.concurrent.atomics.AtomicInt
+import kotlin.time.TimeSource
+import okio.FileSystem
+import okio.Path.Companion.toPath
+import okio.use
 import kotlin.concurrent.atomics.incrementAndFetch
 
 /**
@@ -68,6 +74,35 @@ object LocalHlsProxy {
     private val presentations = ConcurrentMap<String, HlsPresentation>()
     private val segmentCache = ConcurrentMap<String, List<SidxSegment>>()
     private val sabrSessions = ConcurrentMap<String, SabrProxySession>()
+    private val localFiles = ConcurrentMap<String, String>()
+    private val refusals = ConcurrentMap<String, InvalidResponseCodeException>()
+
+    /**
+     * What upstream's data-source chain adds around YouTubeHttpDataSource for media requests (PlayerCacheManager's
+     * dash and progressive factories): a URL swapped after a refusal, the debug builds' fake wall, and one retry of a
+     * refused request once a replacement is recorded (RefusedStreamRetryDataSource). Set by the player.
+     */
+    interface DataPath {
+        fun resolveUrl(url: String): String
+
+        fun refuses(
+            url: String,
+            position: Long,
+        ): Boolean
+
+        suspend fun onRefused(
+            position: Long,
+            url: String,
+        ): Boolean
+    }
+
+    var dataPath: DataPath? = null
+
+    /** Told each googlevideo media transfer's size and time, as Media3 tells its bandwidth meter. */
+    var transferListener: ((bytes: Long, elapsedMs: Long) -> Unit)? = null
+
+    /** The last googlevideo refusal of a source this proxy published at [uri], as Media3's error cause would carry it. */
+    fun refusalFor(uri: String): InvalidResponseCodeException? = PUBLISHED_ID.find(uri)?.groupValues?.get(1)?.let { refusals[it] }
 
     /** Starts the server once; returns the port it listens on. */
     suspend fun start(): Int =
@@ -85,6 +120,7 @@ object LocalHlsProxy {
                         get("/s/{id}/{track}.mp4") { serveSabrBytes(call) }
                         get("/s/{id}/pipe/{track}.mp4") { serveSabrPipe(call) }
                         get("/s/{id}/pipe/{track}.webm") { serveSabrPipe(call) }
+                        get("/f/{id}/{name}") { serveLocalFile(call) }
                     }
                 }.start(wait = false)
             port = started.engine.resolvedConnectors().first().port
@@ -141,8 +177,74 @@ object LocalHlsProxy {
         )
     }
 
+    /**
+     * A file on the device, served with byte ranges as googlevideo's are, so both engines read it as they read a
+     * stream: the engine its video codec needs ([localFileEngineKind]); a muxed file gives the bundled engine both tracks.
+     */
+    suspend fun localFileSource(
+        path: String,
+        mediaId: String = "",
+    ): MediaSource {
+        val port = start()
+        val id = nextId.incrementAndFetch().toString()
+        localFiles[id] = path
+        (id.toInt() - MAX_PRESENTATIONS).takeIf { it > 0 }?.let { evict(it.toString()) }
+        val extension = path.substringAfterLast('.', "").lowercase()
+        val url = "http://$HOST:$port/f/$id/file.$extension"
+        val mimeType = localMimeType(extension)
+        val engine = localFileEngineKind(path)
+        return MediaSource(
+            uri = url,
+            mimeType = mimeType,
+            mediaId = mediaId,
+            engine = engine,
+            audioUri = url.takeIf { engine == PlaybackEngineKind.BUNDLED && mimeType.startsWith("video/") },
+        )
+    }
+
+    private fun localMimeType(extension: String): String =
+        when (extension) {
+            "webm" -> "video/webm"
+            "mkv" -> "video/x-matroska"
+            "mov" -> "video/quicktime"
+            "m4a", "aac" -> "audio/mp4"
+            "opus", "ogg" -> "audio/ogg"
+            "mka" -> "audio/x-matroska"
+            "mp3" -> "audio/mpeg"
+            else -> "video/mp4"
+        }
+
+    private suspend fun serveLocalFile(call: ApplicationCall) {
+        val path = call.parameters["id"]?.let { localFiles[it] }?.toPath() ?: return call.respondText("", status = HttpStatusCode.NotFound)
+        val size = FileSystem.SYSTEM.metadataOrNull(path)?.size ?: return call.respondText("", status = HttpStatusCode.NotFound)
+        val range = call.request.header(HttpHeaders.Range)?.let { BYTE_RANGE.find(it) }
+        val first = range?.groupValues?.get(1)?.toLongOrNull() ?: 0L
+        val last = range?.groupValues?.get(2)?.toLongOrNull()?.coerceAtMost(size - 1) ?: (size - 1)
+        if (first >= size || first > last) {
+            call.response.header(HttpHeaders.ContentRange, "bytes */$size")
+            return call.respondText("", status = HttpStatusCode.RequestedRangeNotSatisfiable)
+        }
+        call.response.header(HttpHeaders.AcceptRanges, "bytes")
+        if (range != null) call.response.header(HttpHeaders.ContentRange, "bytes $first-$last/$size")
+        val status = if (range != null) HttpStatusCode.PartialContent else HttpStatusCode.OK
+        call.respondBytesWriter(ContentType.parse(localMimeType(path.name.substringAfterLast('.', "").lowercase())), status, last - first + 1) {
+            FileSystem.SYSTEM.openReadOnly(path).use { handle ->
+                val buffer = ByteArray(LOCAL_CHUNK)
+                var at = first
+                while (at <= last) {
+                    val read = handle.read(at, buffer, 0, minOf(LOCAL_CHUNK.toLong(), last - at + 1).toInt())
+                    if (read <= 0) break
+                    writeFully(buffer, 0, read)
+                    at += read
+                }
+            }
+        }
+    }
+
     private fun evict(id: String) {
         sabrSessions.remove(id)?.close()
+        localFiles.remove(id)
+        refusals.remove(id)
         val presentation = presentations.remove(id) ?: return
         presentation.renditions.indices.forEach { segmentCache.remove("$id/$it") }
     }
@@ -194,7 +296,7 @@ object LocalHlsProxy {
     ): List<SidxSegment>? {
         segmentCache[key]?.let { return it }
         val bytes =
-            fetch(rendition.url, "bytes=${rendition.indexStart}-${rendition.indexEnd}") { response ->
+            fetch(dataPath?.resolveUrl(rendition.url) ?: rendition.url, "bytes=${rendition.indexStart}-${rendition.indexEnd}") { response ->
                 if (response.status.value !in 200..299) null else response.readRawBytes()
             } ?: return null
         // A server that ignores the range sends the whole file; the index is then at its own offset.
@@ -213,23 +315,46 @@ object LocalHlsProxy {
             call.parameters["rendition"]?.toIntOrNull()?.let { presentation?.renditions?.getOrNull(it) }
                 ?: return call.respondText("", status = HttpStatusCode.NotFound)
         val range = call.request.header(HttpHeaders.Range)
-        fetch(rendition.url, range) { upstream ->
-            val status = upstream.status
-            if (status == HttpStatusCode.Forbidden) reportForbidden(rendition.url, range)
-            if (status.value !in 200..299) {
-                Log.w(TAG, "googlevideo answered $status for itag ${StreamDenialClassifier.itagOf(rendition.url)} $range")
-                call.respondText("", status = status)
-                return@fetch
+        val id = call.parameters["id"].orEmpty()
+        val position = range?.let { BYTE_RANGE.find(it)?.groupValues?.get(1)?.toLongOrNull() } ?: 0L
+        val path = dataPath
+        var url = path?.resolveUrl(rendition.url) ?: rendition.url
+        // One retry, as RefusedStreamRetryDataSource reopens once a replacement for the refused file is recorded.
+        var retried = false
+        while (true) {
+            val refused =
+                if (path?.refuses(url, position) == true) {
+                    Log.w("FakeStreamWall", "fake wall refused c=${StreamDenialClassifier.clientOf(url)} at byte $position")
+                    HttpStatusCode.Forbidden
+                } else {
+                    val started = TimeSource.Monotonic.markNow()
+                    fetch(url, range) { upstream ->
+                        val status = upstream.status
+                        if (status.value !in 200..299) return@fetch status
+                        refusals.remove(id)
+                        upstream.headers[HttpHeaders.ContentRange]?.let { call.response.header(HttpHeaders.ContentRange, it) }
+                        call.response.header(HttpHeaders.AcceptRanges, "bytes")
+                        call.respondBytesWriter(
+                            contentType = ContentType.parse(rendition.mimeType.ifEmpty { if (rendition.isAudio) "audio/mp4" else "video/mp4" }),
+                            status = status,
+                            contentLength = upstream.headers[HttpHeaders.ContentLength]?.toLongOrNull(),
+                        ) {
+                            val bytes = upstream.bodyAsChannel().copyTo(this)
+                            transferListener?.invoke(bytes, started.elapsedNow().inWholeMilliseconds)
+                        }
+                        null
+                    }
+                } ?: return
+            if (refused == HttpStatusCode.Forbidden) reportForbidden(url, range)
+            if (refused == HttpStatusCode.Forbidden && path != null && !retried && path.onRefused(position, url)) {
+                retried = true
+                url = path.resolveUrl(rendition.url)
+                continue
             }
-            upstream.headers[HttpHeaders.ContentRange]?.let { call.response.header(HttpHeaders.ContentRange, it) }
-            call.response.header(HttpHeaders.AcceptRanges, "bytes")
-            call.respondBytesWriter(
-                contentType = ContentType.parse(rendition.mimeType.ifEmpty { if (rendition.isAudio) "audio/mp4" else "video/mp4" }),
-                status = status,
-                contentLength = upstream.headers[HttpHeaders.ContentLength]?.toLongOrNull(),
-            ) {
-                upstream.bodyAsChannel().copyTo(this)
-            }
+            Log.w(TAG, "googlevideo answered $refused for itag ${StreamDenialClassifier.itagOf(url)} $range")
+            refusals[id] = InvalidResponseCodeException(refused.value, url)
+            call.respondText("", status = refused)
+            return
         }
     }
 
@@ -337,5 +462,7 @@ object LocalHlsProxy {
     }
 
     private const val HLS_MIME = "application/vnd.apple.mpegurl"
+    private const val LOCAL_CHUNK = 256 * 1024
+    private val PUBLISHED_ID = Regex("""/[pf]/(\d+)/""")
     private val BYTE_RANGE = Regex("""bytes=(\d+)-(\d*)""")
 }

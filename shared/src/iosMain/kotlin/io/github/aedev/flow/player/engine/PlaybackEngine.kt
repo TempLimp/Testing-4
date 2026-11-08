@@ -5,6 +5,15 @@ package io.github.aedev.flow.player.engine
 import io.github.aedev.flow.player.resolver.MediaSource
 import kotlin.concurrent.Volatile
 import platform.AVFoundation.AVAudioTimePitchAlgorithmSpectral
+import platform.AVFoundation.AVMediaTypeVideo
+import platform.AVFoundation.AVPlayerItemTrack
+import platform.AVFoundation.mediaType
+import platform.AVFoundation.preferredMaximumResolution
+import platform.AVFoundation.preferredPeakBitRate
+import platform.AVFoundation.setPreferredMaximumResolution
+import platform.AVFoundation.setPreferredPeakBitRate
+import platform.AVFoundation.tracks
+import platform.CoreGraphics.CGSizeMake
 import platform.AVFoundation.AVErrorContentIsUnavailable
 import platform.AVFoundation.AVErrorDecodeFailed
 import platform.AVFoundation.AVErrorDecoderNotFound
@@ -112,6 +121,11 @@ object PlaybackEngines {
     /** Set by the app at start-up (iOSApp.swift): the bundled engine is Swift. */
     var bundled: (() -> PlaybackEngine)? = null
 
+    /** Gives the video player its engines; the app calls it at start-up, after registering [bundled]. */
+    fun install() {
+        io.github.aedev.flow.player.EnhancedPlayerManager.engineFactory = ::create
+    }
+
     fun create(kind: PlaybackEngineKind): PlaybackEngine =
         when (kind) {
             PlaybackEngineKind.AVPLAYER -> AvPlayerEngine()
@@ -137,6 +151,12 @@ class AvPlayerEngine : PlaybackEngine {
     @Volatile
     private var seekExact = true
 
+    @Volatile
+    private var videoEnabled = true
+    private var maxWidth = 0
+    private var maxHeight = 0
+    private var maxBitrate = 0L
+
     override fun prepare(source: MediaSource) {
         removeEndObserver()
         ended = false
@@ -144,6 +164,7 @@ class AvPlayerEngine : PlaybackEngine {
         // Speed keeps the pitch, as Media3's PlaybackParameters do.
         next.audioTimePitchAlgorithm = AVAudioTimePitchAlgorithmSpectral
         item = next
+        applyLimits(next)
         endObserver =
             NSNotificationCenter.defaultCenter.addObserverForName(AVPlayerItemDidPlayToEndTimeNotification, next, null) { _ ->
                 ended = true
@@ -202,6 +223,35 @@ class AvPlayerEngine : PlaybackEngine {
     override fun setVolume(volume: Float) {
         player.volume = volume
     }
+
+    override fun setVideoEnabled(enabled: Boolean) {
+        videoEnabled = enabled
+        item?.tracks?.forEach { track ->
+            val playerTrack = track as? AVPlayerItemTrack ?: return@forEach
+            if (playerTrack.assetTrack?.mediaType == AVMediaTypeVideo) playerTrack.enabled = enabled
+        }
+    }
+
+    override fun setVideoLimits(
+        maxWidth: Int,
+        maxHeight: Int,
+        maxBitrate: Long,
+    ) {
+        this.maxWidth = maxWidth
+        this.maxHeight = maxHeight
+        this.maxBitrate = maxBitrate
+        item?.let(::applyLimits)
+    }
+
+    private fun applyLimits(target: AVPlayerItem) {
+        target.preferredMaximumResolution = CGSizeMake(maxWidth.toDouble(), maxHeight.toDouble())
+        target.preferredPeakBitRate = maxBitrate.toDouble()
+    }
+
+    override fun videoDecoderName(): String? = "AVPlayer"
+
+    override fun droppedFrameCount(): Int =
+        item?.accessLog()?.events?.sumOf { (it as? AVPlayerItemAccessLogEvent)?.numberOfDroppedVideoFrames?.toInt() ?: 0 } ?: 0
 
     override fun hasRenderedFirstFrame(): Boolean = playerLayer.readyForDisplay
 

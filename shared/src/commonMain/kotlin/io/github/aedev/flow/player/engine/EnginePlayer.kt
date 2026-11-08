@@ -3,6 +3,7 @@ package io.github.aedev.flow.player.engine
 import io.github.aedev.flow.player.engine.FlowPlayer.Companion.MEDIA_ITEM_TRANSITION_REASON_AUTO
 import io.github.aedev.flow.player.engine.FlowPlayer.Companion.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED
 import io.github.aedev.flow.player.engine.FlowPlayer.Companion.MEDIA_ITEM_TRANSITION_REASON_REPEAT
+import io.github.aedev.flow.player.engine.FlowPlayer.Companion.MEDIA_ITEM_TRANSITION_REASON_SEEK
 import io.github.aedev.flow.player.engine.FlowPlayer.Companion.PLAY_WHEN_READY_CHANGE_REASON_USER_REQUEST
 import io.github.aedev.flow.player.engine.FlowPlayer.Companion.REPEAT_MODE_OFF
 import io.github.aedev.flow.player.engine.FlowPlayer.Companion.REPEAT_MODE_ONE
@@ -15,6 +16,7 @@ import io.github.aedev.flow.player.renderer.subtitle.Cue
 import io.github.aedev.flow.player.renderer.subtitle.Subtitle
 import io.github.aedev.flow.player.resolver.MediaSource
 import io.github.aedev.flow.player.resolver.PlaybackEngineKind
+import io.github.aedev.flow.player.surface.VideoSurface
 import io.github.aedev.flow.utils.Log
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -52,7 +54,10 @@ class EnginePlayer(
 
     private val listeners = mutableListOf<FlowPlayer.Listener>()
     private val items = mutableListOf<Item>()
-    private val current: Item? get() = items.firstOrNull()
+
+    /** Media3's current window: items before it have played and stay until removed, items after it are prepared ahead. */
+    private var currentIndex = 0
+    private val current: Item? get() = items.getOrNull(currentIndex)
 
     private val _engine = MutableStateFlow<EngineControl?>(null)
 
@@ -97,7 +102,7 @@ class EnginePlayer(
 
     override val mediaItemCount: Int get() = items.size
 
-    override val currentMediaItemIndex: Int get() = 0
+    override val currentMediaItemIndex: Int get() = currentIndex
 
     override val currentMediaId: String? get() = current?.source?.mediaId
 
@@ -120,6 +125,43 @@ class EnginePlayer(
     override val videoSize: VideoSize get() = reportedSize
 
     override val currentCues: List<Cue> get() = cues
+
+    private var surface: VideoSurface? = null
+    private var videoEnabled = true
+    private var videoLimits = Triple(0, 0, 0L)
+
+    /** Media3's disabled video track type: audio-only playback on every engine, now and opened later. */
+    fun setVideoEnabled(enabled: Boolean) {
+        videoEnabled = enabled
+        items.forEach { it.engine?.setVideoEnabled(enabled) }
+    }
+
+    /** The track selector's size and bit-rate limits, for AVPlayer's ladder. */
+    fun setVideoLimits(
+        maxWidth: Int,
+        maxHeight: Int,
+        maxBitrate: Long,
+    ) {
+        videoLimits = Triple(maxWidth, maxHeight, maxBitrate)
+        items.forEach { it.engine?.setVideoLimits(maxWidth, maxHeight, maxBitrate) }
+    }
+
+    /** Shows the playing engine's picture on [surface] from now on, as ExoPlayer's setVideoSurface. */
+    fun setVideoSurface(surface: VideoSurface) {
+        this.surface = surface
+        surface.show(_engine.value)
+    }
+
+    fun clearVideoSurface() {
+        surface?.show(null)
+        surface = null
+    }
+
+    private fun showEngine(engine: EngineControl?) {
+        if (_engine.value === engine) return
+        _engine.value = engine
+        surface?.show(engine)
+    }
 
     /** Media3's SeekParameters: EXACT lands on the frame asked for, CLOSEST_SYNC on the nearest keyframe (faster). */
     fun setSeekParameters(exact: Boolean) {
@@ -164,7 +206,7 @@ class EnginePlayer(
             item.positionMs = item.engine?.currentPositionMs() ?: item.positionMs
             closeEngine(item)
         }
-        _engine.value = null
+        showEngine(null)
         resetPictureState()
         setState(STATE_IDLE)
         reportPlaying(false)
@@ -174,7 +216,8 @@ class EnginePlayer(
         val hadItems = items.isNotEmpty()
         items.forEach(::closeEngine)
         items.clear()
-        _engine.value = null
+        currentIndex = 0
+        showEngine(null)
         resetPictureState()
         reportPlaying(false)
         if (state != STATE_IDLE) setState(STATE_ENDED)
@@ -185,7 +228,8 @@ class EnginePlayer(
         items.forEach(::closeEngine)
         items.clear()
         items += Item(source)
-        _engine.value = null
+        currentIndex = 0
+        showEngine(null)
         resetPictureState()
         reportPlaying(false)
         notify { it.onMediaItemTransition(source.mediaId, MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) }
@@ -203,7 +247,20 @@ class EnginePlayer(
         val item = items.getOrNull(index) ?: return
         closeEngine(item)
         items.removeAt(index)
-        if (index == 0) becomeCurrent(MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED)
+        when {
+            index < currentIndex -> currentIndex--
+            index == currentIndex -> {
+                if (currentIndex >= items.size) currentIndex = (items.size - 1).coerceAtLeast(0)
+                becomeCurrent(MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED)
+            }
+        }
+    }
+
+    override fun seekToNextMediaItem() {
+        if (currentIndex >= items.size - 1) return
+        current?.let(::closeEngine)
+        currentIndex++
+        becomeCurrent(MEDIA_ITEM_TRANSITION_REASON_SEEK)
     }
 
     override fun prepare() {
@@ -213,7 +270,7 @@ class EnginePlayer(
             return
         }
         prepareItem(item)
-        items.drop(1).forEach(::prepareItem)
+        items.drop(currentIndex + 1).forEach(::prepareItem)
         setState(item.engine?.playbackState() ?: STATE_BUFFERING)
         ensureTicking()
         tick()
@@ -285,10 +342,12 @@ class EnginePlayer(
         engine.setPlaybackRate(playbackSpeed)
         engine.setVolume(if (muted) 0f else volume)
         engine.setSeekExact(seekExact)
+        engine.setVideoEnabled(videoEnabled)
+        engine.setVideoLimits(videoLimits.first, videoLimits.second, videoLimits.third)
         engine.prepare(resolved)
         if (item.positionMs > 0) engine.seekTo(item.positionMs)
         if (item === current) {
-            _engine.value = engine
+            showEngine(engine)
             if (playWhenReady) engine.play()
         }
         Log.d(TAG, "opened ${item.source.mediaId} on ${resolved.engine} at ${item.positionMs}ms")
@@ -306,13 +365,13 @@ class EnginePlayer(
         resetPictureState()
         val item = current
         if (item == null) {
-            _engine.value = null
+            showEngine(null)
             reportPlaying(false)
             setState(STATE_ENDED)
             return
         }
         prepareItem(item)
-        _engine.value = item.engine
+        showEngine(item.engine)
         if (playWhenReady) item.engine?.play()
         notify { it.onMediaItemTransition(item.source.mediaId, reason) }
         setState(item.engine?.playbackState()?.takeIf { it != STATE_IDLE } ?: STATE_BUFFERING)
@@ -357,7 +416,17 @@ class EnginePlayer(
             return
         }
         engine.error()?.let { message ->
-            fail(item, PlaybackException(message, null, engine.errorCode()))
+            val refusal = item.source.failureCause()
+            // Media3 reports a refused request as a bad HTTP status with the response as its cause.
+            val code =
+                if (refusal is InvalidResponseCodeException && engine.errorCode() in IO_ERROR_CODES) {
+                    PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS
+                } else {
+                    engine.errorCode()
+                }
+            // Media3 gives a container or manifest it could not read a ParserException cause.
+            val cause = refusal ?: ParserException(message).takeIf { code in PARSING_ERROR_CODES }
+            fail(item, PlaybackException(message, cause, code))
             return
         }
         val engineState = engine.playbackState()
@@ -389,9 +458,9 @@ class EnginePlayer(
                 if (playWhenReady) engine.play()
                 notify { it.onMediaItemTransition(item.source.mediaId, MEDIA_ITEM_TRANSITION_REASON_REPEAT) }
             }
-            items.size > 1 -> {
+            currentIndex < items.size - 1 -> {
                 closeEngine(item)
-                items.removeAt(0)
+                currentIndex++
                 becomeCurrent(MEDIA_ITEM_TRANSITION_REASON_AUTO)
             }
             else -> {
@@ -408,7 +477,7 @@ class EnginePlayer(
     ) {
         item.positionMs = item.engine?.currentPositionMs() ?: item.positionMs
         closeEngine(item)
-        _engine.value = null
+        showEngine(null)
         resetPictureState()
         reportPlaying(false)
         setState(STATE_IDLE)
@@ -457,5 +526,7 @@ class EnginePlayer(
         const val TICK_MS = 250L
         const val IDLE_TICK_MS = 1_000L
         const val MIN_TICK_MS = 16L
+        val PARSING_ERROR_CODES = PlaybackException.ERROR_CODE_PARSING_CONTAINER_MALFORMED..PlaybackException.ERROR_CODE_PARSING_MANIFEST_UNSUPPORTED
+        val IO_ERROR_CODES = PlaybackException.ERROR_CODE_IO_UNSPECIFIED..PlaybackException.ERROR_CODE_IO_READ_POSITION_OUT_OF_RANGE
     }
 }

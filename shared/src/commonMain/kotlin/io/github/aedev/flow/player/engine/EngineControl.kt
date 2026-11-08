@@ -52,6 +52,28 @@ interface EngineControl {
      */
     fun setSeekExact(exact: Boolean)
 
+    /**
+     * Video decoding on or off, Media3's disabled video track type (audio-only playback). Turned back on, the picture
+     * resumes at the clock.
+     */
+    fun setVideoEnabled(enabled: Boolean)
+
+    /**
+     * The largest picture and peak bit rate AVPlayer may pick from a quality ladder (its preferredMaximumResolution and
+     * preferredPeakBitRate), from the track selector's limits; 0 for no limit. The bundled engine plays one stream.
+     */
+    fun setVideoLimits(
+        maxWidth: Int,
+        maxHeight: Int,
+        maxBitrate: Long,
+    )
+
+    /** The video decoder ("vp9", "libdav1d", or "AVPlayer"), for the diagnostics log; null without video. */
+    fun videoDecoderName(): String?
+
+    /** Frames decoded too late to show since [prepare]. */
+    fun droppedFrameCount(): Int
+
     /** A picture has been shown since [prepare]. */
     fun hasRenderedFirstFrame(): Boolean
 

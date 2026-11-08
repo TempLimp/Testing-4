@@ -12,7 +12,7 @@ open class ExtractionException : Exception {
     constructor(message: String?, cause: Throwable?) : super(message, cause)
 }
 
-class ParsingException : ExtractionException {
+open class ParsingException : ExtractionException {
     constructor(message: String?) : super(message)
     constructor(message: String?, cause: Throwable?) : super(message, cause)
 }

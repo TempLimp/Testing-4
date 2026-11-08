@@ -3,8 +3,8 @@ package io.github.aedev.flow.player.config
 /**
  * The largest frame the track selector may pick: never above 4K, lower on a small app heap.
  *
- * Upstream's `forDevice(Context)` reads ActivityManager's memory class; the iOS player picks its cap
- * with the player in S10.
+ * Upstream's `forDevice(Context)` reads ActivityManager's memory class; iOS has no app heap class, so [forDevice]
+ * reads the device's memory ([forPhysicalMemory]).
  */
 data class VideoSizeCap(
     val maxWidth: Int,
@@ -22,6 +22,22 @@ data class VideoSizeCap(
                 memoryClassMb <= 384 -> VideoSizeCap(2560, 1440)
                 else -> UHD
             }
+
+        /**
+         * iOS's counterpart of [forHeap]: an iPhone with 4 GB or more decodes and shows 2160p (the S04b phone gate
+         * sustained 2160p60 on an A14 with 6 GB), 3 GB gets 1440p, less 1080p.
+         */
+        fun forPhysicalMemory(bytes: Long): VideoSizeCap =
+            when {
+                bytes >= 4L * 1024 * 1024 * 1024 - SLACK -> UHD
+                bytes >= 3L * 1024 * 1024 * 1024 - SLACK -> VideoSizeCap(2560, 1440)
+                else -> VideoSizeCap(1920, 1080)
+            }
+
+        // A device's reported memory is a little under its marketed size.
+        private const val SLACK = 256L * 1024 * 1024
+
+        fun forDevice(): VideoSizeCap = forPhysicalMemory(devicePhysicalMemoryBytes())
     }
 }
 
@@ -70,3 +86,10 @@ internal fun adaptiveTrackSelectorDefaults(
             allowMultipleAdaptiveSelections = true,
         ).resetVideoSizeTo(cap)
         .copy(forceHighestSupportedBitrate = false)
+
+/** The device's memory in bytes (NSProcessInfo.physicalMemory on iOS). */
+internal expect fun devicePhysicalMemoryBytes(): Long
+
+/** Media3's `clearVideoSizeConstraints`: no minimum and no maximum size. */
+fun VideoTrackParameters.clearVideoSizeConstraints(): VideoTrackParameters =
+    copy(minVideoWidth = 0, minVideoHeight = 0, maxVideoWidth = Int.MAX_VALUE, maxVideoHeight = Int.MAX_VALUE)

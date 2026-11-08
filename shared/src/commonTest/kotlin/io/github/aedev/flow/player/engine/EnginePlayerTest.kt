@@ -88,6 +88,26 @@ class EnginePlayerTest {
             this.exact = exact
         }
 
+        var videoOn = true
+
+        override fun setVideoEnabled(enabled: Boolean) {
+            videoOn = enabled
+        }
+
+        var limits = Triple(0, 0, 0L)
+
+        override fun setVideoLimits(
+            maxWidth: Int,
+            maxHeight: Int,
+            maxBitrate: Long,
+        ) {
+            limits = Triple(maxWidth, maxHeight, maxBitrate)
+        }
+
+        override fun videoDecoderName() = "fake"
+
+        override fun droppedFrameCount() = 0
+
         override fun hasRenderedFirstFrame() = firstFrame
 
         override fun videoWidth() = width
@@ -270,10 +290,64 @@ class EnginePlayerTest {
             assertTrue(engines[0].closed)
             assertTrue(next.wantsToPlay)
             assertEquals("b", player.currentMediaId)
-            assertEquals(1, player.mediaItemCount)
+            // As Media3: the played window stays until removed, and the next one is current.
+            assertEquals(2, player.mediaItemCount)
+            assertEquals(1, player.currentMediaItemIndex)
             assertThat(events).contains("transition b ${FlowPlayer.MEDIA_ITEM_TRANSITION_REASON_AUTO}")
             assertThat(events).doesNotContain("state ${FlowPlayer.STATE_ENDED}")
             assertEquals(next, player.engine.value)
+
+            player.removeMediaItem(0)
+            assertEquals(1, player.mediaItemCount)
+            assertEquals(0, player.currentMediaItemIndex)
+            assertEquals("b", player.currentMediaId)
+            assertEquals(next, player.engine.value)
+        }
+
+    @Test
+    fun seekingToTheNextItemStartsItAsASeekTransition() =
+        runTest {
+            val player = player()
+            player.setMediaSource(source("a"))
+            player.playWhenReady = true
+            player.prepare()
+            runCurrent()
+            engines.single().becomeReady()
+            player.addMediaSource(source("b"))
+            runCurrent()
+            engines[1].becomeReady()
+
+            player.seekToNextMediaItem()
+            assertTrue(engines[0].closed)
+            assertEquals(1, player.currentMediaItemIndex)
+            assertTrue(engines[1].wantsToPlay)
+            assertThat(events).contains("transition b ${FlowPlayer.MEDIA_ITEM_TRANSITION_REASON_SEEK}")
+        }
+
+    @Test
+    fun aRefusalTheProxySawMakesAnIoFailureABadHttpStatus() =
+        runTest {
+            val player = player()
+            val refusal = InvalidResponseCodeException(403, "https://rr1.googlevideo.com/videoplayback?itag=137")
+            player.setMediaSource(
+                LazyMediaSource("a", failureCause = { refusal }) { MediaSource("http://x", null, "a") },
+            )
+            var reported: PlaybackException? = null
+            player.addListener(
+                object : FlowPlayer.Listener {
+                    override fun onPlayerError(error: PlaybackException) {
+                        reported = error
+                    }
+                },
+            )
+            player.prepare()
+            runCurrent()
+            engines.single().failure = "read video (403)"
+            engines.single().failureCode = PlaybackException.ERROR_CODE_IO_UNSPECIFIED
+            advanceTimeBy(1_100)
+
+            assertEquals(PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS, reported?.errorCode)
+            assertEquals(refusal, reported?.cause)
         }
 
     @Test

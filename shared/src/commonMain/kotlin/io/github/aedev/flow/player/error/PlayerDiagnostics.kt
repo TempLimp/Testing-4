@@ -1,5 +1,6 @@
 package io.github.aedev.flow.player.error
 
+import io.github.aedev.flow.player.engine.PlaybackException
 import kotlinx.atomicfu.locks.SynchronizedObject
 import kotlinx.atomicfu.locks.synchronized
 import kotlinx.datetime.TimeZone
@@ -83,6 +84,23 @@ object PlayerDiagnostics {
                 message = message,
                 throwableType = throwable?.let { it::class.simpleName },
                 throwableMsg = throwable?.message?.take(200),
+            ),
+        )
+    }
+
+    fun logPlaybackError(
+        tag: String,
+        error: PlaybackException,
+    ) {
+        append(
+            LogEntry(
+                timestampMs = now(),
+                level = "E",
+                tag = tag,
+                message = "PlaybackException: ${error.message?.take(200)}",
+                errorCode = error.errorCode,
+                throwableType = error.cause?.let { it::class.simpleName },
+                throwableMsg = error.cause?.message?.take(200),
             ),
         )
     }

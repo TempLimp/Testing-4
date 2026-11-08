@@ -50,6 +50,7 @@ final class BundledEngine: NSObject, PlaybackEngine {
     private var videoQueuedUntil = CMTime.invalid
     private var pictureWidth = 0
     private var pictureHeight = 0
+    private var videoEnabled = true
     private var duration: Int64 = 0
     private var framesDecoded = 0
     private var framesRendered = 0
@@ -184,6 +185,40 @@ final class BundledEngine: NSObject, PlaybackEngine {
     /// Always exact: a seek decodes from the keyframe before the target and shows nothing before it.
     func setSeekExact(exact: Bool) {}
 
+    /// Audio-only playback stops decoding video; turned back on, both tracks refill from the clock, as a seek does.
+    func setVideoEnabled(enabled: Bool) {
+        lock.lock()
+        let changed = videoEnabled != enabled
+        videoEnabled = enabled
+        let ready = opened && !closed && video != nil
+        lock.unlock()
+        guard changed, ready else { return }
+        control.async { [self] in
+            if enabled {
+                seek(to: synchronizer.currentTime())
+            } else {
+                displayLayer.sampleBufferRenderer.stopRequestingMediaData()
+                videoQueue.sync {}
+                displayLayer.sampleBufferRenderer.flush()
+            }
+        }
+    }
+
+    /// One stream plays; a quality ladder's limits are AVPlayer's.
+    func setVideoLimits(maxWidth: Int32, maxHeight: Int32, maxBitrate: Int64) {}
+
+    func videoDecoderName() -> String? {
+        lock.lock()
+        defer { lock.unlock() }
+        return video?.decoderName
+    }
+
+    func droppedFrameCount() -> Int32 {
+        lock.lock()
+        defer { lock.unlock() }
+        return Int32(framesDropped)
+    }
+
     func hasRenderedFirstFrame() -> Bool {
         lock.lock()
         defer { lock.unlock() }
@@ -309,7 +344,7 @@ final class BundledEngine: NSObject, PlaybackEngine {
 
     private func startFeeding(_ generation: Int) {
         lock.lock()
-        let hasVideo = video != nil, hasAudio = audio != nil
+        let hasVideo = video != nil && videoEnabled, hasAudio = audio != nil
         lock.unlock()
         if hasVideo {
             displayLayer.sampleBufferRenderer.requestMediaDataWhenReady(on: videoQueue) { [weak self] in self?.feedVideo(generation) }
@@ -413,7 +448,8 @@ final class BundledEngine: NSObject, PlaybackEngine {
                 queue = true
                 audioQueuedMs += CMTimeGetSeconds(CMSampleBufferGetDuration(sample)) * 1000
                 audioQueuedUntil = end
-                if video == nil {
+                // With no video shown (none, or audio-only playback) the sound starts the clock.
+                if video == nil || !videoEnabled {
                     if seekLandedMs < 0 { seekLandedMs = Int64(CMTimeGetSeconds(time) * 1000) }
                     startsClock = clockParked
                 }
@@ -516,7 +552,7 @@ final class BundledEngine: NSObject, PlaybackEngine {
             fail("video renderer: \(displayLayer.sampleBufferRenderer.error?.localizedDescription ?? "failed")", code: 4003)
         }
         lock.lock()
-        let hasAudio = audio != nil, hasVideo = video != nil
+        let hasAudio = audio != nil, hasVideo = video != nil && videoEnabled
         let ended = (!hasVideo || videoEnded) && (!hasAudio || audioEnded)
         if playing && hasAudio && !audioEnded && audioQueuedUntil.isValid {
             let starving = CMTimeCompare(clock, audioQueuedUntil) >= 0

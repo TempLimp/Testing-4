@@ -69,6 +69,9 @@ interface FlowPlayer {
 
     fun removeMediaItem(index: Int)
 
+    /** Starts the item after the current one (prepared ahead by [addMediaSource]), as a SEEK transition. */
+    fun seekToNextMediaItem()
+
     fun prepare()
 
     fun mute()
@@ -145,5 +148,21 @@ data class VideoSize(
 class LazyMediaSource(
     val mediaId: String,
     val isLive: Boolean = false,
+    /** The last request the proxy saw refused for this source, made the cause of an IO error as Media3 makes it. */
+    val failureCause: () -> Throwable? = { null },
     val resolve: suspend () -> MediaSource,
 )
+
+/**
+ * Media3's `HttpDataSource.InvalidResponseCodeException`: a request answered with a non-2xx status. On iOS the proxy
+ * sees googlevideo's answer, so it is the proxy that records one (with the URL it asked) for the player's error.
+ */
+class InvalidResponseCodeException(
+    val responseCode: Int,
+    val url: String,
+) : Exception("Response code: $responseCode")
+
+/** Media3's `ParserException`: a container or manifest the player could not read, the cause of a parsing error. */
+class ParserException(
+    message: String?,
+) : Exception(message)

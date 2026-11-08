@@ -25,13 +25,17 @@ import kotlin.time.Clock
 object SabrMediaSourceFactory {
     private const val TAG = "SabrMediaSrcFactory"
 
-    /** Null when neither engine decodes the session's formats together. */
+    /**
+     * Null when neither engine decodes the session's formats together. [onError] is the orchestrator's, set before the
+     * session starts (upstream's MediaLoader sets it before `start()`), with the proxy session it belongs to.
+     */
     suspend fun create(
         info: SabrStreamInfo,
         videoId: String,
         durationMs: Long,
         startPositionMs: Long = 0L,
         mediaId: String = videoId,
+        onError: ((session: SabrProxySession, code: Int, message: String, recoverable: Boolean) -> Unit)? = null,
     ): SabrMediaSourceResult? {
         val engine = engineFor(info) ?: return null.also {
             Log.w(TAG, "No engine decodes SABR video ${info.videoMimeType} with audio ${info.audioMimeType}")
@@ -104,6 +108,7 @@ object SabrMediaSourceFactory {
                 startPositionMs = startPositionMs,
                 durationMs = durationMs,
             )
+        onError?.let { report -> orchestrator.onError = { code, message, recoverable -> report(session, code, message, recoverable) } }
         val mediaSource = LocalHlsProxy.publishSabr(session, engine, mediaId)
         // The proxy serves the media itself, so the orchestrator's ExoPlayer pipes would only fill: closed, they take nothing.
         orchestrator.start()
