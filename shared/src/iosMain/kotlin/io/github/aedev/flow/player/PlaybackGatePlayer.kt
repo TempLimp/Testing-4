@@ -3,6 +3,7 @@ package io.github.aedev.flow.player
 import io.github.aedev.flow.data.local.KeystoreSecretBox
 import io.github.aedev.flow.data.local.PlayerPreferences
 import io.github.aedev.flow.data.local.VideoQuality
+import io.github.aedev.flow.data.model.Video
 import io.github.aedev.flow.data.repository.SponsorBlockRepository
 import io.github.aedev.flow.player.engine.EngineControl
 import io.github.aedev.flow.player.engine.PlaybackEngine
@@ -74,7 +75,10 @@ internal class PlayerGate(
         val videos = InnerTubeStreamBridge.convertVideoFormats(result.videoFormats)
         val audios = InnerTubeStreamBridge.convertAudioFormats(result.audioFormats)
         val (video, audio) = ServicePlaybackStreamSelector.selectStreams(videos, audios, VideoQuality.AUTO, "original", "auto")
+        val shown = InnerTubeVideoMapper.videoFromResult(videoId, result, Video(id = videoId, title = "", channelName = "", channelId = "", thumbnailUrl = "", duration = 0, viewCount = 0L, uploadDate = ""))
         main {
+            // The player screen's part: the manager registers a video's streams for swapping under this video's id.
+            GlobalPlayerState.setCurrentVideo(shown)
             manager.initialize()
             manager.attachVideoSurface(surface, forceAttach = true)
             manager.setStreams(
@@ -258,16 +262,29 @@ internal class PlayerGate(
         val wasOn = preferences.sponsorBlockEnabled.first()
         main { manager.toggleSponsorBlock(true) }
         main { manager.reloadSponsorSegments(CAPTIONED_VIDEO_ID) }
-        waitFor(15.seconds) { main { manager.sponsorSegments.value }.isNotEmpty() }
+        val loaded = waitFor(15.seconds) { main { manager.sponsorSegments.value }.isNotEmpty() }
+        val loadedSegments = main { manager.sponsorSegments.value }.size
         stage("s10SponsorBlock: seek before")
-        main { manager.seekTo(((segment.startTime - 3) * 1000).toLong()) }
-        val skipped = waitFor(20.seconds) { position() >= (segment.endTime * 1000).toLong() - 500 }
+        val from = ((segment.startTime - 3) * 1000).toLong()
+        val end = (segment.endTime * 1000).toLong()
+        main { manager.seekTo(from) }
+        val seekedAt = TimeSource.Monotonic.markNow()
+        val startedBefore = position() < (segment.startTime * 1000).toLong()
+        val passed = waitFor(20.seconds) { position() >= end - 500 }
+        val tookMs = seekedAt.elapsedNow().inWholeMilliseconds
+        val positionAfter = position()
         main { manager.toggleSponsorBlock(wasOn) }
+        // Playing through takes (end - from) of real time; a skip gets there with the segment's length to spare.
+        val skipped = loaded && startedBefore && passed && tookMs < end - from - (end - (segment.startTime * 1000).toLong()) / 2
         return buildJsonObject {
             put("verdict", verdict(skipped))
             put("segment", "${segment.startTime}-${segment.endTime}")
-            put("positionAfter", position())
-            put("loadedSegments", main { manager.sponsorSegments.value }.size)
+            put("loadedSegments", loadedSegments)
+            put("seekedTo", from)
+            put("startedBefore", startedBefore)
+            put("passedEndAfterMs", tookMs)
+            put("playThroughMs", end - from)
+            put("positionAfter", positionAfter)
         }
     }
 
@@ -281,18 +298,25 @@ internal class PlayerGate(
         SystemFileSystem.sink(wall).buffered().use { it.writeString("on") }
         try {
             stop()
+            val since = kotlin.time.Clock.System.now().toEpochMilliseconds()
             val result = extraction(videoId) ?: return noVideo("s10Recovery", videoId)
             load(videoId, result, startPosition = 50_000)
             val continued = waitFor(90.seconds) { position() > 80_000 && main { manager.isPlaying() } }
-            val log = PlayerDiagnostics.entries().map { it.message }
+            val log = PlayerDiagnostics.entries().filter { it.timestampMs >= since }.map { it.message }
+            val walled = log.any { "403" in it }
+            val swapped = log.any { "swapped" in it }
+            val reloaded = log.any { "reloading at" in it }
             return buildJsonObject {
-                put("verdict", verdict(continued))
+                // Playing on proves the recovery only when the wall was met and a swap or a reload answered it.
+                put("verdict", verdict(continued && walled && (swapped || reloaded)))
                 put("client", result.usedClient.clientName)
-                put("walled", log.any { "fake wall" in it || "403" in it } || result.usedClient.clientName in setOf("VISIONOS", "ANDROID_VR"))
-                put("swapped", log.any { "swapped" in it })
-                put("reloaded", log.any { "reloading at" in it })
+                put("walled", walled)
+                put("swapped", swapped)
+                put("reloaded", reloaded)
+                put("quality", main { manager.playerState.value.effectiveQuality })
                 put("positionAfter", position())
                 put("error", main { manager.playerState.value.error })
+                put("log", log.filter { "403" in it || "swap" in it || "replacement" in it || "reloading" in it }.take(6).joinToString(" | "))
             }
         } finally {
             SystemFileSystem.delete(wall, mustExist = false)

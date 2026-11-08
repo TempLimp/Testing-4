@@ -439,6 +439,7 @@ class EnhancedPlayerManager private constructor() {
         trackSelector = playerFactory.createTrackSelector(videoSizeCap) { player }
         mediaLoader =
             MediaLoader(_playerState, surfaceManager).also { loader ->
+                loader.bitrateEstimate = { bandwidthMeter?.bitrateEstimate }
                 loader.onSabrFallbackNeeded = {
                     scope.launch {
                         Log.w(TAG, "SABR fallback triggered — requesting full re-extraction")
@@ -535,6 +536,19 @@ class EnhancedPlayerManager private constructor() {
                     }
                 },
             )
+    }
+
+    /**
+     * Upstream reads the source's kind as loadMedia returns; here the source resolves when the player prepares, so
+     * MediaLoader reports it then. A ladder the player adapts over turns QualityManager's own checks off; one rung of a
+     * ladder (the bundled engine's) becomes the stream Auto steps from.
+     */
+    private fun applyResolution(resolution: MediaLoader.Resolution) {
+        qualityManager?.isAdaptiveLadderActive = resolution.adaptiveLadder
+        val rung = resolution.videoStream ?: return
+        if (qualityManager?.isAdaptiveQualityEnabled != true) return
+        currentVideoStream = rung
+        qualityManager?.setCurrentStream(rung)
     }
 
     private fun initializePlayer() {
@@ -1213,6 +1227,8 @@ class EnhancedPlayerManager private constructor() {
             } else {
                 qualityManager?.adaptiveLadder(videoStream ?: currentVideoStream).orEmpty()
             }
+        // Not a ladder until the source says so when it resolves (a SABR session never does), as upstream's flag reads.
+        qualityManager?.isAdaptiveLadderActive = false
         val result =
             mediaLoader?.loadMedia(
                 player = player,
@@ -1237,8 +1253,8 @@ class EnhancedPlayerManager private constructor() {
                 mediaId = sessionMetadata?.mediaId.orEmpty(),
                 adaptiveLadder = ladder,
                 onStreams = { videoId, urls -> cacheManager?.registerStreams(videoId, urls) },
+                onResolved = ::applyResolution,
             ) ?: false
-        qualityManager?.isAdaptiveLadderActive = result && mediaLoader?.lastSourceWasAdaptiveLadder == true
         if (result) {
             qualityManager?.isDashSource = !currentDashManifestUrl.isNullOrEmpty()
         }
@@ -2046,7 +2062,9 @@ class EnhancedPlayerManager private constructor() {
         qualityManager?.preferredCodecKey = data.preferredCodec
         qualityManager?.isDashSource = !currentDashManifestUrl.isNullOrEmpty()
         qualityManager?.setCurrentStream(currentVideoStream)
-        qualityManager?.isAdaptiveLadderActive = AdaptiveDashManifest.build(ladder, data.durationSeconds) != null
+        // The preloaded source resolved ahead; on iOS a ladder may be one rung the bundled engine plays.
+        val preloaded = mediaLoader?.resolution(data.enrichedVideo.toVideoSessionMetadata().mediaId)
+        if (preloaded != null) applyResolution(preloaded) else qualityManager?.isAdaptiveLadderActive = AdaptiveDashManifest.build(ladder, data.durationSeconds) != null
         if (data.videoStream != null) {
             qualityManager?.setManualMode(VideoCodecUtils.qualityHeightFromStream(data.videoStream))
         }

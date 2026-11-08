@@ -41,6 +41,10 @@ class VideoPlaybackResolver(
     var resolvedAdaptiveLadder = false
         private set
 
+    /** The one video stream the last [resolve] plays when it was given a ladder it plays one rung of; null otherwise. */
+    var resolvedVideoStream: VideoStream? = null
+        private set
+
     /** One resolved half of what upstream merges: a rendition the proxy serves, or a source as it is. */
     private sealed interface Part {
         data class Rendition(
@@ -61,8 +65,10 @@ class VideoPlaybackResolver(
         durationSeconds: Long,
         isLiveStream: Boolean = false,
         asAdaptiveLadder: Boolean = false,
+        bitrateEstimate: Long? = null,
     ): MediaSource? {
         resolvedAdaptiveLadder = false
+        resolvedVideoStream = null
         Log.d(
             TAG,
             "Resolving playback: ${videoStreams.size} video streams, audio=${audioStream != null}, " +
@@ -112,11 +118,12 @@ class VideoPlaybackResolver(
             Log.w(TAG, "Audio stream ${audioStream.format?.mimeType} ${audioStream.codec} cannot be decoded beside $engine")
         }
         if (engine == PlaybackEngineKind.BUNDLED) {
-            return bundledSource(playableVideo, playableAudio, durationSeconds, asAdaptiveLadder)
+            return bundledSource(playableVideo, playableAudio, durationSeconds, asAdaptiveLadder, bitrateEstimate)
         }
 
         val ladder = if (asAdaptiveLadder) createLadder(playableVideo, durationSeconds) else null
         resolvedAdaptiveLadder = ladder != null
+        if (asAdaptiveLadder && ladder == null) resolvedVideoStream = playableVideo.firstOrNull()
         // A ladder that cannot be built starts on its lowest rung; Auto's own checks step up from there.
         val videoParts =
             ladder?.representations?.map { Part.Rendition(it, ladder.durationMs) }
@@ -170,6 +177,19 @@ class VideoPlaybackResolver(
         }
     }
 
+    /**
+     * Media3's AdaptiveTrackSelection start: the highest bitrate within [PlayerConfig.AUTO_BANDWIDTH_FRACTION] of the
+     * estimate, else the lowest rung. Rungs of unknown bitrate are never picked over a known fit.
+     */
+    internal fun startRung(
+        ladder: List<VideoStream>,
+        estimateBps: Long?,
+    ): VideoStream? {
+        val byBitrate = ladder.sortedByDescending { it.bitrate }
+        val budget = estimateBps?.let { (it * PlayerConfig.AUTO_BANDWIDTH_FRACTION).toLong() } ?: return byBitrate.lastOrNull()
+        return byBitrate.firstOrNull { it.bitrate in 1..budget } ?: byBitrate.lastOrNull()
+    }
+
     private val bestFirst =
         compareByDescending<VideoStream> { VideoCodecUtils.qualityHeightFromStream(it) }
             .thenBy { VideoCodecUtils.playbackCodecRank(it) }
@@ -177,16 +197,18 @@ class VideoPlaybackResolver(
 
     /**
      * The bundled engine's source: one video stream and the audio beside it, each published as a file. A ladder starts
-     * on its lowest rung, as an AVPlayer ladder that cannot be built does, and Auto's own checks step up from there.
+     * on the rung the bandwidth estimate covers ([startRung]); QualityManager's Auto checks step from there by reopening
+     * at the position, as upstream does for a stream that is not a ladder.
      */
-    // shortcut: the bundled engine plays one stream, not a ladder; S10's QualityManager switches rungs by reopening at the position.
     private suspend fun bundledSource(
         video: List<VideoStream>,
         audio: AudioStream?,
         durationSeconds: Long,
         asAdaptiveLadder: Boolean,
+        bitrateEstimate: Long?,
     ): MediaSource? {
-        val stream = if (asAdaptiveLadder) video.minByOrNull { it.bitrate } else video.sortedWith(bestFirst).firstOrNull()
+        val stream = if (asAdaptiveLadder) startRung(video, bitrateEstimate) else video.sortedWith(bestFirst).firstOrNull()
+        if (asAdaptiveLadder) resolvedVideoStream = stream
         val videoPart = stream?.let { progressivePart(it, durationSeconds) }
         val audioPart = audio?.let { progressivePart(it, durationSeconds) }
         if ((stream != null && videoPart == null) || (audio != null && audioPart == null)) {

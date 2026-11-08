@@ -58,9 +58,12 @@ class EnginePlayerTest {
             wantsToPlay = false
         }
 
+        /** An engine that takes a moment to reach a seek, as the bundled one waits out its feeds. */
+        var landsLater = false
+
         override fun seekTo(positionMs: Long) {
             seeks += positionMs
-            position = positionMs
+            if (!landsLater) position = positionMs
             if (state == FlowPlayer.STATE_ENDED) state = FlowPlayer.STATE_READY
         }
 
@@ -209,6 +212,29 @@ class EnginePlayerTest {
             runCurrent()
 
             assertEquals(PlayerConfig.MUSIC_MAX_BUFFER_MS, engines.single().source!!.forwardBufferMs)
+        }
+
+    @Test
+    fun theSeekTargetIsThePositionUntilTheEngineGetsThere() =
+        runTest {
+            val player = player()
+            player.setMediaSource(source("a"))
+            player.prepare()
+            runCurrent()
+            val engine =
+                engines.single().apply {
+                    becomeReady()
+                    position = 40_000
+                    landsLater = true
+                }
+
+            player.seekTo(15_000)
+            assertEquals(15_000L, player.currentPosition)
+
+            engine.position = 14_980
+            assertEquals(14_980L, player.currentPosition)
+            engine.position = 40_500
+            assertEquals(40_500L, player.currentPosition)
         }
 
     @Test

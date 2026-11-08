@@ -28,6 +28,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlin.math.abs
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 
 /**
  * ExoPlayer's role on iOS: a playlist of lazily resolved sources (the playing item and a next one prepared ahead), each
@@ -53,6 +57,11 @@ class EnginePlayer(
 
         /** Where the item starts, or stands while it has no engine (before preparing, after [stop]). */
         var positionMs: Long = 0
+
+        /** A seek the engine has not reached yet, where it was asked from, and when. */
+        var seekTargetMs: Long? = null
+        var seekFromMs: Long = 0
+        var seekMark: TimeMark? = null
     }
 
     private val listeners = mutableListOf<FlowPlayer.Listener>()
@@ -91,7 +100,7 @@ class EnginePlayer(
     override val isPlaying: Boolean get() = current?.engine?.isPlaying() == true
 
     override val currentPosition: Long
-        get() = current?.let { item -> item.engine?.currentPositionMs() ?: item.positionMs } ?: 0L
+        get() = current?.let(::positionOf) ?: 0L
 
     override val bufferedPosition: Long
         get() = current?.engine?.bufferedPositionMs() ?: currentPosition
@@ -185,6 +194,9 @@ class EnginePlayer(
         val target = positionMs.coerceAtLeast(0L)
         val engine = item.engine
         if (engine != null) {
+            item.seekFromMs = positionOf(item)
+            item.seekTargetMs = target
+            item.seekMark = TimeSource.Monotonic.markNow()
             engine.seekTo(target)
             if (state == STATE_ENDED) setState(STATE_BUFFERING)
         } else {
@@ -206,7 +218,7 @@ class EnginePlayer(
 
     override fun stop() {
         for (item in items) {
-            item.positionMs = item.engine?.currentPositionMs() ?: item.positionMs
+            item.positionMs = positionOf(item)
             closeEngine(item)
         }
         showEngine(null)
@@ -356,7 +368,23 @@ class EnginePlayer(
         Log.d(TAG, "opened ${item.source.mediaId} on ${resolved.engine} at ${item.positionMs}ms")
     }
 
+    /**
+     * Media3 reports a seek's target as the position until its player has taken the seek; an engine reports where it
+     * still is until it lands (the bundled engine waits out its feeds first). The target stands until the engine is
+     * nearer it than where the seek started, or for [SEEK_MASK_TIMEOUT] at most.
+     */
+    private fun positionOf(item: Item): Long {
+        val engine = item.engine ?: return item.positionMs
+        val reported = engine.currentPositionMs()
+        val target = item.seekTargetMs ?: return reported
+        val landed = abs(reported - target) < abs(reported - item.seekFromMs) || (item.seekMark?.elapsedNow() ?: SEEK_MASK_TIMEOUT) >= SEEK_MASK_TIMEOUT
+        if (!landed) return target
+        item.seekTargetMs = null
+        return reported
+    }
+
     private fun closeEngine(item: Item) {
+        item.seekTargetMs = null
         item.resolving?.cancel()
         item.resolving = null
         item.engine?.close()
@@ -478,7 +506,7 @@ class EnginePlayer(
         item: Item,
         error: PlaybackException,
     ) {
-        item.positionMs = item.engine?.currentPositionMs() ?: item.positionMs
+        item.positionMs = positionOf(item)
         closeEngine(item)
         showEngine(null)
         resetPictureState()
@@ -525,6 +553,7 @@ class EnginePlayer(
     }
 
     private companion object {
+        val SEEK_MASK_TIMEOUT = 2.seconds
         const val TAG = "EnginePlayer"
         const val TICK_MS = 250L
         const val IDLE_TICK_MS = 1_000L

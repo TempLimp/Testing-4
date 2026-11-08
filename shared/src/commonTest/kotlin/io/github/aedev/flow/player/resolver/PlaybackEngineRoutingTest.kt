@@ -146,4 +146,22 @@ class PlaybackEngineRoutingTest {
             assertEquals(false, resolver.resolvedAdaptiveLadder)
             assertTrue(source.uri.endsWith("/0.webm") && source.audioUri.orEmpty().endsWith("/1.webm"), "$source")
         }
+
+    @Test
+    fun aBundledLadderStartsOnTheRungTheEstimateCoversAndSaysWhichItPlays() =
+        runBlocking {
+            val ladder = listOf(vp9(480, 450_000), vp9(720, 900_000), vp9(1080, 1_875_000), vp9(1440, 6_000_000))
+            val resolver = VideoPlaybackResolver("v")
+
+            // Media3's start: the highest bitrate within 70 % of the estimate (3 Mbps of 4.3).
+            assertNotNull(resolver.resolve(ladder, opus, null, null, 212, asAdaptiveLadder = true, bitrateEstimate = 4_300_000))
+            assertEquals(1080, resolver.resolvedVideoStream?.let(VideoCodecUtils::qualityHeightFromStream))
+
+            assertNotNull(resolver.resolve(ladder, opus, null, null, 212, asAdaptiveLadder = true, bitrateEstimate = 100_000))
+            assertEquals(480, resolver.resolvedVideoStream?.let(VideoCodecUtils::qualityHeightFromStream))
+
+            // A pinned quality is not a ladder the player steps over.
+            assertNotNull(resolver.resolve(listOf(vp9(720, 900_000)), opus, null, null, 212))
+            assertNull(resolver.resolvedVideoStream)
+        }
 }

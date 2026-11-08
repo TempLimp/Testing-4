@@ -42,6 +42,7 @@ class MediaLoader(
     companion object {
         private const val TAG = "MediaLoader"
         private const val SUBTITLE_TRACK_ID_PREFIX = "flow-subtitle-"
+        private const val MAX_RESOLUTIONS = 4
         private val SubtitleTrackIdPattern = Regex("""(?:^|:)$SUBTITLE_TRACK_ID_PREFIX(\d+)$""")
 
         internal fun subtitleTrackId(index: Int): String = "$SUBTITLE_TRACK_ID_PREFIX$index"
@@ -62,9 +63,22 @@ class MediaLoader(
     private var activeSabr: SabrMediaSourceResult? = null
     private var lastSourceWasSabr = false
 
-    /** Whether the media last loaded is a quality ladder the player adapts over by itself. */
-    var lastSourceWasAdaptiveLadder = false
-        private set
+    /**
+     * What a source played once it was resolved (which happens when the player prepares, not in [loadMedia]): a
+     * quality ladder the player adapts over by itself, or [videoStream], the one rung of a ladder it plays.
+     */
+    data class Resolution(
+        val adaptiveLadder: Boolean,
+        val videoStream: VideoStream?,
+    )
+
+    private val resolutions = LinkedHashMap<String, Resolution>()
+
+    /** How the source last built for [mediaId] resolved, when it has. */
+    fun resolution(mediaId: String): Resolution? = resolutions[mediaId]
+
+    /** The bandwidth estimate a ladder the player cannot adapt over starts from. */
+    var bitrateEstimate: () -> Long? = { null }
 
     var onSabrFallbackNeeded: (() -> Unit)? = null
 
@@ -98,6 +112,7 @@ class MediaLoader(
         mediaId: String = "",
         adaptiveLadder: List<VideoStream> = emptyList(),
         onStreams: (videoId: String, urls: Collection<String?>) -> Unit = { _, _ -> },
+        onResolved: (Resolution) -> Unit = {},
     ): Boolean {
         val finalDuration =
             when {
@@ -117,7 +132,6 @@ class MediaLoader(
             }
             Log.d(TAG, "Resolving media with VideoPlaybackResolver for duration ${finalDuration}s")
             lastSourceWasSabr = false
-            lastSourceWasAdaptiveLadder = false
             val mediaSource =
                 createMediaSource(
                     videoStream = videoStream,
@@ -138,7 +152,7 @@ class MediaLoader(
                     innerTubeAudioFormats = innerTubeAudioFormats,
                     mediaId = mediaId,
                     adaptiveLadder = adaptiveLadder,
-                    onAdaptiveLadder = { lastSourceWasAdaptiveLadder = it },
+                    onResolved = onResolved,
                     onStreams = onStreams,
                     onNothingToPlay = {
                         Log.e(TAG, "Failed to resolve media source - streams invalid")
@@ -247,7 +261,7 @@ class MediaLoader(
         innerTubeAudioFormats: List<PlayerResponse.StreamingData.Format> = emptyList(),
         mediaId: String = "",
         adaptiveLadder: List<VideoStream> = emptyList(),
-        onAdaptiveLadder: (Boolean) -> Unit = {},
+        onResolved: (Resolution) -> Unit = {},
         onStreams: (videoId: String, urls: Collection<String?>) -> Unit,
         onNothingToPlay: (() -> Unit)?,
     ): LazyMediaSource? {
@@ -303,7 +317,15 @@ class MediaLoader(
                             durationSeconds = finalDuration,
                             isLiveStream = isLiveStream && !audioOnly,
                             asAdaptiveLadder = useLadder,
-                        ).also { onAdaptiveLadder(resolver.resolvedAdaptiveLadder) }
+                            bitrateEstimate = bitrateEstimate(),
+                        ).also {
+                            val resolution = Resolution(resolver.resolvedAdaptiveLadder, resolver.resolvedVideoStream)
+                            resolutions.remove(mediaId)
+                            resolutions[mediaId] = resolution
+                            // Only the playing and the preloaded videos are ever asked about.
+                            while (resolutions.size > MAX_RESOLUTIONS) resolutions.remove(resolutions.keys.first())
+                            onResolved(resolution)
+                        }
                 } else {
                     null
                 }

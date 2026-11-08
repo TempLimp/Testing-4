@@ -5,6 +5,7 @@ import io.github.aedev.flow.data.model.SponsorBlockSegment
 import io.github.aedev.flow.innertube.models.response.PlayerResponse
 import io.github.aedev.flow.player.engine.EngineControl
 import io.github.aedev.flow.player.engine.FlowPlayer
+import io.github.aedev.flow.player.resolver.LocalHlsProxy
 import io.github.aedev.flow.player.resolver.MediaSource
 import io.github.aedev.flow.player.resolver.PlaybackEngineKind
 import io.github.aedev.flow.player.stream.CaptionFormat
@@ -161,6 +162,13 @@ class EnhancedPlayerManagerTest {
             url = "https://rr1.googlevideo.com/videoplayback?itag=140&id=abc&lmt=1&clen=2000000",
         )
 
+    private fun rung(
+        itag: Int,
+        height: Int,
+        bitrate: Int,
+        mimeType: String,
+    ) = format(itag, height).copy(mimeType = mimeType, bitrate = bitrate, averageBitrate = bitrate)
+
     private val videoStreams = InnerTubeStreamBridge.convertVideoFormats(listOf(format(22, 720), format(18, 360)))
     private val audioStreams = InnerTubeStreamBridge.convertAudioFormats(listOf(audio))
 
@@ -225,6 +233,60 @@ class EnhancedPlayerManagerTest {
             assertTrue(engines.first().closed)
             assertThat(engines.last().seeks).contains(42_000L)
             assertEquals(360, manager.playerState.value.currentQuality)
+        }
+
+    /** An Auto load: no stream pinned, the ladder left to the player. */
+    private suspend fun TestScope.loadAuto(ladder: List<PlayerResponse.StreamingData.Format>) {
+        manager.setStreams(
+            videoId = "auto",
+            videoStream = null,
+            audioStream = audioStreams.first(),
+            videoStreams = InnerTubeStreamBridge.convertVideoFormats(ladder),
+            audioStreams = audioStreams,
+            subtitles = emptyList(),
+            durationSeconds = 120,
+            startPosition = 0,
+        )
+        runCurrent()
+        advanceTimeBy(100)
+    }
+
+    /** The proxy reports a googlevideo transfer, as it does to the bandwidth meter. */
+    private fun measured(bitsPerSecond: Long) = LocalHlsProxy.transferListener!!.invoke(bitsPerSecond * 10 / 8, 10_000)
+
+    @Test
+    fun anAvPlayerLadderAdaptsByItselfSoAutoDoesNotReopenIt() =
+        managerTest {
+            val h264 = "video/mp4; codecs=\"avc1.64001F\""
+            loadAuto(listOf(rung(137, 1080, 2_500_000, h264), rung(22, 720, 1_200_000, h264), rung(18, 360, 300_000, h264)))
+            val engine = engines.single()
+            assertEquals(PlaybackEngineKind.AVPLAYER, engine.kind)
+            assertTrue(engine.source!!.uri.endsWith("/master.m3u8"))
+
+            // Far too slow for the rung Auto started from: QualityManager would step down by reopening a single stream.
+            measured(100_000)
+            engine.becomeReady()
+            advanceTimeBy(2_000)
+
+            assertEquals(1, engines.size)
+        }
+
+    @Test
+    fun autoOnTheBundledEngineStepsUpFromTheRungItPlaysByReopeningAtThePosition() =
+        managerTest {
+            val vp9 = "video/webm; codecs=\"vp9\""
+            loadAuto(listOf(rung(271, 1440, 6_000_000, vp9), rung(248, 1080, 1_875_000, vp9), rung(247, 720, 900_000, vp9), rung(244, 480, 450_000, vp9)))
+            val first = engines.single()
+            assertEquals(PlaybackEngineKind.BUNDLED, first.kind)
+
+            measured(10_000_000)
+            first.becomeReady()
+            first.position = 10_000
+            advanceTimeBy(2_000)
+
+            assertEquals(2, engines.size)
+            assertTrue(first.closed)
+            assertThat(engines.last().seeks).contains(10_000L)
         }
 
     @Test
