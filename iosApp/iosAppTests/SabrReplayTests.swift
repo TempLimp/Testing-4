@@ -129,7 +129,7 @@ final class SabrReplayTests: XCTestCase {
         var created: SabrMediaSourceResult?
         var failure: Error?
         var done = false
-        SabrMediaSourceFactory.shared.create(info: info, videoId: text("videoId"), durationMs: int("durationMs"), startPositionMs: 0, mediaId: name) { result, error in
+        SabrMediaSourceFactory.shared.create(info: info, videoId: text("videoId"), durationMs: int("durationMs"), startPositionMs: 0, mediaId: name, onError: nil) { result, error in
             created = result
             failure = error
             done = true

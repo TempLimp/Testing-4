@@ -414,6 +414,7 @@ class EnhancedPlayerManager private constructor() {
         if (player != null) return
         withContext(Dispatchers.IO) {
             preferences.videoLoopEnabled.first()
+            playerFactory.preloadPreferences(preferences)
             PlayerStrings.preload(listOf(Res.string.error_unable_to_load_next_video, Res.string.error_unable_to_play_quality_options))
         }
         withContext(Dispatchers.Main) { initialize() }
@@ -538,7 +539,7 @@ class EnhancedPlayerManager private constructor() {
 
     private fun initializePlayer() {
         val engines = engineFactory ?: error("no engine factory registered: the app sets EnhancedPlayerManager.engineFactory")
-        player = EnginePlayer(scope, engines)
+        player = EnginePlayer(scope, playerFactory.createLoadControl(preferences), engines)
         player?.addListener(PlaybackAnalyticsLogger(TAG, player = { player }) { currentVideoId })
         player?.addListener(
             RenderedFirstFrameListener(renderedMediaId = { player?.currentMediaId }, currentVideoId = { currentVideoId }) { videoId ->
@@ -3115,6 +3116,7 @@ class EnhancedPlayerManager private constructor() {
         shownCaption = null
         player?.release()
         player = null
+        playerFactory.clearPreferences()
         trackSelector = null
         cacheManager?.release()
         cacheManager = null

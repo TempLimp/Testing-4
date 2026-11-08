@@ -343,7 +343,11 @@ class StoreScopeGuardTest {
                 ("cache_dir" to "main:utils/cipher/CipherWebView.kt") to
                     "player.js is evaluated in JavaScriptCore as a string; nothing is written to the cache folder",
                 ("webview" to "main:utils/cipher/CipherWebView.kt") to "JavaScriptCore keeps no web data",
-            )
+            ) +
+                listOf("shared_prefs", "files_dir", "external_files_dir", "public_dir").associate { kind ->
+                    (kind to "main:data/video/VideoDownloadManager.kt") to
+                        "S10 pulled forward the read half the player needs; S18 ports the half that writes these stores"
+                }
 
         val SCOPES = setOf("PROFILE", "DEVICE", "CACHE", "DEFAULT_ONLY")
         val PROFILE_CLASSES = setOf("settings", "library", "private", "identity")

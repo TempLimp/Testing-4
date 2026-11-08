@@ -1,5 +1,6 @@
 package io.github.aedev.flow.player.factory
 
+import io.github.aedev.flow.data.local.PlayerPreferences
 import io.github.aedev.flow.player.config.PlayerConfig
 import io.github.aedev.flow.player.config.VideoSizeCap
 import io.github.aedev.flow.player.config.VideoTrackParameters
@@ -10,6 +11,8 @@ import io.github.aedev.flow.player.quality.VideoTrackSelector
 import io.github.aedev.flow.network.currentNetwork
 import kotlinx.atomicfu.locks.SynchronizedObject
 import kotlinx.atomicfu.locks.synchronized
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import kotlin.math.sqrt
 import kotlin.time.TimeSource
 
@@ -152,8 +155,48 @@ class EngineTrackSelector(
     private fun Int.limitOrZero(): Int = if (this == Int.MAX_VALUE || this <= 0) 0 else this
 }
 
-/** Upstream's PlayerFactory, as far as iOS builds anything: the meter and the selector the player is made with. */
+/** Upstream's PlayerFactory, as far as iOS builds anything: the meter, the selector and the load control the player is made with. */
 class PlayerFactory {
+    private class CachedPrefs(
+        val minBufferMs: Int,
+        val maxBufferMs: Int,
+        val bufferForPlaybackMs: Int,
+        val bufferRebufferMs: Int,
+    )
+
+    private var cachedPrefs: CachedPrefs? = null
+
+    private suspend fun readPrefs(prefs: PlayerPreferences) =
+        CachedPrefs(
+            minBufferMs = prefs.minBufferMs.first(),
+            maxBufferMs = prefs.maxBufferMs.first(),
+            bufferForPlaybackMs = prefs.bufferForPlaybackMs.first(),
+            bufferRebufferMs = prefs.bufferForPlaybackAfterRebufferMs.first(),
+        )
+
+    private fun ensurePrefs(prefs: PlayerPreferences): CachedPrefs =
+        cachedPrefs ?: runBlocking { readPrefs(prefs) }.also { cachedPrefs = it }
+
+    /** Reads the buffer settings off the main thread, so building the player does not block on them. */
+    suspend fun preloadPreferences(prefs: PlayerPreferences) {
+        if (cachedPrefs == null) cachedPrefs = readPrefs(prefs)
+    }
+
+    /** Drops the preferences read for the released player, so the next one is built with today's settings. */
+    fun clearPreferences() {
+        cachedPrefs = null
+    }
+
+    fun createLoadControl(prefs: PlayerPreferences): LoadControl {
+        val cached = ensurePrefs(prefs)
+        return LoadControlFactory.forVideo(
+            minMs = cached.minBufferMs,
+            maxMs = cached.maxBufferMs,
+            playbackMs = cached.bufferForPlaybackMs,
+            rebufferMs = cached.bufferRebufferMs,
+        )
+    }
+
     fun createBandwidthMeter(): ProxyBandwidthMeter = ProxyBandwidthMeter()
 
     fun createTrackSelector(

@@ -8,7 +8,9 @@ import platform.AVFoundation.AVAudioTimePitchAlgorithmSpectral
 import platform.AVFoundation.AVMediaTypeVideo
 import platform.AVFoundation.AVPlayerItemTrack
 import platform.AVFoundation.mediaType
+import platform.AVFoundation.preferredForwardBufferDuration
 import platform.AVFoundation.preferredMaximumResolution
+import platform.AVFoundation.setPreferredForwardBufferDuration
 import platform.AVFoundation.preferredPeakBitRate
 import platform.AVFoundation.setPreferredMaximumResolution
 import platform.AVFoundation.setPreferredPeakBitRate
@@ -163,6 +165,7 @@ class AvPlayerEngine : PlaybackEngine {
         val next = AVPlayerItem(asset = AVURLAsset(uRL = NSURL.URLWithString(source.uri)!!, options = null))
         // Speed keeps the pitch, as Media3's PlaybackParameters do.
         next.audioTimePitchAlgorithm = AVAudioTimePitchAlgorithmSpectral
+        if (source.forwardBufferMs > 0) next.preferredForwardBufferDuration = source.forwardBufferMs / 1000.0
         item = next
         applyLimits(next)
         endObserver =

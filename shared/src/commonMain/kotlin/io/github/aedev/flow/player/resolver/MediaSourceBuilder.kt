@@ -7,7 +7,8 @@ package io.github.aedev.flow.player.resolver
  * engine, the proxy's file URLs: [uri] the video (or the audio when there is none) and [audioUri] the
  * audio beside it, with [mimeType] the container of [uri]. A [streamed] source (a SABR session's tracks) arrives as
  * the engine reads it, as upstream's progressive pipes did: read in order, it cannot seek; the player rebuilds the session
- * to seek, as upstream does.
+ * to seek, as upstream does. [forwardBufferMs] is the player's LoadControl max buffer, which AVPlayer takes as its
+ * preferred forward buffer (0: AVPlayer's own choice).
  */
 data class MediaSource(
     val uri: String,
@@ -18,6 +19,7 @@ data class MediaSource(
     val audioUri: String? = null,
     val durationMs: Long = 0,
     val streamed: Boolean = false,
+    val forwardBufferMs: Int = 0,
 )
 
 /**

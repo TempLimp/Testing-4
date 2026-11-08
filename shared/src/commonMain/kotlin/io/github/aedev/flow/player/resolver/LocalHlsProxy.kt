@@ -30,6 +30,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.ktor.util.collections.ConcurrentMap
 import io.ktor.utils.io.copyTo
+import io.ktor.utils.io.readAvailable
 import io.ktor.utils.io.writeFully
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
@@ -100,6 +101,9 @@ object LocalHlsProxy {
 
     /** Told each googlevideo media transfer's size and time, as Media3 tells its bandwidth meter. */
     var transferListener: ((bytes: Long, elapsedMs: Long) -> Unit)? = null
+
+    /** The media cache in front of googlevideo (Media3's CacheDataSource over SimpleCache); null for none. */
+    var mediaCache: io.github.aedev.flow.player.cache.ProxyMediaCache? = null
 
     /** The last googlevideo refusal of a source this proxy published at [uri], as Media3's error cause would carry it. */
     fun refusalFor(uri: String): InvalidResponseCodeException? = PUBLISHED_ID.find(uri)?.groupValues?.get(1)?.let { refusals[it] }
@@ -318,6 +322,21 @@ object LocalHlsProxy {
         val id = call.parameters["id"].orEmpty()
         val position = range?.let { BYTE_RANGE.find(it)?.groupValues?.get(1)?.toLongOrNull() } ?: 0L
         val path = dataPath
+        val contentType = ContentType.parse(rendition.mimeType.ifEmpty { if (rendition.isAudio) "audio/mp4" else "video/mp4" })
+        // The cache key is the URL the stream was published with, as Media3's cache sits outside its URL swap.
+        val cacheKey = rendition.url
+        val total = StreamDenialClassifier.queryParam(rendition.url, "clen")?.toLongOrNull()
+        val requestedLast = range?.let { BYTE_RANGE.find(it)?.groupValues?.get(2)?.toLongOrNull() } ?: total?.minus(1)
+        val cache = mediaCache
+        if (cache != null && requestedLast != null) {
+            val cached = cache.read(cacheKey, position, requestedLast)
+            if (cached != null) {
+                call.response.header(HttpHeaders.AcceptRanges, "bytes")
+                call.response.header(HttpHeaders.ContentRange, "bytes $position-$requestedLast/${total ?: "*"}")
+                call.respondBytesWriter(contentType, HttpStatusCode.PartialContent, cached.size.toLong()) { writeFully(cached, 0, cached.size) }
+                return
+            }
+        }
         var url = path?.resolveUrl(rendition.url) ?: rendition.url
         // One retry, as RefusedStreamRetryDataSource reopens once a replacement for the refused file is recorded.
         var retried = false
@@ -334,12 +353,30 @@ object LocalHlsProxy {
                         refusals.remove(id)
                         upstream.headers[HttpHeaders.ContentRange]?.let { call.response.header(HttpHeaders.ContentRange, it) }
                         call.response.header(HttpHeaders.AcceptRanges, "bytes")
+                        // A server that ignores the range sends the file from its start, which is not what [position] names.
+                        val writer = cache?.takeIf { status == HttpStatusCode.PartialContent || range == null }?.writer(cacheKey, position)
                         call.respondBytesWriter(
-                            contentType = ContentType.parse(rendition.mimeType.ifEmpty { if (rendition.isAudio) "audio/mp4" else "video/mp4" }),
+                            contentType = contentType,
                             status = status,
                             contentLength = upstream.headers[HttpHeaders.ContentLength]?.toLongOrNull(),
                         ) {
-                            val bytes = upstream.bodyAsChannel().copyTo(this)
+                            val body = upstream.bodyAsChannel()
+                            val buffer = ByteArray(COPY_CHUNK)
+                            var bytes = 0L
+                            try {
+                                while (true) {
+                                    val read = body.readAvailable(buffer, 0, buffer.size)
+                                    if (read < 0) break
+                                    if (read == 0) continue
+                                    writeFully(buffer, 0, read)
+                                    writer?.write(buffer, 0, read)
+                                    bytes += read
+                                }
+                                writer?.commit()
+                            } catch (e: Throwable) {
+                                writer?.abort()
+                                throw e
+                            }
                             transferListener?.invoke(bytes, started.elapsedNow().inWholeMilliseconds)
                         }
                         null
@@ -463,6 +500,7 @@ object LocalHlsProxy {
 
     private const val HLS_MIME = "application/vnd.apple.mpegurl"
     private const val LOCAL_CHUNK = 256 * 1024
+    private const val COPY_CHUNK = 64 * 1024
     private val PUBLISHED_ID = Regex("""/[pf]/(\d+)/""")
     private val BYTE_RANGE = Regex("""bytes=(\d+)-(\d*)""")
 }

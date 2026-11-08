@@ -12,6 +12,7 @@ import io.github.aedev.flow.player.engine.FlowPlayer.Companion.STATE_ENDED
 import io.github.aedev.flow.player.engine.FlowPlayer.Companion.STATE_IDLE
 import io.github.aedev.flow.player.engine.FlowPlayer.Companion.STATE_READY
 import io.github.aedev.flow.player.engine.FlowPlayer.Companion.TIME_UNSET
+import io.github.aedev.flow.player.factory.LoadControl
 import io.github.aedev.flow.player.renderer.subtitle.Cue
 import io.github.aedev.flow.player.renderer.subtitle.Subtitle
 import io.github.aedev.flow.player.resolver.MediaSource
@@ -38,6 +39,8 @@ import kotlinx.coroutines.launch
  */
 class EnginePlayer(
     private val scope: CoroutineScope,
+    /** ExoPlayer.Builder.setLoadControl: its max buffer reaches each engine with the source. */
+    private val loadControl: LoadControl? = null,
     private val createEngine: (PlaybackEngineKind) -> EngineControl,
 ) : FlowPlayer {
     private class Item(
@@ -344,7 +347,7 @@ class EnginePlayer(
         engine.setSeekExact(seekExact)
         engine.setVideoEnabled(videoEnabled)
         engine.setVideoLimits(videoLimits.first, videoLimits.second, videoLimits.third)
-        engine.prepare(resolved)
+        engine.prepare(loadControl?.let { resolved.copy(forwardBufferMs = it.maxBufferMs) } ?: resolved)
         if (item.positionMs > 0) engine.seekTo(item.positionMs)
         if (item === current) {
             showEngine(engine)

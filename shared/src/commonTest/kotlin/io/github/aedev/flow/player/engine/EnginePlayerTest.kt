@@ -1,6 +1,8 @@
 package io.github.aedev.flow.player.engine
 
 import androidx.compose.ui.text.AnnotatedString
+import io.github.aedev.flow.player.config.PlayerConfig
+import io.github.aedev.flow.player.factory.LoadControlFactory
 import io.github.aedev.flow.player.renderer.subtitle.Cue
 import io.github.aedev.flow.player.renderer.subtitle.CuesWithTiming
 import io.github.aedev.flow.player.renderer.subtitle.CuesWithTimingSubtitle
@@ -196,6 +198,17 @@ class EnginePlayerTest {
             assertTrue(player.isPlaying)
             assertThat(events).containsAtLeastElementsIn(listOf("state 2", "state 3", "playing true", "first frame", "size 1920x1080"))
             assertEquals(VideoSize(1920, 1080), player.videoSize)
+        }
+
+    @Test
+    fun theLoadControlsMaxBufferReachesTheEngineWithTheSource() =
+        runTest {
+            val player = EnginePlayer(backgroundScope, LoadControlFactory.forMusic()) { kind -> FakeEngine(kind).also { engines += it } }
+            player.setMediaSource(source("a"))
+            player.prepare()
+            runCurrent()
+
+            assertEquals(PlayerConfig.MUSIC_MAX_BUFFER_MS, engines.single().source!!.forwardBufferMs)
         }
 
     @Test
