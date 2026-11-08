@@ -123,6 +123,8 @@ final class BundledEngineTests: XCTestCase {
         engine.seekTo(positionMs: 1_000)
         XCTAssertNotEqual(engine.playbackState(), 4, "a seek back leaves the end")
         engine.setPlaybackRate(rate: 0.5)
+        // The seek runs on the engine's queue: until its first frame lands the clock still reads the end.
+        waitUntil(engine, reaches: 1_000) { $0.stats().seekLandedMs >= 0 }
         let (slow, _) = clockRate(engine, from: 1_300, to: 2_300)
         XCTAssertEqual(slow, 0.5, accuracy: 0.1, "clock ran at \(slow)x real time at 0.5x")
         record("speed", ["at2x": clock, "at05x": slow, "width": engine.videoWidth()])
