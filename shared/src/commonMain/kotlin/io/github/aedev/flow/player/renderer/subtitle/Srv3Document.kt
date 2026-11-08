@@ -22,7 +22,7 @@ internal data class Srv3Window(
     val justify: Int = JUSTIFY_CENTER,
     /**
      * Whether the document actually declared a `<wp>` for the paragraph, as opposed to these
-     * defaults. Cues without one must leave [androidx.media3.common.text.Cue.line] unset:
+     * defaults. Cues without one must leave [Cue.line] unset:
      * SubtitleView only applies its bottom-padding fraction - and so the user's subtitle position
      * setting - to cues that carry no explicit line.
      */
