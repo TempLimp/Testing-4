@@ -33,3 +33,22 @@ What run 1 showed, fixed in `fix(player): S10 part 7`:
 3. **Recovery:** the fake wall refused a read-ahead past 4 MB of the 144p file, which the engine never needed before 80 s.
    No swap was tried either: the gate never set the current video, which the player screen sets and under which the
    manager registers streams for swapping. The item now requires the wall's 403 and a swap or a reload.
+
+## Run 2: `iphone-playback-gate-2.json` / `.webp`
+
+Build `63f68f8` (Device IPA run 42521728290), 2026-11-09, after part 7's fixes. Verdict **PASS**. The user heard sound.
+
+| Item | Result |
+|---|---|
+| Regression items | Pass, as in run 1. SABR VP9 2160p60: 1206 frames, 0 dropped, real time 1.0000 |
+| `s10Play` | Auto opened at 1080p60 H.264 in AVPlayer (upstream's Auto pick where 1080p fits the starting 5 Mbps estimate), first frame, real time 1.0002 |
+| `s10Quality` | 720p reopened at the position (6299 → 6455 ms), 1280x720, back to Auto |
+| `s10Speed` | AVPlayer this time: 2.0000x, 0.5001x, 0.2499x |
+| `s10Seek` | Landed at 60.000 s; resumed at 30.024 s |
+| `s10Captions` | A cue at the position from the translated (Afrikaans) and the auto-generated English tracks |
+| `s10SponsorBlock` | 3 segments loaded. Seeked to 15.5 s, 3 s before the 18.5-24.8 s sponsor segment; the position passed the segment's end 2.28 s later (playing through takes 9.31 s) and landed at 24.813 s. **A skip** |
+| `s10Recovery` | Auto on the bundled engine opened VP9 1440p60 at 50 s and stepped up to 2160p60 within a second, by reopening at the position. The fake wall refused VISIONOS's itag 308 past 60 s of the file; the swapper fetched TV_TIZEN streams and **swapped** the refused URLs, and playback went on to 80.3 s with no player error |
+| `s10SabrFallback` | Forced SABR stopped at 60 s, as in run 1; the session was closed and direct formats (AVPlayer 1080p) played from 59.9 s to 90.1 s |
+
+Not covered by either run: AirPlay (no receiver at hand), a reload after a swap fails (`fake_stream_wall_all`), and
+captions drawn on screen (S14's overlay).
