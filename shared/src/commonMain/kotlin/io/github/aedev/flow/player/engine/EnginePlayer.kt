@@ -1,9 +1,12 @@
 package io.github.aedev.flow.player.engine
 
+import io.github.aedev.flow.player.engine.FlowPlayer.Companion.DISCONTINUITY_REASON_AUTO_TRANSITION
+import io.github.aedev.flow.player.engine.FlowPlayer.Companion.DISCONTINUITY_REASON_SEEK
 import io.github.aedev.flow.player.engine.FlowPlayer.Companion.MEDIA_ITEM_TRANSITION_REASON_AUTO
 import io.github.aedev.flow.player.engine.FlowPlayer.Companion.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED
 import io.github.aedev.flow.player.engine.FlowPlayer.Companion.MEDIA_ITEM_TRANSITION_REASON_REPEAT
 import io.github.aedev.flow.player.engine.FlowPlayer.Companion.MEDIA_ITEM_TRANSITION_REASON_SEEK
+import io.github.aedev.flow.player.engine.FlowPlayer.Companion.PLAY_WHEN_READY_CHANGE_REASON_REMOTE
 import io.github.aedev.flow.player.engine.FlowPlayer.Companion.PLAY_WHEN_READY_CHANGE_REASON_USER_REQUEST
 import io.github.aedev.flow.player.engine.FlowPlayer.Companion.REPEAT_MODE_OFF
 import io.github.aedev.flow.player.engine.FlowPlayer.Companion.REPEAT_MODE_ONE
@@ -88,14 +91,50 @@ class EnginePlayer(
 
     override val playbackState: Int get() = state
 
-    override var playWhenReady: Boolean = false
-        set(value) {
-            if (field == value) return
-            field = value
-            current?.engine?.let { if (value) it.play() else it.pause() }
-            notify { it.onPlayWhenReadyChanged(value, PLAY_WHEN_READY_CHANGE_REASON_USER_REQUEST) }
-            tick()
-        }
+    private var wantsToPlay = false
+
+    override var playWhenReady: Boolean
+        get() = wantsToPlay
+        set(value) = setPlayWhenReady(value, PLAY_WHEN_READY_CHANGE_REASON_USER_REQUEST)
+
+    /** Media3's setPlayWhenReady with the reason its listeners hear: an audio focus loss and a noisy route pause too. */
+    fun setPlayWhenReady(
+        value: Boolean,
+        reason: Int,
+    ) {
+        // A play asked for while suppressed takes the audio back, as a play request regains focus on Android.
+        if (value && isPlaybackSuppressed && reason == PLAY_WHEN_READY_CHANGE_REASON_USER_REQUEST) onPlayWhileSuppressed?.invoke()
+        if (wantsToPlay == value) return
+        wantsToPlay = value
+        current?.engine?.let { if (shouldPlay) it.play() else it.pause() }
+        notify { it.onPlayWhenReadyChanged(value, reason) }
+        tick()
+    }
+
+    /**
+     * Media3's playback suppression (a transient audio focus loss): the engine stops while [playWhenReady] keeps the wish
+     * to play, which resumes when the suppression ends. On iOS an audio session interruption (a call, Siri) is one.
+     */
+    var isPlaybackSuppressed = false
+        private set
+
+    /** Asked to lift the suppression when the user plays meanwhile; the platform does if it gets the audio back. */
+    var onPlayWhileSuppressed: (() -> Unit)? = null
+
+    fun setPlaybackSuppressed(suppressed: Boolean) {
+        if (isPlaybackSuppressed == suppressed) return
+        isPlaybackSuppressed = suppressed
+        current?.engine?.let { if (shouldPlay) it.play() else it.pause() }
+        tick()
+    }
+
+    /**
+     * While true, a play or pause made on the engine itself (Picture in Picture's own window, an AirPlay receiver's
+     * remote) becomes [playWhenReady], as Media3 reports what a remote controller changed.
+     */
+    var followsEngineControls = false
+
+    private val shouldPlay: Boolean get() = wantsToPlay && !isPlaybackSuppressed
 
     override val isPlaying: Boolean get() = current?.engine?.isPlaying() == true
 
@@ -202,6 +241,7 @@ class EnginePlayer(
         } else {
             item.positionMs = target
         }
+        notify { it.onPositionDiscontinuity(DISCONTINUITY_REASON_SEEK) }
         updateCues()
         tick()
     }
@@ -363,7 +403,7 @@ class EnginePlayer(
         if (item.positionMs > 0) engine.seekTo(item.positionMs)
         if (item === current) {
             showEngine(engine)
-            if (playWhenReady) engine.play()
+            if (shouldPlay) engine.play()
         }
         Log.d(TAG, "opened ${item.source.mediaId} on ${resolved.engine} at ${item.positionMs}ms")
     }
@@ -403,7 +443,7 @@ class EnginePlayer(
         }
         prepareItem(item)
         showEngine(item.engine)
-        if (playWhenReady) item.engine?.play()
+        if (shouldPlay) item.engine?.play()
         notify { it.onMediaItemTransition(item.source.mediaId, reason) }
         setState(item.engine?.playbackState()?.takeIf { it != STATE_IDLE } ?: STATE_BUFFERING)
         tick()
@@ -466,6 +506,10 @@ class EnginePlayer(
             return
         }
         if (engineState != STATE_IDLE) setState(engineState)
+        if (followsEngineControls && !isPlaybackSuppressed && engineState == STATE_READY && engine.playRequested() != wantsToPlay) {
+            wantsToPlay = !wantsToPlay
+            notify { it.onPlayWhenReadyChanged(wantsToPlay, PLAY_WHEN_READY_CHANGE_REASON_REMOTE) }
+        }
         reportPlaying(engine.isPlaying())
         if (!firstFrameReported && engine.hasRenderedFirstFrame()) {
             firstFrameReported = true
@@ -486,7 +530,8 @@ class EnginePlayer(
         when {
             repeatMode == REPEAT_MODE_ONE -> {
                 engine.seekTo(0)
-                if (playWhenReady) engine.play()
+                if (shouldPlay) engine.play()
+                notify { it.onPositionDiscontinuity(DISCONTINUITY_REASON_AUTO_TRANSITION) }
                 notify { it.onMediaItemTransition(item.source.mediaId, MEDIA_ITEM_TRANSITION_REASON_REPEAT) }
             }
             currentIndex < items.size - 1 -> {

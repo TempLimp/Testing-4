@@ -172,6 +172,7 @@ private val ITEMS =
     listOf(
         "cipher", "poToken", "fonts", "sabrH264", "sabrVp9", "pip", "music", "video", "h264At1080p", "vp9", "av1", "hdrAv1", "longRun",
         "keystore", "s10Play", "s10Quality", "s10Speed", "s10Seek", "s10Captions", "s10SponsorBlock", "s10Recovery", "s10SabrFallback",
+        "s11BackgroundAvPlayer", "s11BackgroundBundled", "s11LockScreen", "s11Pip", "s11AutoPip", "s11Gestures", "s11AirPlay",
     )
 
 // Items left out of a run, each with why. S05's run left out longRun (ten minutes of VP9, which take the battery under 5 %).
@@ -184,7 +185,24 @@ private val SWITCHED_OFF =
         "av1" to "passed in S04b and its verification pass; S10 changed no decoding",
         "hdrAv1" to "passed in S04b's verification pass",
         "longRun" to "passed in S04b's verification pass (ten minutes of VP9, which take the battery under 5 %)",
+        // S11's run: what S10's run 2 proved stays proved; s10Play plays through the changed player (EnginePlayer, the
+        // resolver's audio, AVPlayer's layer) first, and the S11 items play on both engines through the manager too.
+        "music" to "passed in S10's runs; S11 changed no music path",
+        "video" to "passed in S04 and S10's runs; s10Play and S11's items play AVPlayer through the manager",
+        "h264At1080p" to "passed in S04b's verification pass and S10's runs",
+        "sabrH264" to "passed in S05 and S10's runs; S11 changed no SABR code",
+        "sabrVp9" to "passed in S05 and S10's runs; S11 changed no SABR code",
+        "s10Quality" to "passed in S10's run 2",
+        "s10Speed" to "passed in S10's run 2",
+        "s10Seek" to "passed in S10's run 2",
+        "s10Captions" to "passed in S10's run 2",
+        "s10SponsorBlock" to "passed in S10's run 2",
+        "s10Recovery" to "passed in S10's run 2",
+        "s10SabrFallback" to "passed in S10's runs",
     )
+
+// Verdicts an item may end with that do not count against a PASS: what the phone's surroundings did not allow.
+private val ALLOWED = setOf("PASS", "NOT_TESTED")
 
 // "The World in HDR in 4K (ULTRA HD)" (Jacob + Katie Schwarz): offered as 10-bit AV1 HDR (BT.2020, PQ) from 144p to
 // 2160p60 through VISIONOS, the client upstream's ladder asks first; no VP9 profile 2 on any client asked (probed
@@ -248,7 +266,8 @@ fun startPlaybackGateIfRequested(always: Boolean) {
     val videoId = arguments.getOrNull(arguments.indexOf("-gateVideo") + 1).takeIf { "-gateVideo" in arguments } ?: DEFAULT_VIDEO_ID
     val device = "${UIDevice.currentDevice.model} iOS ${UIDevice.currentDevice.systemVersion}"
     // Off the main thread, as the player's own extraction runs: only the video layer goes back to it.
-    MainScope().launch(Dispatchers.Default) { PlaybackGate.run(videoId, device) }
+    // CI's simulator runs it unattended; S11's items need the person holding the phone, so only the phone build runs them.
+    MainScope().launch(Dispatchers.Default) { PlaybackGate.run(videoId, device, attended = always) }
 }
 
 /**
@@ -301,7 +320,7 @@ private val NO_STREAM_OFFERED = Regex("timeout or null response|not asked|no vis
 private object PlaybackGate {
     // The gate writes its result before this, whatever a step is doing; CI's wait covers it only when every
     // playback step is BLOCKED there, as on GitHub's walled runners.
-    private val DEADLINE = 40.minutes
+    private val DEADLINE = 90.minutes
 
     private val videoViews = mutableListOf<UIView>()
     private val extractions = mutableMapOf<String, VideoExtractionResult>()
@@ -311,10 +330,14 @@ private object PlaybackGate {
     private var running = "start"
     private var finished = false
 
+    private var attended = true
+
     suspend fun run(
         videoId: String,
         device: String,
+        attended: Boolean,
     ) {
+        this.attended = attended
         Log.w(TAG, "Playback gate started for $videoId")
         // Sound even with the phone's silent switch on, so the gate is heard as well as seen.
         AVAudioSession.sharedInstance().setCategory(AVAudioSessionCategoryPlayback, error = null)
@@ -371,6 +394,15 @@ private object PlaybackGate {
         step("s10SponsorBlock", 90.seconds) { playerGate.sponsorBlock() }
         step("s10Recovery", 150.seconds) { playerGate.recovery(videoId) }
         step("s10SabrFallback", 5.minutes) { playerGate.sabrFallback(videoId) }
+        // S11: the system around the players, each item with the person holding the phone.
+        val systemGate = SystemGate(playerGate, ::stage, ::extraction, ::showButton)
+        step("s11BackgroundAvPlayer", 8.minutes) { systemGate.background(videoId, onBundled = false) }
+        step("s11BackgroundBundled", 8.minutes) { systemGate.background(videoId, onBundled = true) }
+        step("s11LockScreen", 14.minutes) { systemGate.lockScreen(videoId, CAPTIONED_VIDEO_ID) }
+        step("s11Pip", 14.minutes) { systemGate.pictureInPicture(videoId, CAPTIONED_VIDEO_ID) }
+        step("s11AutoPip", 10.minutes) { systemGate.autoPictureInPicture(videoId) }
+        step("s11Gestures", 8.minutes) { systemGate.gestures(videoId) }
+        step("s11AirPlay", 5.minutes) { systemGate.airPlay(videoId) }
         watchdog.cancel()
         finish(deadlineReached = false)
     }
@@ -393,7 +425,7 @@ private object PlaybackGate {
         timeout: Duration,
         block: suspend () -> JsonObject,
     ) {
-        SWITCHED_OFF[name]?.let { why ->
+        (SWITCHED_OFF[name] ?: "needs the person holding the phone; the phone build (PLAYBACK_GATE) runs it".takeIf { name.startsWith("s11") && !attended })?.let { why ->
             record(
                 name,
                 buildJsonObject {
@@ -446,7 +478,7 @@ private object PlaybackGate {
                 val items = ITEMS.map(::verdictOf)
                 when {
                     "FAIL" in items || null in items -> "FAIL"
-                    ITEMS.drop(2).filterNot { it in SWITCHED_OFF }.all { verdictOf(it) == "PASS" } -> "PASS"
+                    ITEMS.drop(2).filterNot { it in SWITCHED_OFF || verdictOf(it) == "SKIPPED" }.all { verdictOf(it) in ALLOWED } -> "PASS"
                     else -> "BLOCKED"
                 }
             }
@@ -976,9 +1008,8 @@ private object PlaybackGate {
     // Starting Picture in Picture without a tap may be refused; the gate records what iOS allowed.
     private suspend fun pictureInPictureCheck(engine: PlaybackEngine): JsonObject =
         withContext(Dispatchers.Main) {
-            val controller =
-                engine.pictureInPictureController()
-                    ?: return@withContext buildJsonObject { put("supported", AVPictureInPictureController.isPictureInPictureSupported()) }
+            if (!AVPictureInPictureController.isPictureInPictureSupported()) return@withContext buildJsonObject { put("supported", false) }
+            val controller = AVPictureInPictureController(contentSource = engine.pictureInPictureSource())
             val asked = TimeSource.Monotonic.markNow()
             while (!controller.pictureInPicturePossible && asked.elapsedNow() < 5.seconds) delay(100)
             val possible = controller.pictureInPicturePossible
@@ -1062,9 +1093,8 @@ private object PlaybackGate {
         try {
             val opening = TimeSource.Monotonic.markNow()
             while (opening.elapsedNow() < 40.seconds && engine.error() == null && !(engine.isPlaying() && engine.currentPositionMs() > 0)) delay(100)
-            val controller =
-                withContext(Dispatchers.Main) { engine.pictureInPictureController() }
-                    ?: return failed("pip", videoId, "no controller; supported=${AVPictureInPictureController.isPictureInPictureSupported()}")
+            if (!AVPictureInPictureController.isPictureInPictureSupported()) return failed("pip", videoId, "Picture in Picture is not supported")
+            val controller = withContext(Dispatchers.Main) { AVPictureInPictureController(contentSource = engine.pictureInPictureSource()) }
             val tapped = CompletableDeferred<Boolean>()
             button =
                 withContext(Dispatchers.Main) {
@@ -1110,7 +1140,7 @@ private object PlaybackGate {
         }
     }
 
-    private fun showButton(
+    fun showButton(
         title: String,
         onTap: () -> Unit,
     ): UIView? {

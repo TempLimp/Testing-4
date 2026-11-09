@@ -87,6 +87,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -144,6 +145,12 @@ class EnhancedPlayerManager private constructor() {
          * before any playback; tests register fakes.
          */
         var engineFactory: ((PlaybackEngineKind) -> EngineControl)? = null
+
+        /**
+         * The system's media controls for video (iOS: Now Playing and the remote commands), made when the player is, as
+         * upstream builds its video MediaSession. Set by the app; tests set fakes.
+         */
+        internal var mediaSessionHost: ((onCommand: (VideoSessionCommand) -> Boolean) -> MediaSessionHost)? = null
     }
 
     // Core player components
@@ -274,6 +281,7 @@ class EnhancedPlayerManager private constructor() {
                     durationSeconds = resolved.durationSeconds,
                     mediaId = resolved.enrichedVideo.toVideoSessionMetadata().mediaId,
                     adaptiveLadder = AdaptiveLadder.forPreload(resolved.videoStream, videoStreams, resolved.preferredCodec),
+                    audioAlternatives = resolved.audioStreams,
                     onStreams = { videoId, urls -> cacheManager?.registerStreams(videoId, urls) },
                 )
             },
@@ -402,6 +410,7 @@ class EnhancedPlayerManager private constructor() {
             setupPlayerListener()
             startPlaybackTracker()
             observePreferences(built)
+            initializeVideoMediaSession()
             Log.d(TAG, "Player initialized")
         }
     }
@@ -1252,6 +1261,7 @@ class EnhancedPlayerManager private constructor() {
                 innerTubeAudioFormats = innerTubeAudioFormats,
                 mediaId = sessionMetadata?.mediaId.orEmpty(),
                 adaptiveLadder = ladder,
+                audioAlternatives = castAudioStreams,
                 onStreams = { videoId, urls -> cacheManager?.registerStreams(videoId, urls) },
                 onResolved = ::applyResolution,
             ) ?: false
@@ -1573,6 +1583,7 @@ class EnhancedPlayerManager private constructor() {
                 current = existingRelatedCandidates,
             )
         relatedCandidatesSnapshot = RelatedCandidatesSnapshot(sourceVideoId, relatedCandidates)
+        publishVideoSession()
         autoplayCandidates = relatedCandidates.filter { !it.isLive && !it.isUpcoming }
         Log.d(TAG, "Autoplay candidates for $sourceVideoId: ${autoplayCandidates.size}, enabled=$enabled")
         autoNextLog("setAutoplayCandidates source=$sourceVideoId input=${videos.size} filtered=${autoplayCandidates.size} enabled=$enabled")
@@ -1582,6 +1593,114 @@ class EnhancedPlayerManager private constructor() {
     }
 
     private fun hasNextForSession(): Boolean = hasNext() || (autoplayEnabled && autoplayCandidates.isNotEmpty())
+
+    // ===== Video media session (upstream's initializeVideoMediaSession) =====
+
+    @Volatile private var videoMediaSession: MediaSessionHost? = null
+    private var videoSessionJob: Job? = null
+    private var videoSessionButtons: VideoSessionButtons? = null
+    private val videoSessionListener =
+        object : FlowPlayer.Listener {
+            override fun onPlaybackStateChanged(playbackState: Int) = publishVideoSession()
+
+            override fun onIsPlayingChanged(isPlaying: Boolean) = publishVideoSession()
+
+            override fun onMediaItemTransition(
+                mediaId: String?,
+                reason: Int,
+            ) = publishVideoSession()
+
+            override fun onPositionDiscontinuity(reason: Int) = publishVideoSession()
+        }
+
+    private fun initializeVideoMediaSession() {
+        if (videoMediaSession != null) return
+        val realPlayer = player ?: return
+        val host = mediaSessionHost ?: return
+        try {
+            videoSessionButtons =
+                VideoSessionButtons(
+                    currentState = { _playerState.value.toVideoSessionState() },
+                    onLoop = { target ->
+                        toggleLoop(target.videoLoop)
+                        if (queue.loopEnabled != target.queueLoop) toggleQueueLoop(target.queueLoop)
+                    },
+                    onShuffle = ::toggleQueueShuffle,
+                )
+            videoMediaSession = host(::onVideoSessionCommand)
+            realPlayer.addListener(videoSessionListener)
+            videoSessionJob =
+                scope.launch {
+                    combine(_playerState, GlobalPlayerState.currentVideo) { state, video ->
+                        listOf(video, state.isPlaying, state.playbackSpeed, state.isLive, state.hasNext, state.hasPrevious, state.toVideoSessionState())
+                    }.distinctUntilChanged().collect { publishVideoSession() }
+                }
+            Log.d(TAG, "Video MediaSession created")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to create video MediaSession", e)
+        }
+    }
+
+    private fun releaseVideoMediaSession() {
+        videoSessionJob?.cancel()
+        videoSessionJob = null
+        player?.removeListener(videoSessionListener)
+        try {
+            videoMediaSession?.release()
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to release video MediaSession", e)
+        }
+        videoMediaSession = null
+    }
+
+    private fun publishVideoSession() {
+        val session = videoMediaSession ?: return
+        val p = player ?: return
+        val controls = _playerState.value.toVideoSessionState()
+        session.update(
+            VideoSessionSnapshot(
+                metadata = GlobalPlayerState.currentVideo.value?.toVideoSessionMetadata(),
+                hasMediaItem = p.currentMediaId != null,
+                positionMs = p.currentPosition,
+                durationMs = p.duration,
+                playbackSpeed = p.playbackSpeed,
+                isPlaying = p.isPlaying,
+                isLive = currentIsLiveStream || p.isCurrentMediaItemLive,
+                hasNext = hasNextForSession(),
+                hasPrevious = hasPrevious(),
+                controls = controls,
+                buttons = videoSessionButtons?.buttons(controls).orEmpty(),
+            ),
+        )
+    }
+
+    /** What upstream's ForwardingPlayer and VideoSessionButtons do with each command. */
+    private fun onVideoSessionCommand(command: VideoSessionCommand): Boolean {
+        val p = player ?: return false
+        when (command) {
+            VideoSessionCommand.Play -> p.handlePlayButtonAction()
+            VideoSessionCommand.Pause -> p.pause()
+            VideoSessionCommand.TogglePlayPause -> if (p.shouldShowPlayButton(p.isPlaybackSuppressed)) p.handlePlayButtonAction() else p.pause()
+            VideoSessionCommand.Next -> {
+                autoNextLog("MediaSession seekToNext")
+                return skipToNextFromSession()
+            }
+            VideoSessionCommand.Previous -> return playPrevious()
+            // Through the manager, not the player: a SABR session seeks by being rebuilt (decision row "SABR on iOS").
+            is VideoSessionCommand.SeekTo -> seekTo(command.positionMs)
+            is VideoSessionCommand.SetRepeat -> videoSessionButtons?.repeat(command.mode)
+            is VideoSessionCommand.SetShuffle -> videoSessionButtons?.shuffle(command.enabled)
+        }
+        return true
+    }
+
+    private fun EnhancedPlayerState.toVideoSessionState() =
+        VideoSessionControls.State(
+            videoLooping = isLooping,
+            queueLooping = isQueueLooping,
+            queueShuffled = isQueueShuffled,
+            queueSize = queueSize,
+        )
 
     internal fun skipToNextFromSession(): Boolean {
         val expectedVideoId = nextSessionVideo()?.id
@@ -3029,6 +3148,18 @@ class EnhancedPlayerManager private constructor() {
         backgroundService?.stop()
     }
 
+    /**
+     * AirPlay started or ended (iOS's audio route, S11): only AVPlayer's formats play on AirPlay, so a video picks its
+     * stream again for the route and reopens at the position. A device file, a live stream and a SABR session keep
+     * theirs: the file has only its own stream, live plays AVPlayer's HLS already, and a session's formats are its own.
+     */
+    fun onAirPlayChanged(active: Boolean) {
+        val p = player ?: return
+        if (currentVideoStream == null || currentLocalFilePath != null || currentIsLiveStream || mediaLoader?.getActiveSabrOrchestrator() != null) return
+        autoNextLog("onAirPlayChanged active=$active")
+        qualityManager?.reselectForRoute(active, p.currentPosition)
+    }
+
     // ===== Bandwidth & Renderer Info =====
 
     fun getBandwidthEstimate(): Long = bandwidthMeter?.bitrateEstimate ?: 0L
@@ -3122,6 +3253,7 @@ class EnhancedPlayerManager private constructor() {
     fun release() {
         Log.d(TAG, "release() called")
         preload.clear()
+        releaseVideoMediaSession()
         pendingReloadJob?.cancel()
         pendingReloadJob = null
         mediaLoader?.releaseSabr()

@@ -2,6 +2,8 @@ package io.github.aedev.flow.player.engine
 
 import androidx.compose.ui.text.AnnotatedString
 import io.github.aedev.flow.player.config.PlayerConfig
+import io.github.aedev.flow.player.handlePlayButtonAction
+import io.github.aedev.flow.player.shouldShowPlayButton
 import io.github.aedev.flow.player.factory.LoadControlFactory
 import io.github.aedev.flow.player.renderer.subtitle.Cue
 import io.github.aedev.flow.player.renderer.subtitle.CuesWithTiming
@@ -75,6 +77,8 @@ class EnginePlayerTest {
 
         override fun isPlaying() = playing
 
+        override fun playRequested() = wantsToPlay
+
         override fun playbackState() = state
 
         override fun error() = failure
@@ -145,6 +149,13 @@ class EnginePlayerTest {
 
                     override fun onIsPlayingChanged(isPlaying: Boolean) {
                         events += "playing $isPlaying"
+                    }
+
+                    override fun onPlayWhenReadyChanged(
+                        playWhenReady: Boolean,
+                        reason: Int,
+                    ) {
+                        events += "playWhenReady $playWhenReady $reason"
                     }
 
                     override fun onMediaItemTransition(
@@ -500,5 +511,120 @@ class EnginePlayerTest {
 
             assertEquals(1, engines.size)
             assertEquals("b", engines.single().source?.mediaId)
+        }
+
+    private fun TestScope.readyPlayer(): Pair<EnginePlayer, FakeEngine> {
+        val player = player()
+        player.setMediaSource(source("a"))
+        player.playWhenReady = true
+        player.prepare()
+        runCurrent()
+        val engine = engines.single().apply { becomeReady() }
+        advanceTimeBy(300)
+        return player to engine
+    }
+
+    @Test
+    fun aSuppressionStopsTheEngineAndKeepsTheWishToPlay() =
+        runTest {
+            val (player, engine) = readyPlayer()
+
+            player.setPlaybackSuppressed(true)
+            advanceTimeBy(300)
+            assertThat(engine.wantsToPlay).isFalse()
+            assertThat(player.playWhenReady).isTrue()
+            assertThat(player.isPlaying).isFalse()
+
+            player.setPlaybackSuppressed(false)
+            assertThat(engine.wantsToPlay).isTrue()
+        }
+
+    @Test
+    fun playingWhileSuppressedWaitsForTheSuppressionToEnd() =
+        runTest {
+            val (player, engine) = readyPlayer()
+            player.pause()
+            player.setPlaybackSuppressed(true)
+
+            player.play()
+            assertThat(engine.wantsToPlay).isFalse()
+            player.setPlaybackSuppressed(false)
+            assertThat(engine.wantsToPlay).isTrue()
+        }
+
+    @Test
+    fun aPauseForAnAudioFocusLossCarriesItsReason() =
+        runTest {
+            val (player, engine) = readyPlayer()
+
+            player.setPlayWhenReady(false, FlowPlayer.PLAY_WHEN_READY_CHANGE_REASON_AUDIO_BECOMING_NOISY)
+
+            assertThat(engine.wantsToPlay).isFalse()
+            assertThat(events).contains("playWhenReady false ${FlowPlayer.PLAY_WHEN_READY_CHANGE_REASON_AUDIO_BECOMING_NOISY}")
+        }
+
+    @Test
+    fun aPauseMadeOnTheEngineBecomesThePlayersOnlyWhileFollowed() =
+        runTest {
+            val (player, engine) = readyPlayer()
+
+            engine.pause()
+            advanceTimeBy(300)
+            assertThat(player.playWhenReady).isTrue()
+
+            player.followsEngineControls = true
+            advanceTimeBy(1_100)
+            assertThat(player.playWhenReady).isFalse()
+            assertThat(events).contains("playWhenReady false ${FlowPlayer.PLAY_WHEN_READY_CHANGE_REASON_REMOTE}")
+
+            engine.play()
+            advanceTimeBy(1_100)
+            assertThat(player.playWhenReady).isTrue()
+            assertThat(events).contains("playWhenReady true ${FlowPlayer.PLAY_WHEN_READY_CHANGE_REASON_REMOTE}")
+        }
+
+    @Test
+    fun aSuppressedEngineIsNotTakenForAPause() =
+        runTest {
+            val (player, _) = readyPlayer()
+            player.followsEngineControls = true
+
+            player.setPlaybackSuppressed(true)
+            advanceTimeBy(300)
+
+            assertThat(player.playWhenReady).isTrue()
+        }
+
+    @Test
+    fun theSessionsPlayButtonStartsAnEndedVideoOverAndPreparesAnIdleOne() =
+        runTest {
+            val (player, engine) = readyPlayer()
+            player.pause()
+            engine.state = FlowPlayer.STATE_ENDED
+            advanceTimeBy(1_100)
+            assertThat(player.shouldShowPlayButton(isSuppressed = false)).isTrue()
+
+            player.handlePlayButtonAction()
+            assertThat(engine.seeks).contains(0L)
+            assertTrue(engine.wantsToPlay)
+
+            player.stop()
+            player.handlePlayButtonAction()
+            runCurrent()
+            assertEquals(2, engines.size)
+            assertTrue(engines.last().wantsToPlay)
+        }
+
+    @Test
+    fun aPlayAskedForWhileSuppressedAsksForTheAudioBack() =
+        runTest {
+            val (player, engine) = readyPlayer()
+            player.onPlayWhileSuppressed = { player.setPlaybackSuppressed(false) }
+            player.setPlaybackSuppressed(true)
+
+            player.play()
+
+            assertThat(player.isPlaybackSuppressed).isFalse()
+            assertTrue(engine.wantsToPlay)
         }
 }

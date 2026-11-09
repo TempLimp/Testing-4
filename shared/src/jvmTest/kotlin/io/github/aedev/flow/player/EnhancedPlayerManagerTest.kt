@@ -2,11 +2,13 @@ package io.github.aedev.flow.player
 
 import io.github.aedev.flow.data.local.PlayerPreferences
 import io.github.aedev.flow.data.model.SponsorBlockSegment
+import io.github.aedev.flow.data.model.Video
 import io.github.aedev.flow.innertube.models.response.PlayerResponse
 import io.github.aedev.flow.player.engine.EngineControl
 import io.github.aedev.flow.player.engine.FlowPlayer
 import io.github.aedev.flow.player.resolver.LocalHlsProxy
 import io.github.aedev.flow.player.resolver.MediaSource
+import io.github.aedev.flow.player.resolver.PlatformCodecSupport
 import io.github.aedev.flow.player.resolver.PlaybackEngineKind
 import io.github.aedev.flow.player.stream.CaptionFormat
 import io.github.aedev.flow.player.stream.InnerTubeStreamBridge
@@ -74,6 +76,8 @@ class EnhancedPlayerManagerTest {
         override fun bufferedPositionMs() = position
 
         override fun isPlaying() = playing
+
+        override fun playRequested() = wantsToPlay
 
         override fun playbackState() = state
 
@@ -361,5 +365,101 @@ class EnhancedPlayerManagerTest {
             assertTrue(engine.source!!.uri.contains("/f/"))
             assertEquals(engine.source!!.uri, engine.source!!.audioUri)
             file.delete()
+        }
+
+    private class RecordingSession : MediaSessionHost {
+        val snapshots = mutableListOf<VideoSessionSnapshot>()
+        var released = false
+        lateinit var send: (VideoSessionCommand) -> Boolean
+
+        override fun update(snapshot: VideoSessionSnapshot) {
+            snapshots += snapshot
+        }
+
+        override fun release() {
+            released = true
+        }
+    }
+
+    private fun sessionTest(body: suspend TestScope.(RecordingSession) -> Unit) {
+        val session = RecordingSession()
+        EnhancedPlayerManager.mediaSessionHost = { onCommand -> session.also { it.send = onCommand } }
+        try {
+            managerTest { body(session) }
+        } finally {
+            EnhancedPlayerManager.mediaSessionHost = null
+            GlobalPlayerState.setCurrentVideo(null)
+        }
+        assertTrue(session.released)
+    }
+
+    @Test
+    fun theMediaSessionShowsTheVideoAndItsCommandsDriveThePlayer() =
+        sessionTest { session ->
+            GlobalPlayerState.setCurrentVideo(
+                Video(id = "vid", title = "Title", channelName = "Channel", channelId = "c", thumbnailUrl = "https://i.ytimg.com/vi/vid/hq.jpg", duration = 120, viewCount = 0, uploadDate = ""),
+            )
+            load()
+            val engine = engines.single().apply { becomeReady() }
+            advanceTimeBy(300)
+
+            val shown = session.snapshots.last()
+            assertEquals(VideoSessionMetadata("vid", "Title", "Channel", "https://i.ytimg.com/vi/vid/hq.jpg"), shown.metadata)
+            assertTrue(shown.hasMediaItem)
+            assertTrue(shown.isPlaying)
+            assertEquals(120_000L, shown.durationMs)
+            assertThat(shown.buttons).containsExactly(VideoSessionButtons.Button.REPEAT)
+
+            assertTrue(session.send(VideoSessionCommand.TogglePlayPause))
+            assertThat(engine.wantsToPlay).isFalse()
+            assertTrue(session.send(VideoSessionCommand.Play))
+            assertTrue(engine.wantsToPlay)
+
+            session.send(VideoSessionCommand.SeekTo(50_000))
+            runCurrent()
+            assertThat(engine.seeks).contains(50_000L)
+            assertEquals(50_000L, session.snapshots.last().positionMs)
+
+            session.send(VideoSessionCommand.SetRepeat(VideoSessionControls.Repeat.ONE))
+            runCurrent()
+            assertTrue(manager.playerState.value.isLooping)
+            assertEquals(VideoSessionControls.Repeat.ONE, session.snapshots.last().controls.repeat)
+        }
+
+    @Test
+    fun airPlayReopensABundledVideoOnAvPlayerAndGivesItBackAfter() =
+        managerTest {
+            val vp9 = "video/webm; codecs=\"vp9\""
+            val h264 = "video/mp4; codecs=\"avc1.64001F\""
+            measured(10_000_000)
+            // 1440p only as VP9, as YouTube offers it: Auto starts there, on the bundled engine.
+            loadAuto(listOf(rung(271, 1440, 6_000_000, vp9), rung(137, 1080, 2_500_000, h264), rung(22, 720, 1_200_000, h264)))
+            val bundled = engines.single().apply { becomeReady() }
+            assertEquals(PlaybackEngineKind.BUNDLED, bundled.kind)
+            bundled.position = 20_000
+            advanceTimeBy(300)
+
+            try {
+                PlatformCodecSupport.airPlayRoute = true
+                manager.onAirPlayChanged(true)
+                runCurrent()
+                advanceTimeBy(100)
+                val onAirPlay = engines.last()
+                assertEquals(PlaybackEngineKind.AVPLAYER, onAirPlay.kind)
+                assertTrue(bundled.closed)
+                assertThat(onAirPlay.seeks).contains(20_000L)
+
+                onAirPlay.becomeReady()
+                onAirPlay.position = 30_000
+                advanceTimeBy(300)
+                PlatformCodecSupport.airPlayRoute = false
+                manager.onAirPlayChanged(false)
+                runCurrent()
+                advanceTimeBy(100)
+                assertEquals(PlaybackEngineKind.BUNDLED, engines.last().kind)
+                assertThat(engines.last().seeks).contains(30_000L)
+            } finally {
+                PlatformCodecSupport.airPlayRoute = false
+            }
         }
 }

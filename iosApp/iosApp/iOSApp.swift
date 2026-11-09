@@ -8,6 +8,9 @@ struct iOSApp: App {
         PlaybackEngines.shared.bundled = { BundledEngine() }
         // The video player (S10) opens its sources on these engines.
         PlaybackEngines.shared.install()
+        // The audio session, Now Playing and remote commands, Picture in Picture, background hand-off, volume keys (S11).
+        SystemIntegration.shared.install()
+        VolumeWatcher.install()
         #if PLAYBACK_GATE
         // The S04 playback gate build CI makes for a phone (ipa.yml): runs the gate on every launch.
         PlaybackGateKt.startPlaybackGateIfRequested(always: true)

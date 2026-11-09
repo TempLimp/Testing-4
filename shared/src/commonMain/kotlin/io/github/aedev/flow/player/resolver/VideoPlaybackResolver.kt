@@ -66,6 +66,8 @@ class VideoPlaybackResolver(
         isLiveStream: Boolean = false,
         asAdaptiveLadder: Boolean = false,
         bitrateEstimate: Long? = null,
+        /** The video's other audio streams: the same track in a format the engine decodes stands in for [audioStream]. */
+        audioAlternatives: List<AudioStream> = emptyList(),
     ): MediaSource? {
         resolvedAdaptiveLadder = false
         resolvedVideoStream = null
@@ -113,7 +115,16 @@ class VideoPlaybackResolver(
         if (playableVideo.size < videoStreams.size) {
             Log.d(TAG, "Dropped ${videoStreams.size - playableVideo.size} video streams $engine cannot decode")
         }
-        val playableAudio = audioStream?.takeIf { PlatformCodecSupport.decodes(engine, it) }
+        // Upstream's audio choice ignores the engine (ExoPlayer decodes them all): Opus beside H.264 becomes the same
+        // track's best AAC for AVPlayer, as the gate's own loads pick it (PlaybackEngineRoutingTest).
+        val playableAudio =
+            audioStream?.takeIf { PlatformCodecSupport.decodes(engine, it) }
+                ?: audioStream?.let { selected ->
+                    StreamProcessor
+                        .streamsOfTrack(audioAlternatives, selected)
+                        .filter { PlatformCodecSupport.canMergeAudio(it, engine) }
+                        .maxByOrNull { it.averageBitrate.takeIf { rate -> rate > 0 } ?: it.bitrate }
+                }?.also { Log.d(TAG, "Audio ${audioStream?.codec} cannot go beside $engine; playing ${it.codec} of the same track") }
         if (audioStream != null && playableAudio == null) {
             Log.w(TAG, "Audio stream ${audioStream.format?.mimeType} ${audioStream.codec} cannot be decoded beside $engine")
         }

@@ -162,7 +162,7 @@ final class BundledEngineTests: XCTestCase {
         }
         let engine = try start(video: "vp9.webm", audio: "opus.webm")
         waitUntil(engine, reaches: 500)
-        let controller = try XCTUnwrap(engine.pictureInPictureController())
+        let controller = AVPictureInPictureController(contentSource: engine.pictureInPictureSource())
         XCTAssertTrue(controller.contentSource?.sampleBufferDisplayLayer === engine.layer)
         let deadline = Date().addingTimeInterval(10)
         while !controller.isPictureInPicturePossible && Date() < deadline { RunLoop.current.run(until: Date().addingTimeInterval(0.1)) }

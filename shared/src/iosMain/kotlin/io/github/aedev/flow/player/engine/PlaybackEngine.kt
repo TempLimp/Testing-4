@@ -67,7 +67,7 @@ import platform.AVFoundation.presentationSize
 import platform.AVFoundation.rate
 import platform.AVFoundation.replaceCurrentItemWithPlayerItem
 import platform.AVFoundation.seekToTime
-import platform.AVKit.AVPictureInPictureController
+import platform.AVKit.AVPictureInPictureControllerContentSource
 import platform.CoreMedia.CMTimeGetSeconds
 import platform.CoreMedia.CMTimeMake
 import platform.Foundation.NSURL
@@ -86,8 +86,11 @@ interface PlaybackEngine : EngineControl {
 
     fun stats(): PlaybackStats
 
-    /** Picture in Picture over [layer], made on first use. Main thread only. */
-    fun pictureInPictureController(): AVPictureInPictureController?
+    /**
+     * What Picture in Picture shows for this engine: [layer] as AVKit takes it. The app's one PiP controller switches
+     * to the playing engine's source, so the window outlives an engine change. Main thread only.
+     */
+    fun pictureInPictureSource(): AVPictureInPictureControllerContentSource
 }
 
 /** What an engine measured since [PlaybackEngine.prepare]. The counters only grow. */
@@ -144,7 +147,7 @@ class AvPlayerEngine : PlaybackEngine {
     /** The item playing, for what AVFoundation reports on it (tracks, access and error logs). */
     var item: AVPlayerItem? = null
         private set
-    private var pictureInPicture: AVPictureInPictureController? = null
+    private val pictureInPictureSource by lazy { AVPictureInPictureControllerContentSource(playerLayer = playerLayer) }
     private var endObserver: Any? = null
 
     @Volatile
@@ -203,6 +206,9 @@ class AvPlayerEngine : PlaybackEngine {
 
     override fun isPlaying(): Boolean = player.timeControlStatus == AVPlayerTimeControlStatusPlaying
 
+    // AVPlayer's rate is its wish to play: it stays while waiting for media and is 0 after a pause, AVKit's included.
+    override fun playRequested(): Boolean = player.rate != 0f
+
     override fun playbackState(): Int {
         val current = item ?: return FlowPlayer.STATE_IDLE
         return when {
@@ -229,6 +235,9 @@ class AvPlayerEngine : PlaybackEngine {
 
     override fun setVideoEnabled(enabled: Boolean) {
         videoEnabled = enabled
+        // iOS pauses an AVPlayer whose layer shows video when the app leaves the screen; audio-only playback in the
+        // background detaches it (Apple's QA1668), and turning video back on shows it again.
+        playerLayer.player = if (enabled) player else null
         item?.tracks?.forEach { track ->
             val playerTrack = track as? AVPlayerItemTrack ?: return@forEach
             if (playerTrack.assetTrack?.mediaType == AVMediaTypeVideo) playerTrack.enabled = enabled
@@ -283,8 +292,7 @@ class AvPlayerEngine : PlaybackEngine {
         )
     }
 
-    override fun pictureInPictureController(): AVPictureInPictureController? =
-        pictureInPicture ?: AVPictureInPictureController(playerLayer = playerLayer).also { pictureInPicture = it }
+    override fun pictureInPictureSource(): AVPictureInPictureControllerContentSource = pictureInPictureSource
 
     override fun close() {
         removeEndObserver()

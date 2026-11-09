@@ -111,6 +111,7 @@ class MediaLoader(
         innerTubeAudioFormats: List<PlayerResponse.StreamingData.Format> = emptyList(),
         mediaId: String = "",
         adaptiveLadder: List<VideoStream> = emptyList(),
+        audioAlternatives: List<AudioStream> = emptyList(),
         onStreams: (videoId: String, urls: Collection<String?>) -> Unit = { _, _ -> },
         onResolved: (Resolution) -> Unit = {},
     ): Boolean {
@@ -152,6 +153,7 @@ class MediaLoader(
                     innerTubeAudioFormats = innerTubeAudioFormats,
                     mediaId = mediaId,
                     adaptiveLadder = adaptiveLadder,
+                    audioAlternatives = audioAlternatives,
                     onResolved = onResolved,
                     onStreams = onStreams,
                     onNothingToPlay = {
@@ -200,6 +202,7 @@ class MediaLoader(
         durationSeconds: Long,
         mediaId: String = "",
         adaptiveLadder: List<VideoStream> = emptyList(),
+        audioAlternatives: List<AudioStream> = emptyList(),
         onStreams: (videoId: String, urls: Collection<String?>) -> Unit = { _, _ -> },
     ): LazyMediaSource? =
         try {
@@ -217,6 +220,7 @@ class MediaLoader(
                     audioOnly = false,
                     mediaId = mediaId,
                     adaptiveLadder = adaptiveLadder,
+                    audioAlternatives = audioAlternatives,
                     onStreams = onStreams,
                     onNothingToPlay = null,
                 )
@@ -261,6 +265,7 @@ class MediaLoader(
         innerTubeAudioFormats: List<PlayerResponse.StreamingData.Format> = emptyList(),
         mediaId: String = "",
         adaptiveLadder: List<VideoStream> = emptyList(),
+        audioAlternatives: List<AudioStream> = emptyList(),
         onResolved: (Resolution) -> Unit = {},
         onStreams: (videoId: String, urls: Collection<String?>) -> Unit,
         onNothingToPlay: (() -> Unit)?,
@@ -318,6 +323,7 @@ class MediaLoader(
                             isLiveStream = isLiveStream && !audioOnly,
                             asAdaptiveLadder = useLadder,
                             bitrateEstimate = bitrateEstimate(),
+                            audioAlternatives = audioAlternatives,
                         ).also {
                             val resolution = Resolution(resolver.resolvedAdaptiveLadder, resolver.resolvedVideoStream)
                             resolutions.remove(mediaId)

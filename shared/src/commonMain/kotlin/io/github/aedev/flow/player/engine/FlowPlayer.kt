@@ -101,6 +101,9 @@ interface FlowPlayer {
             reason: Int,
         ) {}
 
+        /** Media3's position discontinuity (a seek, a repeat's restart); its reason only, without the positions. */
+        fun onPositionDiscontinuity(reason: Int) {}
+
         fun onRenderedFirstFrame() {}
 
         fun onPlayerError(error: PlaybackException) {}
@@ -111,7 +114,7 @@ interface FlowPlayer {
     }
 
     companion object {
-        // Media3's Player.STATE_*, REPEAT_MODE_*, MEDIA_ITEM_TRANSITION_REASON_*, PLAY_WHEN_READY_CHANGE_REASON_* and C.TIME_UNSET values.
+        // Media3's Player.STATE_*, REPEAT_MODE_*, MEDIA_ITEM_TRANSITION_REASON_*, DISCONTINUITY_REASON_*, PLAY_WHEN_READY_CHANGE_REASON_* and C.TIME_UNSET values.
         const val STATE_IDLE = 1
         const val STATE_BUFFERING = 2
         const val STATE_READY = 3
@@ -123,7 +126,12 @@ interface FlowPlayer {
         const val MEDIA_ITEM_TRANSITION_REASON_AUTO = 1
         const val MEDIA_ITEM_TRANSITION_REASON_SEEK = 2
         const val MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED = 3
+        const val DISCONTINUITY_REASON_AUTO_TRANSITION = 0
+        const val DISCONTINUITY_REASON_SEEK = 1
         const val PLAY_WHEN_READY_CHANGE_REASON_USER_REQUEST = 1
+        const val PLAY_WHEN_READY_CHANGE_REASON_AUDIO_FOCUS_LOSS = 2
+        const val PLAY_WHEN_READY_CHANGE_REASON_AUDIO_BECOMING_NOISY = 3
+        const val PLAY_WHEN_READY_CHANGE_REASON_REMOTE = 4
         const val PLAY_WHEN_READY_CHANGE_REASON_END_OF_MEDIA_ITEM = 5
     }
 }

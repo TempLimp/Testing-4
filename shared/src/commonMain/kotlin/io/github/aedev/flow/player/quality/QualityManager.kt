@@ -3,6 +3,9 @@ package io.github.aedev.flow.player.quality
 import io.github.aedev.flow.player.config.PlayerConfig
 import io.github.aedev.flow.player.config.VideoSizeCap
 import io.github.aedev.flow.player.config.adaptiveTrackSelectorDefaults
+import io.github.aedev.flow.player.resolver.PlatformCodecSupport
+import io.github.aedev.flow.player.resolver.PlaybackEngineKind
+import io.github.aedev.flow.player.resolver.decodes
 import io.github.aedev.flow.player.state.EnhancedPlayerState
 import io.github.aedev.flow.player.state.QualityOption
 import io.github.aedev.flow.player.stream.VideoCodecUtils
@@ -142,8 +145,42 @@ class QualityManager(
     fun getWorkingStreams(): List<VideoStream> =
         availableVideoStreams.filter {
             !failedStreamUrls.contains(streamKey(it)) &&
-                !failedStreamVariants.contains(failureVariantKey(it))
+                !failedStreamVariants.contains(failureVariantKey(it)) &&
+                // While AirPlay is the route only AVPlayer's formats play (iOS, S04b's rule), so only they are picked.
+                (!PlatformCodecSupport.airPlayActive || PlatformCodecSupport.decodes(PlaybackEngineKind.AVPLAYER, it))
         }
+
+    /**
+     * AirPlay started or ended (iOS's route change): the stream is chosen again from what plays on the route, as upstream
+     * chooses it (Auto's start rule, or the pinned height in the preferred codec), and reopens at [currentPosition].
+     * Going to AirPlay, a stream AVPlayer already plays stays. False when the stream stays.
+     */
+    fun reselectForRoute(
+        airPlay: Boolean,
+        currentPosition: Long,
+    ): Boolean {
+        val current = currentVideoStream ?: return false
+        if (airPlay && PlatformCodecSupport.decodes(PlaybackEngineKind.AVPLAYER, current)) return false
+        val working = getWorkingStreams()
+        val target =
+            if (isAdaptiveQualityEnabled) {
+                AutoQualityPolicy.initialPick(working, bandwidthMeter?.bitrateEstimate ?: PlayerConfig.INITIAL_BANDWIDTH_ESTIMATE, preferredCodecKey)
+            } else {
+                val height = manualQualityHeight ?: qualityHeight(current)
+                working.minWithOrNull(
+                    compareBy<VideoStream> { kotlin.math.abs(qualityHeight(it) - height) }
+                        .thenBy { VideoCodecUtils.codecRankWithPreference(it, preferredCodecKey) }
+                        .thenByDescending { it.bitrate },
+                )
+            } ?: return false
+        if (streamKey(target) == streamKey(current)) return false
+        Log.w(TAG, "Route ${if (airPlay) "to" else "off"} AirPlay: ${qualityHeight(current)}p ${VideoCodecUtils.codecKeyFromStream(current)} -> ${qualityHeight(target)}p ${VideoCodecUtils.codecKeyFromStream(target)}")
+        currentVideoStream = target
+        lastAdaptiveQualityHeight = qualityHeight(target)
+        onQualitySwitch(target, currentPosition)
+        stateFlow.value = stateFlow.value.copy(effectiveQuality = qualityHeight(target))
+        return true
+    }
 
     private fun qualityHeight(stream: VideoStream): Int = normalizeQualityHeight(VideoCodecUtils.qualityHeightFromStream(stream))
 

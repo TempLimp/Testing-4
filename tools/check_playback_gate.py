@@ -6,7 +6,10 @@ AV1 rungs and an HDR video's 10-bit AV1 rungs in the bundled engine (S04b), one 
 Picture in Picture opened by a tap, the condensed font, and ten minutes of VP9 2160p60 in 30 s windows; and (S05) a forced
 SABR session at 1080p H.264 in AVPlayer and one as it comes (VP9 2160p, Opus) in the bundled engine; the keystore; and
 (S10) the video player manager: play, quality switch, speed, seek and resume, captions, SponsorBlock, recovery from a
-refused stream, and the fallback from a failed SABR session. BLOCKED means no
+refused stream, and the fallback from a failed SABR session; and (S11) the system around them, each item with the
+person holding the phone: background playback with the phone locked on both engines, the lock screen's controls,
+Picture in Picture by a tap and by leaving the app (and kept across an engine change), the player's gestures and a
+volume key, and AirPlay (NOT_TESTED without a receiver, which does not fail the gate). BLOCKED means no
 client offered this runner a stream it can play: a warning, as for the live smoke test. SKIPPED is an item switched off
 for the run, with why. A fault in
 a layer the port owns (cipher, PoToken mint, HLS proxy, either engine once it had a stream), a crash or a missing
@@ -19,6 +22,7 @@ import sys
 LAYERS = (
     "cipher", "poToken", "fonts", "sabrH264", "sabrVp9", "pip", "music", "video", "h264At1080p", "vp9", "av1", "hdrAv1", "longRun",
     "keystore", "s10Play", "s10Quality", "s10Speed", "s10Seek", "s10Captions", "s10SponsorBlock", "s10Recovery", "s10SabrFallback",
+    "s11BackgroundAvPlayer", "s11BackgroundBundled", "s11LockScreen", "s11Pip", "s11AutoPip", "s11Gestures", "s11AirPlay",
 )
 RUNG_FIELDS = (
     "verdict", "sustained", "videoSize", "videoDecoder", "audioDecoder", "pixelFormat", "transferFunction", "edrHeadroomPotential",

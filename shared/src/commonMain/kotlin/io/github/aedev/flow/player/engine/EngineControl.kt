@@ -26,6 +26,9 @@ interface EngineControl {
 
     fun isPlaying(): Boolean
 
+    /** Set to play: true from [play] until [pause], whoever called them (Picture in Picture's window calls them too). */
+    fun playRequested(): Boolean
+
     /**
      * Media3's state for the source: [FlowPlayer.STATE_BUFFERING] while opening or waiting for media,
      * [FlowPlayer.STATE_READY] when it can play (paused or not), [FlowPlayer.STATE_ENDED] at its end, and

@@ -10,6 +10,9 @@ import io.github.aedev.flow.player.resolver.PlaybackEngineKind.AVPLAYER
 import io.github.aedev.flow.player.resolver.PlaybackEngineKind.BUNDLED
 import io.github.aedev.flow.player.stream.AudioStreamSelector
 import io.github.aedev.flow.player.stream.VideoCodecUtils
+import io.github.aedev.flow.network.platformHttpClient
+import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsText
 import kotlinx.coroutines.runBlocking
 import org.schabi.newpipe.extractor.stream.VideoStream
 import kotlin.test.Test
@@ -138,6 +141,12 @@ class PlaybackEngineRoutingTest {
             // Opus cannot go beside H.264 in AVPlayer; the resolver leaves it out rather than hand AVPlayer what it cannot decode.
             val h264WithOpus = assertNotNull(VideoPlaybackResolver("v").resolve(listOf(h264(720, 1_200_000)), opus, null, null, 212))
             assertEquals(AVPLAYER, h264WithOpus.engine)
+            // Given the video's other audio, the same track's AAC takes its place, so AVPlayer plays with sound (S11).
+            val withAlternatives =
+                assertNotNull(VideoPlaybackResolver("w").resolve(listOf(h264(720, 1_200_000)), opus, null, null, 212, audioAlternatives = listOf(opusLow, aac, opus)))
+            assertEquals(AVPLAYER, withAlternatives.engine)
+            val master = platformHttpClient().get(withAlternatives.uri).bodyAsText()
+            assertTrue("#EXT-X-MEDIA:TYPE=AUDIO" in master && "mp4a.40.2" in master, master)
 
             val resolver = VideoPlaybackResolver("v")
             val ladder = listOf(vp9(480, 450_000), vp9(720, 900_000), vp9(1080, 1_875_000))

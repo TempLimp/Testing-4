@@ -32,6 +32,7 @@ import platform.QuartzCore.CALayer
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
+import org.schabi.newpipe.extractor.stream.VideoStream
 
 // A TED talk with manual captions and a SponsorBlock sponsor segment early on (18.5-24.8 s, looked up 2026-11-08).
 internal const val CAPTIONED_VIDEO_ID = "iG9CE55wbtY"
@@ -63,18 +64,23 @@ internal class PlayerGate(
             }
         }
 
-    private suspend fun <T> main(block: suspend () -> T): T = withContext(Dispatchers.Main) { block() }
+    internal suspend fun <T> main(block: suspend () -> T): T = withContext(Dispatchers.Main) { block() }
 
-    /** Loads [result] as the manager's own load does, at [startPosition], and shows it. */
-    private suspend fun load(
+    /**
+     * Loads [result] as the manager's own load does, at [startPosition], and shows it. [pick] pins a video stream, as a
+     * quality the user chose does (S11 plays one on each engine); null leaves it to Auto.
+     */
+    internal suspend fun load(
         videoId: String,
         result: VideoExtractionResult,
         startPosition: Long = 0L,
         preferSabr: Boolean = false,
+        pick: ((List<VideoStream>) -> VideoStream?)? = null,
     ) {
         val videos = InnerTubeStreamBridge.convertVideoFormats(result.videoFormats)
         val audios = InnerTubeStreamBridge.convertAudioFormats(result.audioFormats)
-        val (video, audio) = ServicePlaybackStreamSelector.selectStreams(videos, audios, VideoQuality.AUTO, "original", "auto")
+        val (auto, audio) = ServicePlaybackStreamSelector.selectStreams(videos, audios, VideoQuality.AUTO, "original", "auto")
+        val video = pick?.invoke(videos) ?: auto
         val shown = InnerTubeVideoMapper.videoFromResult(videoId, result, Video(id = videoId, title = "", channelName = "", channelId = "", thumbnailUrl = "", duration = 0, viewCount = 0L, uploadDate = ""))
         main {
             // The player screen's part: the manager registers a video's streams for swapping under this video's id.
@@ -102,9 +108,9 @@ internal class PlayerGate(
         }
     }
 
-    private suspend fun position(): Long = main { manager.getCurrentPosition() }
+    internal suspend fun position(): Long = main { manager.getCurrentPosition() }
 
-    private suspend fun waitFor(
+    internal suspend fun waitFor(
         timeout: Duration,
         condition: suspend () -> Boolean,
     ): Boolean = withTimeoutOrNull(timeout) {
@@ -124,7 +130,7 @@ internal class PlayerGate(
 
     private fun verdict(pass: Boolean) = if (pass) "PASS" else "FAIL"
 
-    private fun noVideo(
+    internal fun noVideo(
         what: String,
         id: String,
     ): JsonObject = blockedOrFailed(what, id, "every client failed")

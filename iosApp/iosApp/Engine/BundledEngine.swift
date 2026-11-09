@@ -64,7 +64,7 @@ final class BundledEngine: NSObject, PlaybackEngine {
     private var colorPrimaries: String?
     private var transferFunction: String?
 
-    private var pictureInPicture: AVPictureInPictureController?
+    private lazy var pictureInPicture = AVPictureInPictureController.ContentSource(sampleBufferDisplayLayer: displayLayer, playbackDelegate: self)
     private var watchdog: DispatchSourceTimer?
     private var flushObserver: NSObjectProtocol?
 
@@ -101,7 +101,6 @@ final class BundledEngine: NSObject, PlaybackEngine {
         let rate = self.rate
         lock.unlock()
         if ready { control.async { self.synchronizer.rate = rate } }
-        invalidatePictureInPicture()
     }
 
     func pause() {
@@ -110,7 +109,6 @@ final class BundledEngine: NSObject, PlaybackEngine {
         let ready = opened && !closed
         lock.unlock()
         if ready { control.async { self.synchronizer.rate = 0 } }
-        invalidatePictureInPicture()
     }
 
     func seekTo(positionMs: Int64) {
@@ -142,6 +140,12 @@ final class BundledEngine: NSObject, PlaybackEngine {
 
     func isPlaying() -> Bool {
         synchronizer.rate > 0
+    }
+
+    func playRequested() -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return wantsToPlay
     }
 
     func bufferedPositionMs() -> Int64 {
@@ -264,12 +268,10 @@ final class BundledEngine: NSObject, PlaybackEngine {
         )
     }
 
-    func pictureInPictureController() -> AVPictureInPictureController? {
-        if let pictureInPicture { return pictureInPicture }
-        guard AVPictureInPictureController.isPictureInPictureSupported() else { return nil }
-        let controller = AVPictureInPictureController(contentSource: .init(sampleBufferDisplayLayer: displayLayer, playbackDelegate: self))
-        pictureInPicture = controller
-        return controller
+    // The app's one PiP controller (Kotlin's PictureInPicture) takes this when the engine plays, and asks the
+    // delegate below for the state it shows on each change the player reports.
+    func pictureInPictureSource() -> AVPictureInPictureController.ContentSource {
+        pictureInPicture
     }
 
     func close() {
@@ -295,7 +297,6 @@ final class BundledEngine: NSObject, PlaybackEngine {
             audio = nil
             lock.unlock()
         }
-        DispatchQueue.main.async { self.pictureInPicture = nil }
     }
 
     // MARK: Opening
@@ -474,7 +475,6 @@ final class BundledEngine: NSObject, PlaybackEngine {
         let at = seekTarget
         lock.unlock()
         synchronizer.setRate(rate, time: at)
-        invalidatePictureInPicture()
     }
 
     private func tap(_ sample: CMSampleBuffer, _ time: CMTime, _ audioTap: (UnsafeBufferPointer<Float>, Int, Double, CMTime) -> Void) {
@@ -616,10 +616,6 @@ final class BundledEngine: NSObject, PlaybackEngine {
     static func media3Code(feeding message: String) -> Int32 {
         message.hasPrefix("read ") ? 2000 : 4003 // IO_UNSPECIFIED : DECODING_FAILED
     }
-
-    private func invalidatePictureInPicture() {
-        DispatchQueue.main.async { self.pictureInPicture?.invalidatePlaybackState() }
-    }
 }
 
 // Picture in Picture drives the engine through these while its window is up.
@@ -636,7 +632,8 @@ extension BundledEngine: AVPictureInPictureSampleBufferPlaybackDelegate {
     }
 
     func pictureInPictureControllerIsPlaybackPaused(_ pictureInPictureController: AVPictureInPictureController) -> Bool {
-        !isPlaying()
+        // The wish to play, so the window shows pause while the engine waits for media.
+        !playRequested()
     }
 
     func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, didTransitionToRenderSize newRenderSize: CMVideoDimensions) {}
