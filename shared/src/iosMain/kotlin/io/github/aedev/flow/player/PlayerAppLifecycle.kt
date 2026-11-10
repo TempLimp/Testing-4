@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 import platform.Foundation.NSNotificationCenter
 import platform.Foundation.NSOperationQueue
 import platform.UIKit.UIApplication
+import platform.UIKit.UIApplicationDidBecomeActiveNotification
 import platform.UIKit.UIApplicationDidEnterBackgroundNotification
 import platform.UIKit.UIApplicationState
 import platform.UIKit.UIApplicationWillEnterForegroundNotification
@@ -17,7 +18,7 @@ import platform.UIKit.UIApplicationWillEnterForegroundNotification
 /**
  * MainActivity's part in video playback, pulled forward from S13's row: what leaving the app does to a playing video
  * (onUserLeaveHint's auto PiP, onStop's hand-off to background playback or its pause) and what coming back does (onResume
- * re-reads the PiP flag). iOS starts auto PiP itself on leaving the app when the controller allows it, so the flag is
+ * re-reads the PiP flag, and the video comes back once the app is active). iOS starts auto PiP itself on leaving the app when the controller allows it, so the flag is
  * kept current while a video plays instead of decided on leaving. The player surface is not destroyed in the
  * background on iOS, so coming back is also where the video returns after audio-only background playback, which
  * upstream's surface does when Android recreates it. Main thread.
@@ -43,6 +44,9 @@ internal object PlayerAppLifecycle {
         val center = NSNotificationCenter.defaultCenter
         center.addObserverForName(UIApplicationDidEnterBackgroundNotification, null, NSOperationQueue.mainQueue) { _ -> onStop() }
         center.addObserverForName(UIApplicationWillEnterForegroundNotification, null, NSOperationQueue.mainQueue) { _ -> onStart() }
+        // Active, not merely coming forward: the video's restore needs the display interactive (isDisplayInteractive),
+        // and on willEnterForeground iOS still reports the app in the background (phone run 1 kept it audio only).
+        center.addObserverForName(UIApplicationDidBecomeActiveNotification, null, NSOperationQueue.mainQueue) { _ -> onResume() }
         // onUserLeaveHint's rule, kept current: only video enters auto PiP (S12 adds: not while music plays).
         scope.launch {
             combine(manager.playerState, GlobalPlayerState.isExplicitBackgroundPlaybackActive, preferences.autoPipEnabled) { state, explicit, autoPip ->
@@ -82,7 +86,12 @@ internal object PlayerAppLifecycle {
         pendingAutoPip?.cancel()
         // GlobalPlayerState outlives any screen; re-reading the real value here is the only reset path.
         GlobalPlayerState.setPipMode(PictureInPicture.isActive)
-        if (manager.isInAudioOnlyMode() && manager.isSurfaceReady && !GlobalPlayerState.isExplicitBackgroundPlaybackActive.value) {
+    }
+
+    private fun onResume() {
+        if (PictureInPicture.isActive) return
+        val restore = manager.isInAudioOnlyMode() || manager.isVideoSurfaceRestorePending()
+        if (restore && manager.isSurfaceReady && !GlobalPlayerState.isExplicitBackgroundPlaybackActive.value) {
             Log.w(TAG, "restoreVideoOutput on return to the app")
             manager.restoreVideoOutput()
         }

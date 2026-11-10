@@ -2,6 +2,8 @@
 
 package io.github.aedev.flow.player
 
+import io.github.aedev.flow.data.local.PlayerPreferences
+import io.github.aedev.flow.data.repository.YouTubeRepository
 import io.github.aedev.flow.innertube.YouTube
 import io.github.aedev.flow.innertube.models.SongItem
 import io.github.aedev.flow.player.config.PlayerConfig
@@ -348,6 +350,8 @@ private object PlaybackGate {
         YouTube.onVisitorDataChanged = identityStore::save
         WebPoTokenSession.bindIdentityStore(identityStore)
         identityStore.restore()?.let { YouTube.visitorData = it }
+        // FlowApplication's too: the repository the service layer loads a queue's next video through (S11's items).
+        YouTubeRepository.getInstance(PlayerPreferences())
         record("device", JsonPrimitive(device))
         // The model identifier (iPhone15,4 and so on) sets what 2160p can be asked of the phone.
         record(

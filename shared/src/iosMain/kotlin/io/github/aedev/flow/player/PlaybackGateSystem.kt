@@ -37,7 +37,6 @@ import io.github.aedev.flow.player.stream.InnerTubeVideoMapper
 import io.github.aedev.flow.player.stream.InnerTubeVideoStreamExtractor.VideoExtractionResult
 import io.github.aedev.flow.player.stream.VideoCodecUtils
 import io.github.aedev.flow.ui.components.videoplayer.gesture.videoPlayerControls
-import kotlinx.cinterop.useContents
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
@@ -58,7 +57,6 @@ import platform.AVFoundation.AVPlayerItemTrack
 import platform.AVFoundation.externalPlaybackActive
 import platform.AVFoundation.mediaType
 import platform.AVFoundation.tracks
-import platform.CoreGraphics.CGRectMake
 import platform.MediaPlayer.MPMediaItemPropertyArtist
 import platform.MediaPlayer.MPMediaItemPropertyArtwork
 import platform.MediaPlayer.MPMediaItemPropertyPlaybackDuration
@@ -69,10 +67,9 @@ import platform.UIKit.UIApplicationState
 import platform.UIKit.UIColor
 import platform.UIKit.UIScreen
 import platform.UIKit.UIView
-import platform.UIKit.UIViewController
-import platform.UIKit.addChildViewController
-import platform.UIKit.didMoveToParentViewController
-import platform.UIKit.removeFromParentViewController
+import platform.UIKit.UIWindow
+import platform.UIKit.UIWindowLevelNormal
+import platform.UIKit.UIWindowScene
 import kotlin.math.abs
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
@@ -262,6 +259,10 @@ internal class SystemGate(
             InnerTubeVideoMapper.videoFromResult(id, result, Video(id = id, title = "", channelName = "", channelId = "", thumbnailUrl = "", duration = 0, viewCount = 0L, uploadDate = ""))
         }
 
+    /** [videoId] is the current video and plays: it opened, not only took its place in the queue. */
+    private suspend fun playing(videoId: String): Boolean =
+        main { manager.playerState.value.currentVideoId == videoId && manager.isPlaying() && manager.getCurrentPosition() > 1_000 }
+
     private fun remoteCommandsSince(mark: Int): List<String> =
         PlayerDiagnostics.entries().drop(mark).map { it.toString() }.filter { "remote command" in it }.map { it.substringAfter("remote command ").trim() }
 
@@ -295,11 +296,11 @@ internal class SystemGate(
         players.waitFor(6.minutes) {
             val commands = remoteCommandsSince(mark)
             if (videoAfterNext == null && commands.any { it.startsWith("Next") }) {
-                // The next video opens through the service layer, as upstream's session does.
-                if (players.waitFor(30.seconds) { main { manager.playerState.value.currentVideoId } == secondId }) videoAfterNext = secondId
+                // The next video opens through the service layer, as upstream's session does, and has to play.
+                if (players.waitFor(40.seconds) { playing(secondId) }) videoAfterNext = secondId
             }
             if (videoAfterPrevious == null && commands.any { it.startsWith("Previous") }) {
-                if (players.waitFor(30.seconds) { main { manager.playerState.value.currentVideoId } == firstId }) videoAfterPrevious = firstId
+                if (players.waitFor(40.seconds) { playing(firstId) }) videoAfterPrevious = firstId
             }
             !inBackground()
         }
@@ -458,10 +459,7 @@ internal class SystemGate(
         val volumeAfter = main { AVAudioSession.sharedInstance().outputVolume }
         val keys = PlayerHardwareController.volumeKeySignal.value - keysBefore
         main {
-            surface?.let { (controller, view) ->
-                view.removeFromSuperview()
-                controller.removeFromParentViewController()
-            }
+            close(surface)
             PlayerHardwareController.setFullscreenVideoActive(false)
             // Leaving the player gives the screen its own brightness back (upstream's PlayerWindowEffects, S14).
             ScreenBrightness.apply(-1f)
@@ -551,20 +549,29 @@ internal class SystemGate(
         }
     }
 
-    private fun showCompose(content: @Composable () -> Unit): Pair<UIViewController, UIView>? {
-        @Suppress("DEPRECATION")
-        val window = UIApplication.sharedApplication.keyWindow ?: return null
-        val root = window.rootViewController ?: return null
-        // A see-through Compose view over the video (opaque = false: CMP's opt-in for transparency).
+    /**
+     * A see-through Compose surface over the video, in a window of its own above the app's: SwiftUI's hosting controller
+     * owns the app window's root, and UIKit refuses a child controller whose view lives elsewhere (phone run 1's crash).
+     * It is not made key, so the gate's overlay and buttons stay in the app's window, shown through it.
+     */
+    private fun showCompose(content: @Composable () -> Unit): UIWindow? {
+        val scene = UIApplication.sharedApplication.connectedScenes.firstOrNull { it is UIWindowScene } as? UIWindowScene ?: return null
+        // opaque = false: CMP's opt-in for a transparent surface.
         @OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
         val controller = ComposeUIViewController(configure = { opaque = false }) { content() }
-        root.addChildViewController(controller)
-        val (width, height) = window.bounds.useContents { size.width to size.height }
-        controller.view.setFrame(CGRectMake(0.0, 0.0, width, height))
         controller.view.backgroundColor = UIColor.clearColor
-        window.addSubview(controller.view)
-        controller.didMoveToParentViewController(root)
-        return controller to controller.view
+        return UIWindow(windowScene = scene).apply {
+            windowLevel = UIWindowLevelNormal + 1.0
+            backgroundColor = UIColor.clearColor
+            rootViewController = controller
+            hidden = false
+        }
+    }
+
+    private fun close(window: UIWindow?) {
+        window ?: return
+        window.hidden = true
+        window.rootViewController = null
     }
 
     // ----- AirPlay -----
@@ -600,10 +607,7 @@ internal class SystemGate(
             players.waitFor(90.seconds) { main { !PlatformCodecSupport.airPlayActive } }
         }
         main {
-            picker?.let { (controller, view) ->
-                view.removeFromSuperview()
-                controller.removeFromParentViewController()
-            }
+            close(picker)
         }
         return buildJsonObject {
             put("verdict", if (!routed) "NOT_TESTED" else if (engineOnAirPlay == AvPlayerEngine::class.simpleName) "PASS" else "FAIL")
