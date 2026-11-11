@@ -265,8 +265,11 @@ internal class SystemGate(
     private suspend fun playing(videoId: String): Boolean =
         main { manager.playerState.value.currentVideoId == videoId && manager.isPlaying() && manager.getCurrentPosition() > 1_000 }
 
-    private fun remoteCommandsSince(mark: Int): List<String> =
-        PlayerDiagnostics.entries().drop(mark).map { it.toString() }.filter { "remote command" in it }.map { it.substringAfter("remote command ").trim() }
+    // The log is a ring of 300 lines: what came after a mark is told by time, not position.
+    private fun diagnosticsMark(): Long = PlayerDiagnostics.entries().lastOrNull()?.timestampMs ?: 0L
+
+    private fun remoteCommandsSince(mark: Long): List<String> =
+        PlayerDiagnostics.entries().filter { it.timestampMs > mark }.map { it.message }.filter { "remote command" in it }.map { it.substringAfter("remote command ").trim() }
 
     /** Now Playing on the lock screen and its buttons: pause, play, next, previous and the progress bar. */
     suspend fun lockScreen(
@@ -287,7 +290,7 @@ internal class SystemGate(
         ) {
             return failed("nobody tapped within 5 minutes")
         }
-        val mark = PlayerDiagnostics.entries().size
+        val mark = diagnosticsMark()
         val eventsMark = main { events.size }
         if (!players.waitFor(60.seconds) { inBackground() }) return failed("the phone was not locked within 60 s")
         stage("$item: LOCKED — press Pause, Play, Next, Previous, then drag the bar; then unlock")

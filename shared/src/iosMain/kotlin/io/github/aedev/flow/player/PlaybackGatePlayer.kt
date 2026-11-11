@@ -139,8 +139,14 @@ internal class PlayerGate(
         stage("s10Play: extraction")
         val result = extraction(videoId) ?: return noVideo("s10Play", videoId).also { unplayable = it }
         stage("s10Play: manager")
+        // The log is a ring: what came after is told by time, not position.
+        val mark = PlayerDiagnostics.entries().lastOrNull()?.timestampMs ?: 0L
         load(videoId, result)
         val started = waitFor(40.seconds) { position() > 1_000 && main { manager.isPlaying() } }
+        // What a load that never started met first, before the error handler's retries fill the log.
+        val since = PlayerDiagnostics.entries().filter { it.timestampMs > mark }.map { it.message }
+        val firstError = since.firstOrNull { "PlaybackException" in it }
+        val refusals = since.filter { it.startsWith("403 c=") || "googlevideo answered" in it }
         val firstFrame = waitFor(10.seconds) { main { manager.firstFrameVideoId.value } == videoId }
         val rate = if (started) clockRate(5.seconds) else 0.0
         val state = main { manager.playerState.value }
@@ -154,6 +160,11 @@ internal class PlayerGate(
             put("firstFrame", firstFrame)
             put("clockRate", rate)
             put("error", state.error)
+            if (!started) {
+                put("firstPlayerError", firstError)
+                put("googlevideoRefusals", refusals.size)
+                put("firstRefusal", refusals.firstOrNull())
+            }
         }
     }
 

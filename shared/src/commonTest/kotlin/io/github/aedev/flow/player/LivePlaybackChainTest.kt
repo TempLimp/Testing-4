@@ -48,7 +48,7 @@ class LivePlaybackChainTest {
             val result =
                 InnerTubeVideoStreamExtractor.extract(VIDEO_ID) ?: run {
                     val block =
-                        InnerTubeVideoStreamExtractor.blockOf(VIDEO_ID)
+                        refusal(VIDEO_ID)
                             ?: fail("no client resolved $VIDEO_ID and none reported a block:\n${diagnostics()}")
                     return@live blocked("video", "every client refused $VIDEO_ID ($block): ${clientRefusals()}")
                 }
@@ -90,7 +90,7 @@ class LivePlaybackChainTest {
             val result =
                 InnerTubeVideoStreamExtractor.extract(VIDEO_ID) ?: run {
                     val block =
-                        InnerTubeVideoStreamExtractor.blockOf(VIDEO_ID)
+                        refusal(VIDEO_ID)
                             ?: fail("no client resolved $VIDEO_ID and none reported a block:\n${diagnostics()}")
                     return@live blocked("bundled", "every client refused $VIDEO_ID ($block): ${clientRefusals()}")
                 }
@@ -202,6 +202,14 @@ class LivePlaybackChainTest {
     }
 
     private fun diagnostics() = PlayerDiagnostics.entries().takeLast(40).joinToString("\n")
+
+    /**
+     * The network's refusal: upstream's block verdict, or the gate's reading of the ladder's report, where a client
+     * answering in SABR alone counts as the network (the user's decision, 2026-11-11).
+     */
+    private fun refusal(id: String): String? =
+        InnerTubeVideoStreamExtractor.blockOf(id)?.name
+            ?: networkRefusal(id, PlayerDiagnostics.entries().lastOrNull { "ALL clients failed $id: " in it.message }?.message)
 
     private fun blocked(
         what: String,
