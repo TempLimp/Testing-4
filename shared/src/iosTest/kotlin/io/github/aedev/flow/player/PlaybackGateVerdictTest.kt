@@ -39,8 +39,17 @@ class PlaybackGateVerdictTest {
     fun formatsThePortFailedToMakePlayableAreAFault() {
         assertNull(networkRefusal("BSTsnWoslP4", with("MWEB", sabrOnly)))
         assertNull(networkRefusal("BSTsnWoslP4", with("TV_TIZEN", "12/40 formats solved")))
-        assertNull(networkRefusal("BSTsnWoslP4", with("VISIONOS", "18 formats, none resolvable (SABR-only)")))
         assertNull(networkRefusal("BSTsnWoslP4", with("ANDROID", "exception=IllegalStateException: boom")))
+    }
+
+    // CI run 42874108797 (2026-11-11): ANDROID answered the walled runner with SABR-only formats, no URL or cipher to
+    // solve. The user's decision: that is the network's answer, not a fault in the port.
+    @Test
+    fun aClientAnsweringInSabrAloneIsTheNetwork() {
+        assertEquals(
+            "bot wall x7, web client SABR-only (S05) x1, SABR-only answer x1",
+            networkRefusal("BSTsnWoslP4", with("ANDROID", "34 formats, none resolvable (SABR-only)")),
+        )
     }
 
     @Test

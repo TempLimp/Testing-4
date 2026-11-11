@@ -292,6 +292,10 @@ internal fun networkRefusal(
                 "BOT_WALL" in reason -> "bot wall"
                 "status=" in reason -> "status " + reason.substringAfter("status=").substringBefore(',')
                 reason.startsWith("WEB: SABR resolved but no format survived") -> "web client SABR-only (S05)"
+                // Any client answering in SABR alone, with no direct format, is YouTube's answer to this network, as
+                // WEB's is: upstream's ladder passes over it too (the user's decision, 2026-11-11, after ANDROID began
+                // answering CI's walled runner so).
+                "none resolvable (SABR-only)" in reason -> "SABR-only answer"
                 NO_STREAM_OFFERED.containsMatchIn(reason) -> "no stream offered"
                 else -> return null
             }
