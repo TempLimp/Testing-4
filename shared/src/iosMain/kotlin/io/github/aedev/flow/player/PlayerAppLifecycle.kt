@@ -42,11 +42,14 @@ internal object PlayerAppLifecycle {
         installed = true
         lifecyclePlaybackPreferences.observeIn(scope)
         val center = NSNotificationCenter.defaultCenter
-        center.addObserverForName(UIApplicationDidEnterBackgroundNotification, null, NSOperationQueue.mainQueue) { _ -> onStop() }
-        center.addObserverForName(UIApplicationWillEnterForegroundNotification, null, NSOperationQueue.mainQueue) { _ -> onStart() }
+        // Delivered inside UIKit's own post (no queue), not after it: iOS pauses an AVPlayer whose layer shows video as
+        // the app leaves the screen, and the hand-off has to have detached it by then (phone run 2 lost that race: the
+        // audio stopped, iOS suspended the app and reclaimed the loopback proxy's socket).
+        center.addObserverForName(UIApplicationDidEnterBackgroundNotification, null, null) { _ -> onStop() }
+        center.addObserverForName(UIApplicationWillEnterForegroundNotification, null, null) { _ -> onStart() }
         // Active, not merely coming forward: the video's restore needs the display interactive (isDisplayInteractive),
         // and on willEnterForeground iOS still reports the app in the background (phone run 1 kept it audio only).
-        center.addObserverForName(UIApplicationDidBecomeActiveNotification, null, NSOperationQueue.mainQueue) { _ -> onResume() }
+        center.addObserverForName(UIApplicationDidBecomeActiveNotification, null, null) { _ -> onResume() }
         // onUserLeaveHint's rule, kept current: only video enters auto PiP (S12 adds: not while music plays).
         scope.launch {
             combine(manager.playerState, GlobalPlayerState.isExplicitBackgroundPlaybackActive, preferences.autoPipEnabled) { state, explicit, autoPip ->
@@ -89,6 +92,7 @@ internal object PlayerAppLifecycle {
     }
 
     private fun onResume() {
+        manager.ensureProxyServing()
         if (PictureInPicture.isActive) return
         val restore = manager.isInAudioOnlyMode() || manager.isVideoSurfaceRestorePending()
         if (restore && manager.isSurfaceReady && !GlobalPlayerState.isExplicitBackgroundPlaybackActive.value) {

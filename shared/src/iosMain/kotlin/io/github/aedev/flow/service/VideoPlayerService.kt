@@ -214,6 +214,8 @@ internal object VideoPlayerService : VideoBackgroundService, MediaSessionHost {
         }
         // In the diagnostics report, as upstream's service logs what reached its session.
         PlayerDiagnostics.logWarning(TAG, "remote command $command")
+        // A command may be what woke a suspended app, whose loopback proxy iOS took meanwhile.
+        EnhancedPlayerManager.getInstance().ensureProxyServing()
         return if (onCommand?.invoke(command) == true) MPRemoteCommandHandlerStatusSuccess else MPRemoteCommandHandlerStatusCommandFailed
     }
 

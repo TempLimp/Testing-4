@@ -627,4 +627,18 @@ class EnginePlayerTest {
             assertThat(player.isPlaybackSuppressed).isFalse()
             assertTrue(engine.wantsToPlay)
         }
+
+    @Test
+    fun aPlayAskedForAgainRestartsAnEngineTheSystemPaused() =
+        runTest {
+            val (player, engine) = readyPlayer()
+            val changes = events.count { it.startsWith("playWhenReady") }
+            engine.pause()
+
+            player.play()
+
+            assertTrue(engine.wantsToPlay)
+            // The player's own wish did not change, so its listeners hear nothing.
+            assertThat(events.count { it.startsWith("playWhenReady") }).isEqualTo(changes)
+        }
 }

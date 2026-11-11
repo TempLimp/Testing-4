@@ -39,6 +39,7 @@ import io.github.aedev.flow.player.quality.QualityManager
 import io.github.aedev.flow.player.recovery.ClearedMediaRecoveryState
 import io.github.aedev.flow.player.recovery.StreamDenialReloader
 import io.github.aedev.flow.player.resolver.AdaptiveDashManifest
+import io.github.aedev.flow.player.resolver.LocalHlsProxy
 import io.github.aedev.flow.player.resolver.PlaybackEngineKind
 import io.github.aedev.flow.player.sabr.integration.SabrStreamInfo
 import io.github.aedev.flow.player.sponsorblock.SponsorBlockHandler
@@ -796,6 +797,11 @@ class EnhancedPlayerManager private constructor() {
                 }
 
                 override fun onPlayerError(error: PlaybackException) {
+                    // An engine that cannot reach the loopback proxy may have lost it to iOS (a reclaimed socket): it is
+                    // started again before the error handler's reload publishes the streams anew (S11).
+                    if (error.errorCode in PlaybackException.ERROR_CODE_IO_UNSPECIFIED..PlaybackException.ERROR_CODE_IO_READ_POSITION_OUT_OF_RANGE) {
+                        scope.launch { LocalHlsProxy.restartIfGone() }
+                    }
                     errorHandler?.handleError(error, player)
                 }
 
@@ -3146,6 +3152,26 @@ class EnhancedPlayerManager private constructor() {
 
     fun stopBackgroundService() {
         backgroundService?.stop()
+    }
+
+    /**
+     * iOS reclaims a suspended app's listening sockets, the loopback proxy's among them: a video paused from the lock
+     * screen long enough lets iOS suspend the app. Before playing on, the proxy is checked, and when it had to start
+     * again on a new port the video reopens at its position, playing if it was (S11). Main thread.
+     */
+    fun ensureProxyServing() {
+        scope.launch {
+            if (!LocalHlsProxy.restartIfGone()) return@launch
+            val p = player ?: return@launch
+            val video = currentVideoStream ?: return@launch
+            if (p.mediaItemCount == 0) return@launch
+            val position = p.currentPosition
+            val playWhenReady = p.playWhenReady
+            autoNextLog("ensureProxyServing: the loopback proxy restarted; reopening at $position")
+            p.stop()
+            p.clearMediaItems()
+            loadMediaInternal(video, currentAudioStream ?: availableAudioStreams.firstOrNull(), position, playWhenReady = playWhenReady)
+        }
     }
 
     /**

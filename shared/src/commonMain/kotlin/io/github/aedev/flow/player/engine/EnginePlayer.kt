@@ -104,7 +104,12 @@ class EnginePlayer(
     ) {
         // A play asked for while suppressed takes the audio back, as a play request regains focus on Android.
         if (value && isPlaybackSuppressed && reason == PLAY_WHEN_READY_CHANGE_REASON_USER_REQUEST) onPlayWhileSuppressed?.invoke()
-        if (wantsToPlay == value) return
+        if (wantsToPlay == value) {
+            // Media3's player is only ever paused through itself; an engine can be paused by the system (iOS pauses an
+            // AVPlayer showing video as the app leaves the screen), so a play asked for again reaches it.
+            if (shouldPlay) current?.engine?.takeIf { !it.playRequested() }?.play()
+            return
+        }
         wantsToPlay = value
         current?.engine?.let { if (shouldPlay) it.play() else it.pause() }
         notify { it.onPlayWhenReadyChanged(value, reason) }

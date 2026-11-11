@@ -38,6 +38,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.concurrent.atomics.AtomicInt
 import kotlin.time.TimeSource
 import okio.FileSystem
@@ -66,6 +67,7 @@ object LocalHlsProxy {
     private const val TAG = "LocalHlsProxy"
     private const val HOST = "127.0.0.1"
     private const val MAX_PRESENTATIONS = 32
+    private const val ALIVE_TIMEOUT_MS = 1_000L
 
     private val httpClient = ProxyAwareClient()
     private val startLock = Mutex()
@@ -115,6 +117,7 @@ object LocalHlsProxy {
             val started =
                 embeddedServer(CIO, port = 0, host = HOST) {
                     routing {
+                        get("/alive") { call.respondText("ok") }
                         get("/p/{id}/master.m3u8") { serveMaster(call) }
                         get("/p/{id}/{rendition}.m3u8") { serveMedia(call) }
                         get("/p/{id}/{rendition}.mp4") { serveBytes(call) }
@@ -132,6 +135,40 @@ object LocalHlsProxy {
             Log.d(TAG, "Serving HLS on $HOST:$port")
             port
         }
+
+    private val restarts = AtomicInt(0)
+
+    /** How often the server has been started again after it stopped answering. */
+    val restartCount: Int get() = restarts.load()
+
+    /**
+     * iOS reclaims a suspended app's listening sockets (one playing audio is not suspended, but one paused a while in the
+     * background is), so a server that was running may be gone. True when it no longer answered and runs again on a new
+     * port: sources published before point at nothing and have to be published again (the player reopens its video).
+     */
+    suspend fun restartIfGone(): Boolean =
+        startLock.withLock {
+            val running = server ?: return@withLock false
+            if (answers()) return@withLock false
+            Log.w(TAG, "The loopback server on $port stopped answering; starting it again")
+            PlayerDiagnostics.logWarning(TAG, "loopback server on $port gone (socket reclaimed?); restarting")
+            runCatching { running.stop(0, 0) }
+            server = null
+            restarts.incrementAndFetch()
+            true
+        }.also { restarted -> if (restarted) start() }
+
+    private suspend fun answers(): Boolean =
+        withTimeoutOrNull(ALIVE_TIMEOUT_MS) {
+            val alive = "http://$HOST:$port/alive"
+            // Loopback: the app proxy's selector sends it direct.
+            runCatching { httpClient.get(Url(alive)).prepareGet(alive).execute { it.status == HttpStatusCode.OK } }.getOrDefault(false)
+        } == true
+
+    /** Stops the listener but keeps the server object, as iOS reclaiming the socket leaves it. Tests only. */
+    internal suspend fun dropListenerForTest() {
+        startLock.withLock { server?.stop(0, 0) }
+    }
 
     /** Publishes [presentation] and returns its master playlist's URL. */
     suspend fun publish(presentation: HlsPresentation): String {

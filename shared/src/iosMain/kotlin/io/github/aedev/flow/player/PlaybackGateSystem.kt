@@ -164,11 +164,13 @@ internal class SystemGate(
             .filter { VideoCodecUtils.codecKeyFromStream(it) == "h264" && VideoCodecUtils.qualityHeightFromStream(it) <= 1080 }
             .maxByOrNull(VideoCodecUtils::qualityHeightFromStream)
 
+    // 720p: these items prove the system around the engine, not its decoding (S04b's), and a phone decoding VP9 in
+    // software for half an hour of hands-on steps runs hot (phone run 2).
     private fun vp9(streams: List<VideoStream>): VideoStream? =
         streams
             .filter {
                 VideoCodecUtils.codecKeyFromStream(it) == "vp9" && !AdaptiveLadder.isHighBitDepth(it) &&
-                    VideoCodecUtils.qualityHeightFromStream(it) <= 1080 && PlatformCodecSupport.engineFor(it) == PlaybackEngineKind.BUNDLED
+                    VideoCodecUtils.qualityHeightFromStream(it) <= 720 && PlatformCodecSupport.engineFor(it) == PlaybackEngineKind.BUNDLED
             }.maxByOrNull(VideoCodecUtils::qualityHeightFromStream)
 
     private fun failed(
